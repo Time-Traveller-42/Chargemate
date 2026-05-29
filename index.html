@@ -901,27 +901,35 @@ function renderPlanStops(){
 }
 
 function calcWithStops(current, totalDist, kmPerPct, stops){
-  // Sort stops by km
-  const sorted = stops.filter(s=>s.km>0&&s.chargeTo>0).sort((a,b)=>a.km-b.km);
+  const validStops = stops.filter(s=>s.km>0&&s.chargeTo>0);
   const legs = [];
-  let pos=0, batt=current;
+  let batt = current;
+  let coveredKm = 0;
   
-  for(const stop of sorted){
-    if(stop.km <= pos || stop.km >= totalDist) continue;
-    const legDist = stop.km - pos;
-    const used = legDist / kmPerPct;
+  for(const stop of validStops){
+    const used = stop.km / kmPerPct;
     const arriveAt = batt - used;
-    legs.push({from:pos, to:stop.km, dist:legDist, startBatt:batt, arriveBatt:arriveAt, chargeTo:stop.chargeTo});
+    coveredKm += stop.km;
+    // Advice: what's needed to arrive at 20% (comfortable)
+    const needForComfort = Math.ceil(used + 20); // charge to this at prev stop
+    const maxReachKm = Math.floor(batt * kmPerPct); // max km from current charge (to 0%)
+    const safeReachKm = Math.floor((batt - 20) * kmPerPct); // max km staying above 20%
+    legs.push({dist:stop.km, startBatt:batt, arriveBatt:arriveAt, chargeTo:stop.chargeTo, reachable:arriveAt>=0, needForComfort, maxReachKm, safeReachKm});
     batt = stop.chargeTo;
-    pos = stop.km;
   }
-  // Final leg to destination
-  const finalDist = totalDist - pos;
-  const finalUsed = finalDist / kmPerPct;
-  const finalArrive = batt - finalUsed;
-  legs.push({from:pos, to:totalDist, dist:finalDist, startBatt:batt, arriveBatt:finalArrive, chargeTo:null});
+  const remainingDist = totalDist - coveredKm;
+  if(remainingDist > 0){
+    const used = remainingDist / kmPerPct;
+    const arriveAt = batt - used;
+    const needForComfort = Math.ceil(used + 20);
+    const maxReachKm = Math.floor(batt * kmPerPct);
+    const safeReachKm = Math.floor((batt - 20) * kmPerPct);
+    legs.push({dist:remainingDist, startBatt:batt, arriveBatt:arriveAt, chargeTo:null, reachable:arriveAt>=0, needForComfort, maxReachKm, safeReachKm});
+  }
   
-  return {legs, finalArrive};
+  const finalArrive = legs.length>0 ? legs[legs.length-1].arriveBatt : current;
+  const allReachable = legs.every(l=>l.reachable);
+  return {legs, finalArrive, allReachable, coveredKm};
 }
 
 function runPlan(){
@@ -939,23 +947,6 @@ function runPlan(){
   const eff=getActiveEff();
   if(!eff){
   
-  // Multi-stop legs display
-  let legsHtml='';
-  if(hasStops&&stopsResult){
-    legsHtml=`<div style="margin-top:14px">
-      <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Route Breakdown</div>
-      ${stopsResult.legs.map((leg,i)=>`
-        <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:12px;color:var(--text)">${leg.from}\u2192${leg.to} km <span style="color:var(--muted)">(${leg.dist} km)</span></span>
-            <span style="font-size:12px;font-weight:700;color:${leg.arriveBatt>=20?'var(--good)':leg.arriveBatt>=10?'var(--warn)':'var(--danger)'}">${leg.arriveBatt.toFixed(0)}%</span>
-          </div>
-          ${leg.chargeTo?'<div style="font-size:11px;color:var(--accent);margin-top:4px">\u26a1 Charge to '+leg.chargeTo+'%</div>':'<div style="font-size:11px;color:var(--muted);margin-top:4px">\ud83c\udfc1 Destination</div>'}
-        </div>
-      `).join('')}
-    </div>`;
-  }
-
     resultEl.innerHTML=`<div class="card"><div class="empty" style="padding:12px 0">
       ${planEffMode==='live'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
     </div></div>`;
@@ -979,12 +970,28 @@ function runPlan(){
   if(hasStops){
     stopsResult = calcWithStops(current, dist, kmPerPct, planStops);
     pctAtDest = stopsResult.finalArrive;
+    if(stopsResult.coveredKm > dist){
+      resultEl.innerHTML='<div class="card"><div class="empty" style="padding:12px 0;color:var(--warn)">Charging stops total ('+stopsResult.coveredKm+' km) exceeds trip distance ('+dist+' km). Reduce leg distances.</div></div>';
+      return;
+    }
   }
+  // Check worst leg across all stops
+  const anyLegUnreachable = hasStops && stopsResult && !stopsResult.allReachable;
+  const worstLegArrive = hasStops && stopsResult ? Math.min(...stopsResult.legs.map(l=>l.arriveBatt)) : pctAtDest;
   const kmOfBuffer  = pctAtDest*kmPerPct; // positive = headroom, negative = shortfall
 
   // Status — three-zone model
   let status, statusSub;
-  if(pctAtDest>=reserve){
+  if(anyLegUnreachable){
+    status='critical';
+    statusSub=`One or more legs exceed your range. Adjust stop distances or charge levels.`;
+  } else if(hasStops&&worstLegArrive<critical){
+    status='critical';
+    statusSub=`Leg arrives below ${critical}%. Increase charge at previous stop or reduce leg distance.`;
+  } else if(hasStops&&worstLegArrive<reserve){
+    status='reserve';
+    statusSub=`A leg arrives in reserve zone (${worstLegArrive.toFixed(0)}%). Consider charging more at a previous stop.`;
+  } else if(pctAtDest>=reserve){
     status='safe';
     statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — ${(pctAtDest-reserve).toFixed(0)}% above reserve. No action needed.`;
   } else if(pctAtDest>=critical){
@@ -1023,6 +1030,28 @@ function runPlan(){
   const pubChargers=sessions.filter(x=>x.t==='public'&&x.charger?.location)
     .map(x=>escapeHtml(x.charger.location)).filter((v,i,a)=>a.indexOf(v)===i);
 
+  
+  // Multi-stop legs display
+  let legsHtml='';
+  if(hasStops&&stopsResult){
+    legsHtml=`<div style="margin-top:14px">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Route Breakdown</div>
+      ${stopsResult.legs.map((leg,i)=>`
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--text);font-weight:600">Leg ${i+1}: ${leg.dist} km</span>
+            <span style="font-size:11px;color:${leg.arriveBatt>=20?'var(--good)':leg.arriveBatt>=10?'var(--warn)':'var(--danger)'};font-weight:700">${leg.reachable?leg.arriveBatt.toFixed(0)+'%':'\u2717 Short'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${leg.startBatt.toFixed(0)}% \u2192 ${leg.reachable?leg.arriveBatt.toFixed(0)+'%':leg.arriveBatt.toFixed(0)+'% (need '+(Math.abs(leg.arriveBatt)).toFixed(0)+'% more)'}</div>
+          ${leg.chargeTo?'<div style="font-size:11px;color:var(--accent);margin-top:3px">\u26a1 Charge to '+leg.chargeTo+'%</div>':'<div style="font-size:11px;color:var(--good);margin-top:3px">\ud83c\udfc1 Destination</div>'}
+          ${!leg.reachable?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Won\u2019t reach! ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or r':'R'}educe leg to ${leg.safeReachKm} km (arrive at 20%).</div>`:''}
+          ${leg.reachable&&leg.arriveBatt<10?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Critical (${leg.arriveBatt.toFixed(0)}%). ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
+          ${leg.reachable&&leg.arriveBatt>=10&&leg.arriveBatt<20?`<div style="font-size:11px;color:var(--warn);margin-top:3px">\u26a0 Reserve zone. ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
   resultEl.innerHTML=`
     <div class="card">
       <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">${roundTrip?'(round trip · '+dist+' km total)':'(one way · '+dist+' km)'} · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
@@ -1032,7 +1061,7 @@ function runPlan(){
         <div class="plan-status-sub">${statusSub}</div>
       </div>
 
-      <!-- Range Bar -->
+      ${!hasStops?`<!-- Range Bar -->
       <div class="rbar-wrap">
         <div class="rbar-label">Range Map</div>
         <div class="rbar-track">
@@ -1053,7 +1082,7 @@ function runPlan(){
         </div>
       </div>
 
-      <!-- Key numbers -->
+      `:''}<!-- Key numbers -->
       <div style="margin-top:14px">
         <div class="plan-row">
           <span class="plan-row-label">Battery at destination</span>
@@ -1067,14 +1096,14 @@ function runPlan(){
           <span class="plan-row-label">Must charge by</span>
           <span class="plan-row-val danger">${safeRangeKm.toFixed(0)} km <span style="font-size:10px;color:var(--muted);font-family:\'JetBrains Mono\',monospace">(${buffer}% reserve = ${(buffer*kmPerPct).toFixed(0)} km left)</span></span>
         </div>`:''}
-        <div class="plan-row">
+        ${!hasStops?`<div class="plan-row">
           <span class="plan-row-label">Safe range beyond destination</span>
           <span class="plan-row-val ${distAfterDest>=0?'good':'danger'}">${distAfterDest>=0?'+'+distAfterDest.toFixed(0):distAfterDest.toFixed(0)} km</span>
-        </div>
-        <div class="plan-row">
+        </div>`:''}
+        ${!hasStops?`<div class="plan-row">
           <span class="plan-row-label">Total usable range at current %</span>
           <span class="plan-row-val">${safeRangeKm.toFixed(0)} km safe / ${totalRangeKm.toFixed(0)} km max</span>
-        </div>
+        </div>`:''}
       </div>
       ${legsHtml}
 
@@ -1750,7 +1779,7 @@ function toggleTheme(){var el=document.getElementById('themeToggle');if(!el)retu
 (function(){var s=safeLS.get('cm-theme');if(s==='light'){document.body.classList.add('light');var el=document.getElementById('themeToggle');if(el)el.checked=true;}})();
 
 // — Swipe Navigation —
-(function(){var sx=0,tabs=['dash','charges','carpool','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;},{passive:true});document.addEventListener('touchend',function(e){var diff=sx-e.changedTouches[0].screenX;if(Math.abs(diff)<60)return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diff>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diff<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — PWA Service Worker —
 (function(){try{if(navigator.serviceWorker){var sw='self.addEventListener("install",function(){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(clients.claim())});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))})';navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
