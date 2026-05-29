@@ -471,8 +471,9 @@ canvas{width:100%;display:block;border-radius:8px}
 .plan-result{margin-top:14px}
 .plan-status-box{padding:12px 14px;border-radius:10px;margin-bottom:10px;border:1px solid}
 .plan-status-box.safe{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.3)}
-.plan-status-box.marginal{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)}
-.plan-status-box.unsafe{background:rgba(244,63,94,0.08);border-color:rgba(244,63,94,0.3)}
+.plan-status-box.reserve{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)}
+.plan-status-box.critical{background:rgba(244,63,94,0.08);border-color:rgba(244,63,94,0.3)}
+.plan-status-box.impossible{background:rgba(244,63,94,0.12);border-color:rgba(244,63,94,0.5)}
 .plan-status-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px}
 .plan-status-box.safe .plan-status-title{color:var(--good)}
 .plan-status-box.marginal .plan-status-title{color:var(--warn)}
@@ -561,7 +562,7 @@ body.light .btn-del{background:#fee2e2}
     <input type="date" id="date">
     <div class="form-row" style="margin-top:10px">
       <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview()"></div>
-      <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview()"></div>
+      <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='End % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
     </div>
     <div id="kwhPreview" class="small"></div>
     <div class="form-row">
@@ -607,6 +608,11 @@ body.light .btn-del{background:#fee2e2}
     <button class="secondary" id="cancelChargeEdit" style="display:none" onclick="cancelChargeEdit()">Cancel Edit</button>
   </div>
   <div class="card"><h3>Log</h3><div id="list"></div></div>
+  <div class="card">
+    <h3>Saved Chargers</h3>
+    <div id="savedChargersList"></div>
+  </div>
+  
   <div class="card" id="pubHistoryCard" style="display:none">
     <h3>Public Charger History</h3><div id="pubHistory"></div>
   </div>
@@ -676,6 +682,20 @@ body.light .btn-del{background:#fee2e2}
     </div>
   </div>
 
+  
+  <div class="card" id="planStopsCard">
+    <h3>Charging Stops <span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span></h3>
+    <div id="planStopsList"></div>
+    <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
+  </div>
+
+  <div class="card">
+    <h3>Find Chargers <span style="font-size:10px;color:var(--muted);font-weight:400">via Open Charge Map</span></h3>
+    <button class="ghost" onclick="findNearbyChargers()" id="findChargersBtn">📍 Find Near Me</button>
+    <div id="chargerSearchStatus" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
+    <div id="chargerResults"></div>
+  </div>
+
   <div id="planResult"></div>
 </div>
 
@@ -740,7 +760,7 @@ function switchTab(tab) {
   if (tab==='dash')    requestAnimationFrame(drawAllCharts);
   if (tab==='charges') renderCharges();
   if (tab==='carpool') renderCarpool();
-  if (tab==='plan')    { updateEffModeDisplay(); runPlan(); }
+  if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
@@ -847,6 +867,63 @@ function updateEffModeDisplay(){
 }
 
 // ── PLAN / TRIP ESTIMATOR ──────────────────────────────────────────────────
+
+// ── MULTI-STOP PLANNER ───────────────────────────────────────────────────
+let planStops = [];
+
+function addPlanStop(){
+  planStops.push({km:'', chargeTo:''});
+  renderPlanStops();
+  runPlan();
+}
+
+function removePlanStop(i){
+  planStops.splice(i,1);
+  renderPlanStops();
+  runPlan();
+}
+
+function updatePlanStop(i, field, val){
+  planStops[i][field] = +val;
+  runPlan();
+}
+
+function renderPlanStops(){
+  const el=document.getElementById('planStopsList');
+  if(!planStops.length){ el.innerHTML='<div style="font-size:11px;color:var(--muted)">No stops. Direct trip.</div>'; return; }
+  el.innerHTML=planStops.map((s,i)=>`
+    <div class="form-row" style="margin-bottom:8px;align-items:center">
+      <div style="flex:1"><label>At km</label><input type="number" value="${s.km||''}" placeholder="e.g. 200" oninput="updatePlanStop(${i},'km',this.value)" style="font-size:12px"></div>
+      <div style="flex:1"><label>Charge to %</label><input type="number" value="${s.chargeTo||''}" placeholder="e.g. 80" min="0" max="100" oninput="updatePlanStop(${i},'chargeTo',this.value)" style="font-size:12px"></div>
+      <div style="flex:0"><label>&nbsp;</label><button class="btn-sm btn-del" onclick="removePlanStop(${i})">✕</button></div>
+    </div>
+  `).join('');
+}
+
+function calcWithStops(current, totalDist, kmPerPct, stops){
+  // Sort stops by km
+  const sorted = stops.filter(s=>s.km>0&&s.chargeTo>0).sort((a,b)=>a.km-b.km);
+  const legs = [];
+  let pos=0, batt=current;
+  
+  for(const stop of sorted){
+    if(stop.km <= pos || stop.km >= totalDist) continue;
+    const legDist = stop.km - pos;
+    const used = legDist / kmPerPct;
+    const arriveAt = batt - used;
+    legs.push({from:pos, to:stop.km, dist:legDist, startBatt:batt, arriveBatt:arriveAt, chargeTo:stop.chargeTo});
+    batt = stop.chargeTo;
+    pos = stop.km;
+  }
+  // Final leg to destination
+  const finalDist = totalDist - pos;
+  const finalUsed = finalDist / kmPerPct;
+  const finalArrive = batt - finalUsed;
+  legs.push({from:pos, to:totalDist, dist:finalDist, startBatt:batt, arriveBatt:finalArrive, chargeTo:null});
+  
+  return {legs, finalArrive};
+}
+
 function runPlan(){
   const resultEl=document.getElementById('planResult');
   const current =+document.getElementById('planCurrent').value;
@@ -861,6 +938,24 @@ function runPlan(){
 
   const eff=getActiveEff();
   if(!eff){
+  
+  // Multi-stop legs display
+  let legsHtml='';
+  if(hasStops&&stopsResult){
+    legsHtml=`<div style="margin-top:14px">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Route Breakdown</div>
+      ${stopsResult.legs.map((leg,i)=>`
+        <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--text)">${leg.from}\u2192${leg.to} km <span style="color:var(--muted)">(${leg.dist} km)</span></span>
+            <span style="font-size:12px;font-weight:700;color:${leg.arriveBatt>=20?'var(--good)':leg.arriveBatt>=10?'var(--warn)':'var(--danger)'}">${leg.arriveBatt.toFixed(0)}%</span>
+          </div>
+          ${leg.chargeTo?'<div style="font-size:11px;color:var(--accent);margin-top:4px">\u26a1 Charge to '+leg.chargeTo+'%</div>':'<div style="font-size:11px;color:var(--muted);margin-top:4px">\ud83c\udfc1 Destination</div>'}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
     resultEl.innerHTML=`<div class="card"><div class="empty" style="padding:12px 0">
       ${planEffMode==='live'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
     </div></div>`;
@@ -871,30 +966,39 @@ function runPlan(){
   const kmPerPct  = (settings.battery*eff)/100;  // km per 1% SOC
 
   // Current range capacities
-  const totalRangeKm   = current*kmPerPct;                    // km until 0%
-  const safeRangeKm    = Math.max(0,(current-buffer)*kmPerPct); // km until reserve
-  const comfortRangeKm = Math.max(0,(current-buffer-10)*kmPerPct); // km until "start looking" zone
+  const reserve=20, critical=10;
+  const totalRangeKm   = current*kmPerPct;                      // km until 0%
+  const safeRangeKm    = Math.max(0,(current-critical)*kmPerPct); // km until critical (must charge)
+  const comfortRangeKm = Math.max(0,(current-reserve)*kmPerPct);  // km until reserve (start looking)
 
   // Where will we be at destination
   const pctUsed     = dist/kmPerPct;
-  const pctAtDest   = current-pctUsed;
+  let pctAtDest   = current-pctUsed;
+  const hasStops = planStops.filter(s=>s.km>0&&s.chargeTo>0).length>0;
+  let stopsResult = null;
+  if(hasStops){
+    stopsResult = calcWithStops(current, dist, kmPerPct, planStops);
+    pctAtDest = stopsResult.finalArrive;
+  }
   const kmOfBuffer  = pctAtDest*kmPerPct; // positive = headroom, negative = shortfall
 
-  // Status
+  // Status — three-zone model
   let status, statusSub;
-  if(pctAtDest>=buffer+10){
+  if(pctAtDest>=reserve){
     status='safe';
-    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — ${(pctAtDest-buffer).toFixed(0)}% above reserve. No action needed.`;
-  } else if(pctAtDest>=buffer){
-    status='marginal';
-    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — ${(pctAtDest-buffer).toFixed(0)}% above reserve. You'll make it.`;
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — ${(pctAtDest-reserve).toFixed(0)}% above reserve. No action needed.`;
+  } else if(pctAtDest>=critical){
+    status='reserve';
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — entering reserve zone but above critical (${critical}%).`;
+  } else if(pctAtDest>=0){
+    status='critical';
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — below critical (${critical}%). Must charge en-route.`;
   } else {
-    status='unsafe';
-    const shortfall=(buffer-pctAtDest).toFixed(0);
-    statusSub=`${shortfall}% short of reserve — you won't make it safely without charging.`;
+    status='impossible';
+    statusSub=`${Math.abs(pctAtDest).toFixed(0)}% short — you won't make it. Plan a charging stop.`;
   }
 
-  const statusTitle={safe:'✓ Good to go',marginal:'✓ Reachable',unsafe:'✗ Insufficient charge'}[status];
+  const statusTitle={safe:'✓ Good to go',reserve:'⚠ Entering reserve',critical:'✗ Critical — charge needed',impossible:'✗ Won\'t make it'}[status];
 
   // Key distances
   const kmToReserve   = safeRangeKm;               // how far before hitting buffer%
@@ -902,13 +1006,13 @@ function runPlan(){
   const distAfterDest = safeRangeKm-dist;           // km of safe range beyond destination (can be negative)
 
   // Charge advice (only if unsafe or marginal)
-  const neededToLeave = Math.ceil(pctUsed+buffer);  // min% needed before leaving
+  const neededToLeave = Math.ceil(pctUsed+reserve);  // min% needed before leaving
   const topUpFromCurrent = neededToLeave-current;   // how many % to add
   const topUpKwh  = topUpFromCurrent>0 ? (topUpFromCurrent/100*settings.battery) : 0;
   const topUpCost = topUpKwh>0 ? (topUpKwh*settings.homeRate).toFixed(0) : 0;
 
   // Range bar data — show up to totalRangeKm, mark zones
-  const maxBar = Math.max(totalRangeKm*1.1, dist*1.15);
+  const maxBar = Math.max(totalRangeKm, dist*1.05);
   const pComfort  = Math.min(100,(comfortRangeKm/maxBar*100)).toFixed(1);
   const pSafe     = Math.min(100,((safeRangeKm-comfortRangeKm)/maxBar*100)).toFixed(1);
   const pReserve  = Math.min(100,((buffer*kmPerPct)/maxBar*100)).toFixed(1);
@@ -955,7 +1059,7 @@ function runPlan(){
           <span class="plan-row-label">Battery at destination</span>
           <span class="plan-row-val ${pctAtDest>=buffer+10?'good':pctAtDest>=buffer?'warn':'danger'}">${Math.max(0,pctAtDest).toFixed(0)}%${pctAtDest<0?' (not enough)':''}</span>
         </div>
-        ${status==='unsafe'?`<div class="plan-row">
+        ${(status==='critical'||status==='impossible')?`<div class="plan-row">
           <span class="plan-row-label">Start looking for charger after</span>
           <span class="plan-row-val warn">${comfortRangeKm.toFixed(0)} km</span>
         </div>
@@ -972,15 +1076,16 @@ function runPlan(){
           <span class="plan-row-val">${safeRangeKm.toFixed(0)} km safe / ${totalRangeKm.toFixed(0)} km max</span>
         </div>
       </div>
+      ${legsHtml}
 
-      ${status!=='safe'&&neededToLeave>current&&neededToLeave<=100?`
+      ${(status==='critical'||status==='impossible')&&neededToLeave>current&&neededToLeave<=100?`
       <div class="charge-advice">
         <div class="charge-advice-title">⚡ Charge Advice</div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Charge to at least</span><span class="advice-val">${neededToLeave}% before leaving</span></div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Energy to add</span><span class="advice-val">${topUpKwh.toFixed(1)} kWh</span></div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (home rate)</span><span class="advice-val">₹${topUpCost}</span></div>
         ${settings.lastPublicRate?`<div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (public ~₹${settings.lastPublicRate}/unit)</span><span class="advice-val">₹${(topUpKwh*settings.lastPublicRate).toFixed(0)}</span></div>`:''}
-      </div>`:status!=='safe'&&neededToLeave>100?`
+      </div>`:status==='impossible'?`
       <div class="charge-advice">
         <div class="charge-advice-title">⚡ Charge Advice</div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Even a full charge won't cover this trip safely.</span></div>
@@ -992,6 +1097,98 @@ function runPlan(){
       <div style="font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Chargers You've Used Before</div>
       ${pubChargers.map(loc=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">${loc}</div>`).join('')}`:''}
     </div>`;
+}
+
+
+// ── CHARGER FINDER (Open Charge Map) ─────────────────────────────────────
+let savedChargers = JSON.parse(safeLS.get('cm-chargers') || '[]');
+
+function findNearbyChargers(){
+  const statusEl = document.getElementById('chargerSearchStatus');
+  const resultsEl = document.getElementById('chargerResults');
+  statusEl.textContent = 'Getting your location...';
+  resultsEl.innerHTML = '';
+  
+  if(!navigator.geolocation){
+    statusEl.textContent = 'Geolocation not supported. Try on mobile.';
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    pos => fetchChargers(pos.coords.latitude, pos.coords.longitude),
+    err => { statusEl.textContent = 'Location denied. Enable GPS and retry.'; },
+    {enableHighAccuracy:true, timeout:10000}
+  );
+}
+
+function fetchChargers(lat, lng){
+  const statusEl = document.getElementById('chargerSearchStatus');
+  const resultsEl = document.getElementById('chargerResults');
+  statusEl.textContent = 'Searching chargers nearby...';
+  
+  const url = `https://api.openchargemap.io/v3/poi/?output=json&latitude=${lat}&longitude=${lng}&distance=25&distanceunit=KM&maxresults=10&compact=true&verbose=false`;
+  
+  fetch(url)
+    .then(r=>r.json())
+    .then(data=>{
+      if(!data.length){ statusEl.textContent='No chargers found within 25km.'; return; }
+      statusEl.textContent=`Found ${data.length} chargers within 25km:`;
+      resultsEl.innerHTML = data.map((c,i)=>{
+        const name = c.AddressInfo?.Title || 'Unknown';
+        const addr = c.AddressInfo?.AddressLine1 || '';
+        const dist = c.AddressInfo?.Distance ? c.AddressInfo.Distance.toFixed(1)+'km' : '?';
+        const conns = (c.Connections||[]).map(x=>x.ConnectionType?.Title||'').filter(Boolean);
+        const kw = Math.max(...(c.Connections||[]).map(x=>x.PowerKW||0));
+        const connType = conns.some(x=>x.includes('DC')||x.includes('CCS')||x.includes('CHAdeMO'))?'DC':'AC';
+        const lat2 = c.AddressInfo?.Latitude;
+        const lng2 = c.AddressInfo?.Longitude;
+        const isSaved = savedChargers.some(sc=>sc.name===name&&sc.address===addr);
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:start">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;color:var(--text);font-weight:600">${escapeHtml(name)}</div>
+              <div style="font-size:11px;color:var(--muted)">${escapeHtml(addr)} · ${dist}</div>
+              <div style="font-size:11px;color:var(--accent)">${connType} · ${kw>0?kw+'kW':'? kW'}</div>
+            </div>
+            <div style="flex-shrink:0;display:flex;gap:6px">
+              <button class="btn-sm btn-edit" onclick="saveCharger('${escapeHtml(name).replace(/'/g,"\\'")}','${escapeHtml(addr).replace(/'/g,"\\'")}',${lat2},${lng2},'${connType}',${kw})" ${isSaved?'disabled style="opacity:0.5"':''}>${isSaved?'Saved':'Save'}</button>
+              <a href="https://www.google.com/maps/dir/?api=1&destination=${lat2},${lng2}" target="_blank" class="btn-sm btn-edit" style="text-decoration:none">Go ↗</a>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(err=>{ statusEl.textContent='Error fetching chargers. Try again.'; });
+}
+
+function saveCharger(name, address, lat, lng, connector, kw){
+  if(savedChargers.some(c=>c.name===name&&c.address===address)) return;
+  savedChargers.push({id:Date.now(), name, address, lat, lng, connector, kw});
+  safeLS.set('cm-chargers', JSON.stringify(savedChargers));
+  renderSavedChargers();
+  // Re-render search results to show "Saved" state
+  findNearbyChargers();
+}
+
+function removeSavedCharger(id){
+  savedChargers = savedChargers.filter(c=>c.id!==id);
+  safeLS.set('cm-chargers', JSON.stringify(savedChargers));
+  renderSavedChargers();
+}
+
+function renderSavedChargers(){
+  const el = document.getElementById('savedChargersList');
+  if(!el) return;
+  if(!savedChargers.length){ el.innerHTML='<div style="font-size:11px;color:var(--muted)">No saved chargers yet. Use Find Chargers in Plan tab.</div>'; return; }
+  el.innerHTML = savedChargers.map(c=>`
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div style="flex:1;min-width:0">
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">${escapeHtml(c.name)} ↗</a>
+        <div style="font-size:11px;color:var(--muted)">${escapeHtml(c.address)} · ${c.connector} · ${c.kw}kW</div>
+      </div>
+      <button class="btn-sm btn-del" onclick="removeSavedCharger(${c.id})">✕</button>
+    </div>
+  `).join('');
 }
 
 // ── FORM PREVIEWS ──────────────────────────────────────────────────────────
@@ -1125,13 +1322,10 @@ function cancelChargeEdit(){
 }
 
 function clearChargeForm(){
-  ['start','end','odo','pubLocation','pubKw','pubRate','pubUnits','pubTotal','startTime','endTime']
+  ['start','end','odo','pubRate','pubUnits','pubTotal','startTime','endTime']
     .forEach(id=>document.getElementById(id).value='');
   delete document.getElementById('pubUnits').dataset.manual;
-  document.getElementById('pubConnector').value='';
   document.getElementById('date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('type').value='office';
-  document.getElementById('publicBlock').style.display='none';
   document.getElementById('kwhPreview').textContent='';
   document.getElementById('durationPreview').textContent='';
   document.getElementById('formError').textContent='';
