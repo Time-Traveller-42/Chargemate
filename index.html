@@ -413,7 +413,7 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 .stat-label{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
 .stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
 
-.session-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.session-row{padding:10px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
 .session-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
 .session-date-badge{display:flex;align-items:center;gap:6px;min-width:0}
@@ -583,6 +583,8 @@ body.light .btn-del{background:#fee2e2}
       <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Charger Details</div>
       <label>Location / Name</label>
       <input type="text" id="pubLocation" placeholder="e.g. Phoenix Mall, Wakad">
+      <label>Maps Link <span style="color:var(--muted);font-size:10px">(paste Google Maps share link)</span></label>
+      <input type="url" id="pubMapsLink" placeholder="https://maps.app.goo.gl/...">
       <div class="form-row" style="margin-top:10px">
         <div><label>Connector</label>
           <select id="pubConnector">
@@ -613,6 +615,16 @@ body.light .btn-del{background:#fee2e2}
   <div class="card">
     <h3>Saved Chargers</h3>
     <div id="savedChargersList"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">Add Charger</div>
+      <input type="text" id="scName" placeholder="Charger name" style="margin-bottom:6px">
+      <input type="url" id="scLink" placeholder="Google Maps link (paste share URL)" style="margin-bottom:6px">
+      <div class="form-row" style="margin-bottom:6px">
+        <div><select id="scType"><option value="DC">DC</option><option value="AC">AC</option></select></div>
+        <div><input type="number" id="scKw" placeholder="kW" step="0.1"></div>
+      </div>
+      <button class="ghost" onclick="addSavedCharger()" style="font-size:11px">+ Save Charger</button>
+    </div>
   </div>
   
   <div class="card" id="pubHistoryCard" style="display:none">
@@ -691,12 +703,7 @@ body.light .btn-del{background:#fee2e2}
     <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
   </div>
 
-  <div class="card">
-    <h3>Find Chargers <span style="font-size:10px;color:var(--muted);font-weight:400">via Open Charge Map</span></h3>
-    <button class="ghost" onclick="findNearbyChargers()" id="findChargersBtn">📍 Find Near Me</button>
-    <div id="chargerSearchStatus" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
-    <div id="chargerResults"></div>
-  </div>
+  
 
   <div id="planResult"></div>
 </div>
@@ -1145,95 +1152,42 @@ function runPlan(){
 // ── CHARGER FINDER (Open Charge Map) ─────────────────────────────────────
 let savedChargers = [];try{savedChargers=JSON.parse(safeLS.get('cm-chargers')||'[]');}catch(e){}
 
-function findNearbyChargers(){
-  const statusEl = document.getElementById('chargerSearchStatus');
-  const resultsEl = document.getElementById('chargerResults');
-  statusEl.textContent = 'Getting your location...';
-  resultsEl.innerHTML = '';
-  
-  if(!navigator.geolocation||!navigator.geolocation.getCurrentPosition){
-    statusEl.textContent = 'Geolocation not available in this view.';
-    return;
-  }
-  
-  navigator.geolocation.getCurrentPosition(
-    pos => fetchChargers(pos.coords.latitude, pos.coords.longitude),
-    err => { statusEl.textContent = 'Location denied. Enable GPS and retry.'; },
-    {enableHighAccuracy:true, timeout:10000}
-  );
-}
-
-function fetchChargers(lat, lng){
-  const statusEl = document.getElementById('chargerSearchStatus');
-  const resultsEl = document.getElementById('chargerResults');
-  statusEl.textContent = 'Searching chargers nearby...';
-  
-  const url = `https://api.openchargemap.io/v3/poi/?output=json&latitude=${lat}&longitude=${lng}&distance=25&distanceunit=KM&maxresults=10&compact=true&verbose=false`;
-  
-  fetch(url)
-    .then(r=>r.json())
-    .then(data=>{
-      if(!data.length){ statusEl.textContent='No chargers found within 25km.'; return; }
-      statusEl.textContent=`Found ${data.length} chargers within 25km:`;
-      resultsEl.innerHTML = data.map((c,i)=>{
-        const name = c.AddressInfo?.Title || 'Unknown';
-        const addr = c.AddressInfo?.AddressLine1 || '';
-        const dist = c.AddressInfo?.Distance ? c.AddressInfo.Distance.toFixed(1)+'km' : '?';
-        const conns = (c.Connections||[]).map(x=>x.ConnectionType?.Title||'').filter(Boolean);
-        const kw = Math.max(...(c.Connections||[]).map(x=>x.PowerKW||0));
-        const connType = conns.some(x=>x.includes('DC')||x.includes('CCS')||x.includes('CHAdeMO'))?'DC':'AC';
-        const lat2 = c.AddressInfo?.Latitude;
-        const lng2 = c.AddressInfo?.Longitude;
-        const isSaved = savedChargers.some(sc=>sc.name===name&&sc.address===addr);
-        return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;align-items:start">
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;color:var(--text);font-weight:600">${escapeHtml(name)}</div>
-              <div style="font-size:11px;color:var(--muted)">${escapeHtml(addr)} · ${dist}</div>
-              <div style="font-size:11px;color:var(--accent)">${connType} · ${kw>0?kw+'kW':'? kW'}</div>
-            </div>
-            <div style="flex-shrink:0;display:flex;gap:6px">
-              <button class="btn-sm btn-edit" onclick="saveCharger('${escapeHtml(name).replace(/'/g,"\\'")}','${escapeHtml(addr).replace(/'/g,"\\'")}',${lat2},${lng2},'${connType}',${kw})" ${isSaved?'disabled style="opacity:0.5"':''}>${isSaved?'Saved':'Save'}</button>
-              <a href="https://www.google.com/maps/dir/?api=1&destination=${lat2},${lng2}" target="_blank" class="btn-sm btn-edit" style="text-decoration:none">Go ↗</a>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-    })
-    .catch(err=>{ statusEl.textContent='Error fetching chargers. Try again.'; });
-}
-
-function saveCharger(name, address, lat, lng, connector, kw){
-  if(savedChargers.some(c=>c.name===name&&c.address===address)) return;
-  savedChargers.push({id:Date.now(), name, address, lat, lng, connector, kw});
-  safeLS.set('cm-chargers', JSON.stringify(savedChargers));
-  renderSavedChargers();
-  // Re-render search results to show "Saved" state
-  findNearbyChargers();
-}
-
-function removeSavedCharger(id){
-  savedChargers = savedChargers.filter(c=>c.id!==id);
-  safeLS.set('cm-chargers', JSON.stringify(savedChargers));
-  renderSavedChargers();
-}
-
 function renderSavedChargers(){
-  const el = document.getElementById('savedChargersList');
-  if(!el) return;
-  if(!savedChargers.length){ el.innerHTML='<div style="font-size:11px;color:var(--muted)">No saved chargers yet. Use Find Chargers in Plan tab.</div>'; return; }
-  el.innerHTML = savedChargers.map(c=>`
+  const el=document.getElementById('savedChargersList');
+  if(!el)return;
+  if(!savedChargers.length){el.innerHTML='<div style="font-size:11px;color:var(--muted)">No saved chargers. Add one below or they\'ll auto-save from public charges with Maps links.</div>';return;}
+  el.innerHTML=savedChargers.map(c=>`
     <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
       <div style="flex:1;min-width:0">
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">${escapeHtml(c.name)} ↗</a>
-        <div style="font-size:11px;color:var(--muted)">${escapeHtml(c.address)} · ${c.connector} · ${c.kw}kW</div>
+        <a href="${c.mapsLink||'#'}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">${escapeHtml(c.name)} \u2197</a>
+        <div style="font-size:11px;color:var(--text)">${c.connector||''} ${c.kw?'\u00b7 '+c.kw+' kW':''}</div>
       </div>
-      <button class="btn-sm btn-del" onclick="removeSavedCharger(${c.id})">✕</button>
+      <button class="btn-sm btn-del" onclick="removeSavedCharger(${c.id})">\u2715</button>
     </div>
   `).join('');
 }
 
-// ── FORM PREVIEWS ──────────────────────────────────────────────────────────
+function addSavedCharger(){
+  const name=document.getElementById('scName').value.trim();
+  const link=document.getElementById('scLink').value.trim();
+  if(!name){toast('Enter a charger name');return;}
+  const connector=document.getElementById('scType').value;
+  const kw=document.getElementById('scKw').value?+document.getElementById('scKw').value:null;
+  savedChargers.push({id:Date.now(),name,mapsLink:link||null,connector,kw});
+  safeLS.set('cm-chargers',JSON.stringify(savedChargers));
+  document.getElementById('scName').value='';
+  document.getElementById('scLink').value='';
+  document.getElementById('scKw').value='';
+  renderSavedChargers();
+  toast('Charger saved \u2713');
+}
+
+function removeSavedCharger(id){
+  savedChargers=savedChargers.filter(c=>c.id!==id);
+  safeLS.set('cm-chargers',JSON.stringify(savedChargers));
+  renderSavedChargers();
+}
+
 function updatePreview(){
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
   document.getElementById('kwhPreview').textContent=(e>s&&s>=0)?'⚡ '+calcKwh(s,e).toFixed(2)+' kWh':'';
@@ -1334,6 +1288,7 @@ function saveCharge(){
   const duration =calcDuration(startTime,endTime);
   const charger  =type==='public'?{
     location: document.getElementById('pubLocation').value||null,
+    mapsLink: document.getElementById('pubMapsLink').value||null,
     connector:document.getElementById('pubConnector').value||null,
     kw:       document.getElementById('pubKw').value!==''?+document.getElementById('pubKw').value:null,
     rate:     document.getElementById('pubRate').value!==''?+document.getElementById('pubRate').value:null,
@@ -1362,7 +1317,7 @@ function cancelChargeEdit(){
 }
 
 function clearChargeForm(){
-  ['start','end','odo','pubRate','pubUnits','pubTotal','startTime','endTime']
+  ['start','end','odo','pubRate','pubUnits','pubTotal','pubMapsLink','startTime','endTime']
     .forEach(id=>document.getElementById(id).value='');
   delete document.getElementById('pubUnits').dataset.manual;
   document.getElementById('date').value=new Date().toISOString().slice(0,10);
@@ -1438,9 +1393,26 @@ function renderList(){
       const i=sessions.findIndex(s=>s.id===x.id);
       const costStr=x.cost!=null?(x.cost===0?'Free':'\u20b9'+x.cost.toFixed(0)+(x.charger&&x.charger.rate?' (\u20b9'+x.charger.rate+'/unit)':'')):'';
       let effStr='';
-      if(x.km&&x.km>0){
+      {
+        // Show efficiency only on FIRST charge at each new odo
         const fullIdx=sorted.indexOf(x);
-        if(fullIdx>0){const prev=sorted[fullIdx-1];const drop=prev.e-x.s;if(drop>0){effStr=(x.km/(settings.battery*drop/100)).toFixed(1)+' km/kWh';}}
+        if(x.odo&&fullIdx<sorted.length-1){
+          // Check if this is first at this odo (next older session has different odo)
+          const nextOlder=sorted[fullIdx+1];
+          const isFirstAtOdo=!nextOlder||!nextOlder.odo||nextOlder.odo!==x.odo;
+          if(isFirstAtOdo){
+            // Find prev session at DIFFERENT odo for consumption calc
+            let prevDiffOdo=null;
+            for(let j=fullIdx+1;j<sorted.length;j++){
+              if(sorted[j].odo&&sorted[j].odo!==x.odo){prevDiffOdo=sorted[j];break;}
+            }
+            if(prevDiffOdo){
+              const km=x.odo-prevDiffOdo.odo;
+              const drop=prevDiffOdo.e-x.s;
+              if(km>0&&drop>0){effStr=(km/(settings.battery*drop/100)).toFixed(1)+' km/kWh';}
+            }
+          }
+        }
       }
       let line1=`${x.s}% \u2192 ${x.e}% \u00b7 ${x.kwh.toFixed(1)} kWh`;
       if(x.t==='public'&&x.charger&&x.charger.units) line1+=` <span style="color:var(--muted)">(${(+x.charger.units).toFixed(1)} kWh actual)</span>`;
@@ -1453,7 +1425,7 @@ function renderList(){
       let line2=line2parts.join(' \u00b7 ');
       let line3='';
       if(x.charger&&x.charger.location){
-        line3=`<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.charger.location)}" target="_blank" style="color:var(--accent);text-decoration:none">${escapeHtml(x.charger.location)} \u2197</a>`;
+        const mLink=x.charger.mapsLink||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.charger.location)}`;line3=`<a href="${mLink}" target="_blank" style="color:var(--accent);text-decoration:none">${escapeHtml(x.charger.location)} \u2197</a>`;
         let cp=[];
         if(x.charger.kw&&x.duration&&x.kwh){cp.push(x.charger.kw+' kW rated \u00b7 '+(x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
         else if(x.charger.kw){cp.push(x.charger.kw+' kW rated');}
@@ -1485,18 +1457,20 @@ function renderPubHistory(){
   if(!pub.length){card.style.display='none';return;}
   card.style.display='block';
   const by={};
-  pub.forEach(x=>{const l=escapeHtml(x.charger.location);
-    if(!by[l])by[l]={visits:0,cost:0,kwh:0,totalMin:0,connector:x.charger.connector||'—',kw:x.charger.kw||null,rates:[]};
+  pub.forEach(x=>{const l=escapeHtml(x.charger.location.trim());
+    if(!by[l])by[l]={visits:0,cost:0,kwh:0,totalMin:0,connector:x.charger.connector||'\u2014',kw:x.charger.kw||null,rates:[],mapsLink:null};
     by[l].visits++;by[l].cost+=x.cost||0;by[l].kwh+=x.kwh||0;
     if(x.duration)by[l].totalMin+=x.duration;
     if(x.charger.rate)by[l].rates.push(x.charger.rate);
+    if(x.charger.mapsLink&&!by[l].mapsLink)by[l].mapsLink=x.charger.mapsLink;
   });
   document.getElementById('pubHistory').innerHTML=
     Object.entries(by).sort((a,b)=>b[1].visits-a[1].visits).map(([loc,d])=>{
       const avgSpeed=d.totalMin>0?(d.kwh/(d.totalMin/60)).toFixed(0)+' kW avg':'';
       const avgRate=d.rates.length>0?'\u20b9'+(d.rates.reduce((a,b)=>a+b,0)/d.rates.length).toFixed(1)+'/unit':'';
+      const link=d.mapsLink||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc));
       return `<div class="charger-row">
-        <div><div class="charger-name">${loc}</div>
+        <div><div class="charger-name"><a href="${link}" target="_blank" style="color:var(--accent);text-decoration:none">${loc} \u2197</a></div>
         <div class="charger-meta"><span style="color:var(--text)">${d.connector}${d.kw?' \u00b7 '+d.kw+' kW rated':''}</span> \u00b7 ${d.visits} visit${d.visits>1?'s':''} \u00b7 ${d.kwh.toFixed(1)} kWh</div>
         <div class="charger-meta"><span style="color:var(--text)">${avgSpeed}${avgSpeed&&avgRate?' \u00b7 ':''}${avgRate}</span></div></div>
         <div style="text-align:right"><div style="font-family:'Inter',sans-serif;font-weight:600;color:var(--good);font-size:11px">${d.cost>0?'\u20b9'+d.cost.toFixed(0):'Free'}</div></div>
@@ -1515,6 +1489,7 @@ function editCharge(i){
   document.getElementById('publicBlock').style.display=x.t==='public'?'block':'none';
   if(x.t==='public'&&x.charger){
     document.getElementById('pubLocation').value=x.charger.location||'';
+    document.getElementById('pubMapsLink').value=x.charger.mapsLink||'';
     document.getElementById('pubConnector').value=x.charger.connector||'';
     document.getElementById('pubKw').value=x.charger.kw!=null?x.charger.kw:'';
     document.getElementById('pubRate').value=x.charger.rate!=null?x.charger.rate:'';
