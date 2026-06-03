@@ -1779,7 +1779,7 @@ function importData(e){
       const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
       const fC=iC.filter(c=>!cI.has(c.id));
       sessions=[...fS,...sessions];carpools=[...fC,...carpools];
-      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));}
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       recomputeAllKm();persist();render();renderCarpool();
       toast(`Imported ${fS.length} charge(s), ${fC.length} trip(s)${p.settings?' + settings':''}`);
     }catch{alert('Import failed.');}e.target.value='';
@@ -1796,12 +1796,15 @@ function saveSettings(){
 function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];persist();render();renderCarpool();toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
-document.getElementById('battery').value           = settings.battery;
-document.getElementById('homeRate').value          = settings.homeRate;
-document.getElementById('defaultOfficeRate').value = settings.officeRate??0;
-document.getElementById('bufferPct').value         = settings.bufferPct??15;
-document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
-document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
+function populateSettingsInputs(){
+  document.getElementById('battery').value           = settings.battery;
+  document.getElementById('homeRate').value          = settings.homeRate;
+  document.getElementById('defaultOfficeRate').value = settings.officeRate??0;
+  document.getElementById('bufferPct').value         = settings.bufferPct??15;
+  document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
+  document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
+}
+populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
 try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
