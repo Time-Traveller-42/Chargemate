@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html><head><style id="qw-theme">:root {
+  --color-bg: #f2f1f4;
+  --color-text: #352f3d;
+  --color-navbar-bg: #eae8ed;
+  --color-bg-chat-view: #fcfcfd;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #eae8ed;
+  --color-bg-hover: #dcdadf;
+  --color-surface: #eae8ed;
+  --color-surface-hover: #dcdadf;
+  --color-surface-active: #c1bec6;
+  --color-border: #c1bec6;
+  --color-border-light: #dcdadf;
+  --color-border-strong: #c1bec6;
+  --color-primary: #4200db;
+  --color-primary-dark: #35009e;
+  --color-primary-light: #8575ff;
+  --color-primary-bg: #e8e6ff;
+  --color-primary-hover-border: #35009e;
+  --color-nav-icon-active: #4200db;
+  --color-nav-hover-border: #4200db;
+  --color-primary-alpha-3: color-mix(in srgb, #4200db 3%, transparent);
+  --color-primary-alpha-5: color-mix(in srgb, #4200db 5%, transparent);
+  --color-primary-alpha-8: color-mix(in srgb, #4200db 8%, transparent);
+  --color-primary-alpha-12: color-mix(in srgb, #4200db 12%, transparent);
+  --color-primary-alpha-15: color-mix(in srgb, #4200db 15%, transparent);
+  --color-primary-alpha-20: color-mix(in srgb, #4200db 20%, transparent);
+  --color-primary-alpha-25: color-mix(in srgb, #4200db 25%, transparent);
+  --color-primary-alpha-30: color-mix(in srgb, #4200db 30%, transparent);
+  --color-primary-alpha-40: color-mix(in srgb, #4200db 40%, transparent);
+  --color-primary-alpha-50: color-mix(in srgb, #4200db 50%, transparent);
+  --color-primary-alpha-60: color-mix(in srgb, #4200db 60%, transparent);
+  --color-primary-subtle: color-mix(in srgb, #4200db 18%, transparent);
+  --color-primary-border: #8575ff;
+  --color-focus-ring: color-mix(in srgb, #4200db 50%, transparent);
+  --color-sidebar-hover: color-mix(in srgb, #4200db 12%, transparent);
+  --color-accent: #4200db;
+  --color-accent-foreground: #4200db;
+  --color-accent-dark: #35009e;
+  --color-accent-light: #e8e6ff;
+  --color-accent-inverse: #ffffff;
+  --color-link: #4200db;
+  --color-primary-gradient-end: #e8e6ff;
+  --color-primary-bg-solid: #eae8ed;
+  --color-user-bubble: #F3F3F7;
+  --color-text-secondary: #5e5966;
+  --color-text-tertiary: #7a7582;
+  --color-text-muted: #938f9b;
+  --color-text-on-primary: #f2f1f4;
+  --color-success: #00802f;
+  --color-success-dark: #00471e;
+  --color-success-light: #d9ffd6;
+  --color-success-hover: #005c26;
+  --color-success-bg: #e6f4eb;
+  --color-success-border: #c4dccb;
+  --color-success-foreground: #00802f;
+  --color-success-dark-foreground: #00471e;
+  --color-success-text: #00471e;
+  --color-error: #db0000;
+  --color-error-dark: #700000;
+  --color-error-light: #ffe0e0;
+  --color-error-hover: #ffe0e0;
+  --color-error-bg: #fbe9ea;
+  --color-error-border: #eecbcd;
+  --color-error-active-border: #db0000;
+  --color-error-foreground: #db0000;
+  --color-error-dark-foreground: #700000;
+  --color-error-inverse: #ffffff;
+  --color-error-text: #700000;
+  --color-warning: #f2b100;
+  --color-warning-dark: #573a00;
+  --color-warning-light: #fffbbd;
+  --color-warning-hover: #db9200;
+  --color-warning-bg: #fdf6e4;
+  --color-warning-border: #f5dda6;
+  --color-warning-foreground: #f2b100;
+  --color-warning-dark-foreground: #573a00;
+  --color-warning-inverse: #573a00;
+  --color-surface-warning: #fffbbd;
+  --color-text-warning: #573a00;
+  --color-info: #006ce0;
+  --color-info-dark: #002a66;
+  --color-info-light: #d1f1ff;
+  --color-info-hover: #003b8f;
+  --color-info-bg: #e6f0fb;
+  --color-info-border: #c0d5ec;
+  --color-info-foreground: #006ce0;
+  --color-info-dark-foreground: #002a66;
+  --color-info-inverse: #ffffff;
+  --color-overlay: #dcdadf80;
+  --color-shadow: #352f3d40;
+  --color-hover: #352f3d0d;
+  --color-tooltip-bg: #eae8ed;
+  --color-tooltip-text: #352f3d;
+  --color-voice-purple: #8575ff;
+  --color-voice-purple-dark: #4200db;
+  --color-voice-purple-light: #8575ff;
+  --color-voice-red: #db0000;
+  --color-voice-red-dark: #700000;
+  --color-voice-amber: #f2b100;
+  --color-voice-purple-glow: rgba(66, 0, 219, .4);
+  --color-voice-red-glow: rgba(219, 0, 0, .4);
+  --font-sans: "Amazon Ember", "Helvetica Neue", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Monaco", "Menlo", "Consolas", monospace;
+  --text-2xs: .5625rem;
+  --text-xs: .625rem;
+  --text-sm: .6875rem;
+  --text-base: .75rem;
+  --text-md: .8125rem;
+  --text-lg: .875rem;
+  --text-xl: 1rem;
+  --text-2xl: 1.125rem;
+  --text-3xl: 1.25rem;
+  --text-4xl: 1.5rem;
+  --text-5xl: 2rem;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-card: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 8px;
+  --shadow-sm: 0 1px 2px rgba(53, 47, 61, .06);
+  --shadow-md: 0 4px 12px rgba(53, 47, 61, .1);
+  --color-success-bg-solid: #d9ffd6;
+  --color-error-bg-solid: #ffe0e0;
+  --color-error-border-solid: #ffe0e0;
+  --color-warning-bg-solid: #fffbbd;
+  --color-warning-text: #573a00;
+  --color-info-bg-solid: #d1f1ff;
+  --color-info-bg-solid-alt: #d1f1ff;
+  --color-info-text: #002a66;
+  --color-info-text-alt: #002a66;
+  --color-emerald: #367c53;
+  --color-teal: #0c9aa7;
+  --color-code-bg: #eae8ed;
+  --color-code-header-bg: #dcdadf;
+  --color-code-text: #352f3d;
+  --color-code-border: #c1bec6;
+  --color-code-muted: #5e5966;
+  --color-inline-code-bg: #eae8ed;
+  --color-inline-code-text: #352f3d;
+  --color-inline-code-border: #c1bec6;
+  --color-scrollbar-thumb: #c1bec6;
+  --color-scrollbar-track: transparent;
+  --color-graph-node-text: #352f3d;
+  --color-graph-node-text-dim: #938f9b;
+  --color-graph-edge-default: #938f9b;
+  --color-graph-edge-cross: #d08025;
+  --color-graph-edge-text: #5e5966;
+  --color-graph-edge-stroke: #f2f1f4;
+  --color-graph-highlight-bg: #FF6B6B;
+  --color-graph-highlight-border: #E74C3C;
+  --color-graph-search-bg: #FFD700;
+  --color-graph-search-border: #FFA500;
+  --color-graph-focus-border: #C0392B;
+  --color-graph-external-border: #938f9b;
+  --color-graph-cat-file: #3878b0;
+  --color-graph-cat-folder: #5e5966;
+  --color-graph-cat-file-aggregate: #2d6a9f;
+  --color-graph-cat-class: #7138cc;
+  --color-graph-cat-function: #367c53;
+  --color-graph-cat-method: #0c9aa7;
+  --color-graph-cat-variable: #d08025;
+  --color-graph-cat-import: #b06a1a;
+  --color-graph-cat-module: #5e35a8;
+  --color-graph-cat-concept: #993333;
+  --color-graph-cat-person: #c44d4d;
+  --color-graph-cat-org: #0c9aa7;
+  --color-graph-cat-organization: #0c9aa7;
+  --color-graph-cat-product: #8e47ff;
+  --color-graph-cat-metric: #c44d78;
+  --color-graph-cat-location: #34495E;
+  --color-graph-cat-date: #b34d8a;
+  --color-graph-cat-code: #3878b0;
+  --color-graph-cat-doc: #5e5966;
+  --color-graph-cat-url: #367c53;
+  --color-graph-cat-email: #5e35a8;
+  --color-graph-cat-unknown: #938f9b;
+  --color-graph-rel-contains: #938f9b;
+  --color-graph-rel-extends: #7138cc;
+  --color-graph-rel-implements: #3878b0;
+  --color-graph-rel-imports: #d08025;
+  --color-graph-rel-uses: #367c53;
+  --color-graph-rel-calls: #367c53;
+  --color-graph-rel-references: #d08025;
+  --color-graph-rel-related-to: #938f9b;
+  --color-graph-rel-works-on: #993333;
+  --color-graph-rel-owns: #0c9aa7;
+  --color-graph-rel-depends-on: #b06a1a;
+  --color-graph-rel-parent-of: #938f9b;
+  --qs-content: #fff;
+  --qs-main: #fff;
+  --qs-primary-foreground: #131920;
+  --qs-secondary-foreground: #656871;
+  --qs-tertiary-foreground: #938f9b;
+  --qs-placeholder-foreground: #8c8c94;
+  --qs-divider: #dedee3;
+  --qs-default-border: #8c8c94;
+  --qs-neutral-soft: #b4b4bb;
+  --qs-neutral-gray-50: #eae8ed;
+  --qs-tertiary-background: #eae8ed;
+  --qs-action-hover: #f3f3f7;
+  --qs-primary-default: #4200db;
+  --qs-primary-dark: #35009e;
+  --qs-primary-light: #e8e6ff;
+  --qs-success-default: #00802f;
+  --qs-error-default: #db0000;
+  --qs-font-sans: "Amazon Ember", "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif;
+  --qs-font-family: "Amazon Ember", "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif;
+  --qs-font-base-letter-spacing: .15px;
+  --qs-shadow-sm: 0 0 2px 0 #00000029, 0 0 4px 0 #00000029;
+  --qs-shadow-md: 0 0 2px 0 #00000029, 0 2px 8px 1px #00000029;
+  --qs-shadow-lg: 0 4px 16px 4px #00000029, 0 2px 6px 1px #00000029;
+  --qs-shadow-xl: 0 4px 8px 2px #00000029, 0 6px 20px 4px #00000029;
+  --qs-width-modal-sm: 384px;
+  --qs-width-modal-md: 600px;
+  --qs-width-modal-lg: 1136px;
+  --qs-grid-gap: 16px;
+  --qs-grid-gap-xl: 24px;
+  --qs-primary-medium: #8575ff;
+  --qs-primary-inverse: #fff;
+  --qs-neutral-lightest: #f9f9fb;
+  --qs-neutral-light: #f3f3f7;
+  --qs-neutral-default: #dedee3;
+  --qs-neutral-medium: #8c8c94;
+  --qs-neutral-deep: #656871;
+  --qs-neutral-dark: #333843;
+  --qs-neutral-strong: #131920;
+  --qs-neutral-white: #fff;
+  --qs-neutral-black: #000;
+  --qs-success-medium: #005c26;
+  --qs-success-dark: #00471e;
+  --qs-success-light: #d9ffd6;
+  --qs-success-inverse: #fff;
+  --qs-info-default: #006ce0;
+  --qs-info-medium: #003b8f;
+  --qs-info-dark: #002a66;
+  --qs-info-light: #d1f1ff;
+  --qs-info-inverse: #fff;
+  --qs-warning-default: #f2b100;
+  --qs-warning-medium: #db9200;
+  --qs-warning-dark: #573a00;
+  --qs-warning-light: #fffbbd;
+  --qs-warning-inverse: #573a00;
+  --qs-warning-experimental: #f2b100;
+  --qs-warning-experimental-light: #fffbbd;
+  --qs-warning-experimental-light-foreground: #fffbbd;
+  --qs-error-medium: #900;
+  --qs-error-dark: #700000;
+  --qs-error-light: #ffe0e0;
+  --qs-error-inverse: #fff;
+  --qs-connection-default: #db3300;
+  --qs-connection-soft: #ff997a;
+  --qs-connection-light: #ffe0d6;
+  --qs-connection-dark: #661800;
+  --qs-automation-default: #b3008f;
+  --qs-automation-medium: #d600ba;
+  --qs-automation-soft: #ff94f1;
+  --qs-automation-light: #ffe0fb;
+  --qs-automation-dark: #660052;
+  --qs-insight-default: #a000b8;
+  --qs-insight-soft: #f299ff;
+  --qs-insight-light: #fce6ff;
+  --qs-insight-dark: #590066;
+  --qs-visualization-default: #7300e5;
+  --qs-visualization-soft: #d4a8ff;
+  --qs-visualization-light: #f2e5ff;
+  --qs-visualization-dark: #45008a;
+  --qs-spice: #ff9800;
+  --qs-coachmark: #006ce0;
+  --qs-brand: #fff;
+  --qs-brand-foreground: #131920;
+  --qs-brand-navbar: #131920;
+  --qs-brand-navbar-foreground: #fff;
+  --qs-brand-navbar-light: #dedee3;
+  --qs-brand-navbar-dark: #000;
+  --qs-application-navbar: #4200db;
+  --qs-application-navbar-foreground: #fff;
+  --qs-application-navbar-light: #e8e6ff;
+  --qs-application-navbar-dark: #35009e;
+  --qs-dimension: #4200db;
+  --qs-dimension-foreground: #fff;
+  --qs-dimension-experimental: #4200db;
+  --qs-dimension-experimental-foreground: #4200db;
+  --qs-measure: #00802f;
+  --qs-measure-foreground: #fff;
+  --qs-measure-experimental: #f2b100;
+  --qs-measure-experimental-foreground: #f2b100;
+  --qs-content-inverse: #333843;
+  --qs-content-inverse-active: #131920;
+  --qs-secondary: #dedee3;
+  --qs-disabled: #8c8c94;
+  --qs-divider-light: #f3f3f7;
+  --qs-hover-border: #333843;
+  --qs-active-border: #4200db;
+  --qs-disabled-border: #dedee3;
+  --qs-error-border: #ffe0e0;
+  --qs-error-active-border: #db0000;
+  --qs-disabled-foreground: #b4b4bb;
+  --qs-primary-inverse-foreground: #fff;
+  --qs-error-foreground: #db0000;
+  --qs-contrast-foreground: #131920;
+  --qs-main-foreground: #131920;
+  --qs-action-disabled: #f3f3f7;
+  --qs-action-active: #e8e6ff;
+  --qs-default-badge: #b4b4bb;
+  --qs-tag-default: #dedee3;
+  --qs-tag-soft-border: #b4b4bb;
+  --qs-focus-offset: 1px;
+  --qs-toggle-tile-sm: calc(.25rem * 8);
+  --qs-toggle-tile-md: calc(.25rem * 12);
+  --qs-toggle-tile-lg: calc(.25rem * 15);
+  --qs-shadow-pin-right: inset 4px 0 4px -4px #00000029;
+  --qs-shadow-pin-left: inset -4px 0 4px -4px #00000029;
+  --react-pdf-text-layer: 1;
+  --highlight-bg-color: rgba(180, 0, 170, 1);
+  --highlight-selected-bg-color: rgba(0, 100, 0, 1);
+  --react-pdf-annotation-layer: 1;
+  --annotation-unfocused-field-background: url("data:image/svg+xml;charset=UTF-8,<svg width='1px' height='1px' xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' style='fill:rgba(0, 54, 255, 0.13);'/></svg>");
+  --input-focus-border-color: Highlight;
+  --input-focus-outline: 1px solid Canvas;
+  --input-unfocused-border-color: transparent;
+  --input-disabled-border-color: transparent;
+  --input-hover-border-color: black;
+  --link-outline: none;
+  color-scheme: light;
+}
+body { background: var(--color-bg); color: var(--color-text); }
+a { color: var(--color-link, var(--color-primary)); }</style>
+<meta charset="UTF-8">
+<title>ChargeMate</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkNoYXJnZU1hdGUiLAogICJzaG9ydF9uYW1lIjogIkNoYXJnZU1hdGUiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBiMTIyMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMGU1ZmYiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnPjxyZWN0IHdpZHRoPScxMDAnIGhlaWdodD0nMTAwJyByeD0nMjAnIGZpbGw9JyMwYjEyMjAnLz48dGV4dCB4PSc1MCcgeT0nNjUnIGZvbnQtc2l6ZT0nNTAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9JyMwMGU1ZmYnPuKaoTwvdGV4dD48L3N2Zz4iLAogICAgInNpemVzIjogImFueSIsCiAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogIH1dCn0=">
+<meta name="theme-color" content="#00e5ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700&display=swap');
+
+:root{
+  --bg:#0b1220;--card:#121a2b;--accent:#00e5ff;--accent2:#7c3aed;
+  --text:#e2e8f0;--muted:#b4c0cc;--danger:#f43f5e;--border:#1e2d45;
+  --good:#34d399;--warn:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:500px;margin:auto;padding:12px 16px 80px}
+
+.tabs{display:flex;gap:3px;padding:8px 10px;position:sticky;top:0;z-index:10;
+  background:rgba(11,18,32,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.tab{flex:1;text-align:center;padding:6px 2px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:9.5px;font-weight:600;
+  cursor:pointer;color:var(--muted);transition:all .2s;letter-spacing:.03em;text-transform:uppercase}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#000}
+
+.card{background:var(--card);padding:16px;border-radius:14px;margin-bottom:12px;border:1px solid var(--border)}
+.card h3{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
+  color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
+
+label{font-size:11px;color:var(--muted);display:block;margin-top:10px;margin-bottom:3px;letter-spacing:.05em}
+input,select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
+  background:#0d1525;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--accent)}
+
+input.warn-input{border-color:var(--warn)}
+select option{background:#0d1525}
+
+button.primary{width:100%;padding:11px;margin-top:14px;border-radius:10px;border:none;
+  background:var(--accent);color:#000;font-family:'Inter',sans-serif;
+  font-weight:700;font-size:13px;letter-spacing:.05em;cursor:pointer;transition:opacity .15s,transform .1s}
+button.primary:hover{opacity:.9}
+button.primary:active{transform:scale(.98)}
+button.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);
+  width:100%;padding:9px;border-radius:8px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;cursor:pointer;transition:border-color .2s,color .2s}
+button.ghost:hover{border-color:var(--accent);color:var(--accent)}
+button.secondary{background:#1e2d45;color:var(--accent);border:none;
+  width:100%;padding:9px;border-radius:8px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;cursor:pointer;margin-top:8px}
+.danger-link{display:block;text-align:center;font-size:11px;color:var(--danger);
+  opacity:.6;cursor:pointer;padding:8px;margin-top:4px;letter-spacing:.04em}
+.danger-link:hover{opacity:1}
+
+/* Toggle pill */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;
+  background:#0d1525;border-radius:8px;padding:10px 12px;margin-top:10px;border:1px solid var(--border)}
+.toggle-label{font-size:12px;color:var(--muted)}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#1e2d45;border-radius:11px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;
+  background:var(--muted);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px);background:#000}
+
+/* Efficiency mode selector */
+.eff-tabs{display:flex;gap:4px;margin-top:10px}
+.eff-tab{flex:1;text-align:center;padding:7px 4px;border-radius:8px;border:1px solid var(--border);
+  font-size:10px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;
+  color:var(--muted);transition:all .2s;text-transform:uppercase;letter-spacing:.03em}
+.eff-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.eff-tab:hover:not(.active){border-color:var(--muted);color:var(--text)}
+
+.view{display:none}.view.active{display:block}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+.stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border)}
+.stat-val{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1.2}
+.stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
+.stat-label{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+.session-row{padding:10px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
+.session-row:last-child{border-bottom:none}
+.session-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.session-date-badge{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
+.session-date{font-size:11px;color:var(--muted);white-space:nowrap}
+.session-actions{display:flex;gap:6px;flex-shrink:0}
+.session-detail{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.session-main{font-size:12px;color:var(--text);flex:1;min-width:0}
+.session-cost{font-family:'Inter',sans-serif;font-weight:600;color:var(--good);white-space:nowrap;font-size:11px;flex-shrink:0}
+.btn-sm{padding:5px 10px;border-radius:6px;border:none;font-size:11px;
+  cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:500;white-space:nowrap}
+.btn-edit{background:#1e2d45;color:var(--accent)}
+.btn-del{background:#2d1a22;color:var(--danger)}
+
+.month-header{font-size:11px;color:var(--accent);font-family:'Inter',sans-serif;
+  font-weight:700;letter-spacing:.06em;padding:8px 0 4px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);margin-bottom:2px}
+
+.small{font-size:11px;color:var(--accent);margin-top:4px;min-height:16px}
+.warn-msg{font-size:11px;color:var(--warn);margin-top:4px}
+.error-msg{font-size:11px;color:var(--danger);margin-top:4px;min-height:16px}
+.chart-wrap{position:relative;width:100%;margin-top:8px}
+canvas{width:100%;display:block;border-radius:8px}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;letter-spacing:.04em;white-space:nowrap}
+.badge-home{background:#0c2a1c;color:var(--good)}
+.badge-public{background:#1a1a2e;color:#818cf8}
+.badge-office{background:#1a2810;color:#a3e635}
+.badge-tooffice{background:#1a1a2e;color:#818cf8}
+.badge-tohome{background:#0c2a1c;color:var(--good)}
+.badge-both{background:#1e1a2e;color:#c084fc}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--accent);color:#000;padding:9px 18px;border-radius:20px;
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:700;
+  transition:transform .3s;z-index:100;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+.file-label{display:block;padding:9px;border:1px dashed var(--border);border-radius:8px;
+  text-align:center;font-size:11px;color:var(--muted);cursor:pointer;transition:border-color .2s;margin-top:8px}
+.file-label:hover{border-color:var(--accent);color:var(--accent)}
+#importInput{display:none}
+
+.empty{text-align:center;padding:30px 0;color:var(--muted);font-size:12px}
+
+.split-label{font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.split-track{display:flex;border-radius:6px;overflow:hidden;height:10px;gap:2px}
+.split-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.split-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle}
+.split-legend-item{font-size:11px;color:var(--muted)}
+
+.range-meter{margin-top:10px}
+.range-track{background:#1e2d45;border-radius:6px;height:10px;width:100%;margin-top:4px;overflow:hidden}
+.range-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+.range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
+
+/* PLAN TAB */
+.plan-result{margin-top:14px}
+.plan-status-box{padding:12px 14px;border-radius:10px;margin-bottom:10px;border:1px solid}
+.plan-status-box.safe{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.3)}
+.plan-status-box.reserve{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)}
+.plan-status-box.critical{background:rgba(244,63,94,0.08);border-color:rgba(244,63,94,0.3)}
+.plan-status-box.impossible{background:rgba(244,63,94,0.12);border-color:rgba(244,63,94,0.5)}
+.plan-status-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px}
+.plan-status-box.safe .plan-status-title{color:var(--good)}
+.plan-status-box.marginal .plan-status-title{color:var(--warn)}
+.plan-status-box.unsafe .plan-status-title{color:var(--danger)}
+.plan-status-sub{font-size:11px;color:var(--muted)}
+
+.plan-row{display:flex;justify-content:space-between;align-items:baseline;
+  padding:7px 0;border-bottom:1px solid var(--border)}
+.plan-row:last-child{border-bottom:none}
+.plan-row-label{font-size:11px;color:var(--muted)}
+.plan-row-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+.plan-row-val.good{color:var(--good)}
+.plan-row-val.warn{color:var(--warn)}
+.plan-row-val.danger{color:var(--danger)}
+
+/* Range bar */
+.rbar-wrap{margin-top:14px}
+.rbar-label{font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.rbar-track{position:relative;height:28px;background:#0d1525;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.rbar-seg{position:absolute;top:0;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'Inter',sans-serif;font-weight:700;overflow:hidden;white-space:nowrap}
+.rbar-markers{position:relative;height:18px;margin-top:2px}
+.rbar-marker{position:absolute;transform:translateX(-50%);font-size:9px;color:var(--muted);white-space:nowrap}
+.rbar-trip-line{position:absolute;top:0;width:2px;height:100%;background:rgba(255,255,255,0.7);z-index:2}
+
+/* Charge advice box */
+.charge-advice{background:#0d1525;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:10px}
+.charge-advice-title{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;
+  color:var(--warn);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.advice-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+.advice-val{font-family:'Inter',sans-serif;font-weight:700;color:var(--accent)}
+
+/* Eff mode display */
+.eff-display{background:#0d1525;border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+.eff-display-label{font-size:11px;color:var(--muted)}
+.eff-display-val{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--accent)}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-row>div label{margin-top:0}
+hr.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+.charger-row{padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:baseline}
+.charger-row:last-child{border-bottom:none}
+.charger-name{font-size:12px}.charger-meta{font-size:11px;color:var(--muted)}
+
+body.light{--bg:#f0f4f8;--card:#fff;--accent:#0077cc;--accent2:#6d28d9;--text:#1e293b;--muted:#64748b;--danger:#dc2626;--border:#e2e8f0;--good:#059669;--warn:#d97706;}
+body.light .tabs{background:rgba(240,244,248,0.95)}
+body.light input,body.light select{background:#f8fafc;color:#1e293b;border-color:#e2e8f0}
+body.light .stat-box,body.light .toggle-row{background:#f8fafc;border-color:#e2e8f0}
+body.light #toast{color:#fff}
+body.light .btn-edit{background:#e2e8f0}
+body.light .btn-del{background:#fee2e2}
+body.light .eff-tab{border-color:#e2e8f0;color:#64748b}
+body.light .eff-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+body.light .eff-display{background:#f1f5f9;border-color:#e2e8f0}
+body.light .month-header{color:var(--accent)}
+body.light .badge-home{background:#dcfce7;color:#166534}
+body.light .badge-office{background:#ecfccb;color:#3f6212}
+body.light .badge-AC{background:#dcfce7;color:#166534}
+body.light .badge-DC{background:#e0e7ff;color:#3730a3}
+body.light .badge-public{background:#e0e7ff;color:#3730a3}
+body.light .badge-tooffice{background:#e0e7ff;color:#3730a3}
+body.light .badge-tohome{background:#dcfce7;color:#166534}
+body.light .badge-both{background:#f3e8ff;color:#6b21a8}
+body.light .toggle-slider{background:#cbd5e1}
+body.light .toggle input:checked+.toggle-slider{background:var(--accent)}
+body.light .charger-row{border-color:#e2e8f0}
+body.light .plan-status-box.safe{background:#dcfce7;border-color:#86efac}
+body.light .plan-status-box.reserve{background:#fef9c3;border-color:#fde047}
+body.light .plan-status-box.critical{background:#fee2e2;border-color:#fca5a5}
+body.light .plan-status-box.impossible{background:#fee2e2;border-color:#f87171}
+body.light .session-row{border-color:#e2e8f0}
+body.light .divider{border-color:#e2e8f0}
+body.light .ghost{border-color:#e2e8f0;color:#64748b}
+body.light .ghost:hover{border-color:var(--accent);color:var(--accent)}
+body.light .primary{background:var(--accent);color:#fff}
+body.light .tab.active{background:var(--accent);color:#fff}
+body.light .secondary{background:#e2e8f0;color:var(--accent)}
+body.light .tab{color:#64748b}
+body.light .rbar-track{background:#f1f5f9}
+
+body.light .stat-label{color:#374151}
+body.light .stat-sub{color:#4b5563}
+body.light .charger-meta{color:#4b5563}
+body.light .month-header{color:#1e40af}
+body.light .session-date{color:#1e293b}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dash')" id="t-dash">Dashboard</div>
+  <div class="tab" onclick="switchTab('charges')" id="t-charges">Charging</div>
+  <div class="tab" onclick="switchTab('plan')" id="t-plan">Plan</div>
+  <div class="tab" onclick="switchTab('settings')" id="t-settings">Settings</div>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div id="dash" class="view active">
+  <div class="card"><h3>Overview</h3><div class="stats-grid" id="stats"></div></div>
+  <div class="card"><h3>Cost Metrics</h3><div class="stats-grid" id="costMetrics"></div></div>
+  <div class="card">
+    <h3>Charging Habits</h3>
+    <div class="stats-grid" id="habitMetrics"></div>
+    <div id="splitBars" style="margin-top:16px"></div>
+  </div>
+  <div class="card"><h3>Estimated Range</h3><div id="rangeCard"></div></div>
+  <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="180"></canvas></div></div>
+
+</div>
+
+<!-- ═══════════════════ CHARGES ═══════════════════ -->
+<div id="charges" class="view">
+  <div class="card"><h3>Summary</h3><div class="stats-grid" id="chargeSummary"></div></div>
+  <div class="card">
+    <h3 id="chargeFormTitle">New Charge</h3>
+    <label>Date</label>
+    <input type="date" id="date">
+    <div class="form-row" style="margin-top:10px">
+      <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview()"></div>
+      <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='End % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
+    </div>
+    <div id="kwhPreview" class="small"></div>
+    <div class="form-row">
+      <div><label>Start Time <span style="color:var(--muted);font-size:10px">(opt)</span></label><input type="time" id="startTime"></div>
+      <div><label>End Time <span style="color:var(--muted);font-size:10px">(opt)</span></label><input type="text" id="endTime" placeholder="e.g. 4:52pm" inputmode="text"></div>
+    </div>
+    <div id="durationPreview" class="small"></div>
+    <label>Type</label>
+    <select id="type" onchange="onTypeChange()">
+      <option value="office">Office</option>
+      <option value="home">Home</option>
+      <option value="public">Public</option>
+    </select>
+    <div id="publicBlock" style="display:none">
+      <hr class="divider">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Charger Details</div>
+      <label>Location / Name</label>
+      <input type="text" id="pubLocation" placeholder="e.g. Phoenix Mall, Wakad">
+      <label>Maps Link <span style="color:var(--muted);font-size:10px">(paste Google Maps share link)</span></label>
+      <input type="url" id="pubMapsLink" placeholder="https://maps.app.goo.gl/...">
+      <div class="form-row" style="margin-top:10px">
+        <div><label>Connector</label>
+          <select id="pubConnector">
+            <option value="AC">AC</option>
+            <option value="DC">DC</option>
+          </select>
+        </div>
+        <div><label>Rated kW</label><input type="number" id="pubKw" placeholder="—" step="0.1"></div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Cost</div>
+      <div class="form-row">
+        <div><label>₹ / unit</label><input type="number" id="pubRate" placeholder="e.g. 18" step="0.01" oninput="autoCalcPublic('rate')"></div>
+        <div><label>Units (kWh)</label><input type="number" id="pubUnits" placeholder="auto" step="0.01" oninput="autoCalcPublic('units')"></div>
+      </div>
+      <label>Total ₹</label>
+      <input type="number" id="pubTotal" placeholder="auto-calculated" oninput="autoCalcPublic('total')">
+    </div>
+    <label>Odometer (km)</label>
+    <input type="number" id="odo" placeholder="—" oninput="validateOdo()" onfocus="updateOdoPlaceholder()">
+    <div id="odoWarn" class="warn-msg"></div>
+    <div id="formError" class="error-msg"></div>
+    <button class="primary" onclick="saveCharge()">Save</button>
+    <button class="ghost" onclick="clearChargeForm()" style="margin-top:8px">Reset</button>
+    <button class="secondary" id="cancelChargeEdit" style="display:none" onclick="cancelChargeEdit()">Cancel Edit</button>
+  </div>
+  <div class="card"><h3>Log</h3><div id="list"></div></div>
+  <div class="card">
+    <h3>Saved Chargers</h3>
+    <div id="savedChargersList"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;cursor:pointer" onclick="var f=this.nextElementSibling;f.style.display=f.style.display==='none'?'block':'none'">+ Add Charger <span style="font-size:9px;color:var(--muted)">(tap to expand)</span></div>
+      <div style="display:none">
+      <input type="text" id="scName" placeholder="Charger name" style="margin-bottom:6px">
+      <input type="url" id="scLink" placeholder="Google Maps link (paste share URL)" style="margin-bottom:6px">
+      <div class="form-row" style="margin-bottom:6px">
+        <div><select id="scType"><option value="DC">DC</option><option value="AC">AC</option></select></div>
+        <div><input type="number" id="scKw" placeholder="kW" step="0.1"></div>
+      </div>
+      <button class="ghost" onclick="addSavedCharger()" style="font-size:11px">+ Save Charger</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card" id="pubHistoryCard" style="display:none">
+    <h3>Public Charger History</h3><div id="pubHistory"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PLAN ═══════════════════ -->
+<div id="plan" class="view">
+  <div class="card">
+    <h3>Trip Details</h3>
+
+    <div class="form-row">
+      <div><label>Current Battery %</label><input type="number" id="planCurrent" min="0" max="100" placeholder="e.g. 80" oninput="runPlan()"></div>
+      <div><label>Distance (km)</label><input type="number" id="planDist" min="0" placeholder="e.g. 45" oninput="runPlan()"></div>
+    </div>
+
+    <div class="toggle-row" style="margin-top:12px">
+      <span class="toggle-label">Round trip</span>
+      <label class="toggle"><input type="checkbox" id="planRoundTrip" onchange="runPlan()"><span class="toggle-slider"></span></label>
+    </div>
+
+    <hr class="divider">
+    <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
+
+    <div class="eff-tabs">
+      <div class="eff-tab active" id="eff-tab-avg" onclick="setEffMode('avg')">Avg</div>
+      <div class="eff-tab" id="eff-tab-last" onclick="setEffMode('last')">Last Trip</div>
+      <div class="eff-tab" id="eff-tab-live" onclick="setEffMode('live')">Custom</div>
+    </div>
+
+    <div id="effModeDisplay" class="eff-display" style="display:none">
+      <span class="eff-display-label" id="effModeLabel">—</span>
+      <span class="eff-display-val" id="effModeVal">—</span>
+    </div>
+
+    <div id="liveEffBlock" style="display:none;margin-top:8px">
+      <label>Your Efficiency (Wh/km)</label>
+      <input type="number" id="planLiveEff" placeholder="e.g. 160" step="1" oninput="runPlan()">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">
+        As shown on your car's display. Lower = more efficient. Typical: 120–200 Wh/km
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card" id="planStopsCard">
+    <h3>Charging Stops <span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span></h3>
+    <div id="planStopsList"></div>
+    <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
+  </div>
+
+  
+
+  <div id="planResult"></div>
+</div>
+
+<!-- ═══════════════════ SETTINGS ═══════════════════ -->
+<div id="settings" class="view">
+  <div class="card">
+    <h3>Vehicle</h3>
+    <label>Battery Capacity (kWh)</label><input type="number" id="battery" placeholder="e.g. 40">
+    <label>Home Charging Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="e.g. 7">
+    <label>Office Charging Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="e.g. 0 for free">
+    <label>Reserve Buffer % <span style="color:var(--muted);font-size:10px">(trip planner safety margin)</span></label>
+    <input type="number" id="bufferPct" placeholder="e.g. 15">
+    <button class="primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div class="card">
+    <h3>Petrol Comparison</h3>
+    <label>Petrol Car Mileage (km/litre)</label><input type="number" id="petrolMileage" placeholder="e.g. 15">
+    <label>Petrol Price (₹/litre)</label><input type="number" id="petrolPrice" placeholder="e.g. 103">
+    <button class="primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div class="card"><h3>Appearance</h3><div class="toggle-row"><span class="toggle-label">Light Mode</span><label class="toggle"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="toggle-slider"></span></label></div></div>
+  <div class="card">
+    <h3>Export</h3>
+    <button class="ghost" onclick="exportJSON()" style="margin-bottom:8px">⬇ Export Full Backup (JSON)</button>
+    <button class="ghost" onclick="exportCSV()">⬇ Export Charges CSV</button>
+  </div>
+  <div class="card">
+    <h3>Import</h3>
+    <label class="file-label" for="importInput" style="margin-top:0">⬆ Import Backup (JSON)</label>
+    <input type="file" id="importInput" accept=".json" onchange="importData(event)">
+  </div>
+  <div class="card">
+    <h3>Advanced</h3>
+    <span class="danger-link" onclick="clearAll()">⚠ Clear all data permanently</span>
+  </div>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+// localStorage shim for sandboxed environments
+var _ls;
+try{_ls=window.localStorage;_ls.getItem('_test');}catch(e){_ls={_d:{},getItem:function(k){return this._d[k]||null;},setItem:function(k,v){this._d[k]=''+v;},removeItem:function(k){delete this._d[k];}};}
+var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);}catch(e){}}};
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let settings = JSON.parse(safeLS.get('cm-settings') ||
+  '{"battery":40,"homeRate":7,"officeRate":0,"bufferPct":15,"petrolMileage":15,"petrolPrice":103}');
+let sessions  = JSON.parse(safeLS.get('cm-data')    || '[]');
+let carpools  = JSON.parse(safeLS.get('cm-carpool') || '[]');
+let editIndex=null, cpEditIndex=null;
+let planEffMode = 'avg'; // 'avg' | 'last' | 'live'
+
+// ── TABS ───────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  document.getElementById('t-'+tab).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  if (tab==='dash')    requestAnimationFrame(drawAllCharts);
+  if (tab==='charges') renderCharges();
+  if (tab==='carpool') 
+  if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
+}
+
+
+
+function fmt12hr(t){
+  if(!t)return '';
+  const [h,m]=t.split(':').map(Number);
+  const ampm=h>=12?'pm':'am';
+  const hr=h%12||12;
+  return hr+':'+String(m).padStart(2,'0')+ampm;
+}
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const calcKwh=(s,e)=>settings.battery*(e-s)/100;
+function escapeHtml(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function badgeHtml(type){
+  const map={home:'Home',office:'Office',public:'Public',to_office:'→ Office',to_home:'← Home',both:'↔ Both'};
+  return `<span class="badge badge-${type.replace('_','')}">${map[type]||type}</span>`;
+}
+
+function statBox(val,label,sub,colorClass){
+  return `<div class="stat-box">
+    <div class="stat-val ${colorClass||''}">${val}</div>
+    <div class="stat-label">${label}</div>
+    ${sub?`<div class="stat-sub">${sub}</div>`:''}
+  </div>`;
+}
+
+function shortDate(iso){
+  const d=new Date(iso+'T00:00:00');
+  return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+}
+
+function fmtDuration(mins){
+  if(mins<60)return mins+' min';
+  return Math.floor(mins/60)+'h '+(mins%60).toString().padStart(2,'0')+'m';
+}
+
+function calcDuration(st,et){
+  if(!st||!et)return null;
+  const[sh,sm]=st.split(':').map(Number),[eh,em]=et.split(':').map(Number);
+  let m=(eh*60+em)-(sh*60+sm); if(m<0)m+=1440;
+  return m>0?m:null;
+}
+
+// ── EFFICIENCY HELPERS ─────────────────────────────────────────────────────
+function getAvgEff(){
+  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
+  let km=0,kwh=0;
+  for(let i=1;i<sorted.length;i++){
+    const p=sorted[i-1],c=sorted[i];
+    if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0){km+=c.km;kwh+=con;}}
+  }
+  return kwh>0?km/kwh:null;
+}
+
+function getLastEff(){
+  // Most recent consecutive pair with km + consumed kWh
+  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
+  for(let i=sorted.length-1;i>=1;i--){
+    const p=sorted[i-1],c=sorted[i];
+    if(c.km&&c.km>0){
+      const con=settings.battery*(p.e-c.s)/100;
+      if(con>0)return{eff:c.km/con,date:c.date,km:c.km,kwh:con};
+    }
+  }
+  return null;
+}
+
+function getActiveEff(){
+  if(planEffMode==='avg') return getAvgEff();
+  if(planEffMode==='last'){ const l=getLastEff(); return l?l.eff:null; }
+  if(planEffMode==='live'){
+    const whkm=+document.getElementById('planLiveEff').value;
+    return whkm>0?1000/whkm:null;
+  }
+  return null;
+}
+
+// ── EFF MODE UI ────────────────────────────────────────────────────────────
+function setEffMode(mode){
+  planEffMode=mode;
+  ['avg','last','live'].forEach(m=>{
+    document.getElementById('eff-tab-'+m).classList.toggle('active',m===mode);
+  });
+  document.getElementById('liveEffBlock').style.display=mode==='live'?'block':'none';
+  updateEffModeDisplay();
+  runPlan();
+}
+
+function updateEffModeDisplay(){
+  const display=document.getElementById('effModeDisplay');
+  const labelEl=document.getElementById('effModeLabel');
+  const valEl  =document.getElementById('effModeVal');
+
+  if(planEffMode==='live'){ display.style.display='none'; return; }
+
+  if(planEffMode==='avg'){
+    const e=getAvgEff();
+    if(e){ labelEl.textContent='Overall average'; valEl.textContent=(1000/e).toFixed(0)+' Wh/km  ·  '+e.toFixed(2)+' km/kWh'; display.style.display='flex'; }
+    else { display.style.display='none'; }
+  } else if(planEffMode==='last'){
+    const l=getLastEff();
+    if(l){ labelEl.textContent='Last trip ('+shortDate(l.date)+')'; valEl.textContent=(1000/l.eff).toFixed(0)+' Wh/km  ·  '+l.eff.toFixed(2)+' km/kWh'; display.style.display='flex'; }
+    else { display.style.display='none'; }
+  }
+}
+
+// ── PLAN / TRIP ESTIMATOR ──────────────────────────────────────────────────
+
+// ── MULTI-STOP PLANNER ───────────────────────────────────────────────────
+let planStops = [];
+
+function addPlanStop(){
+  planStops.push({km:'', chargeTo:''});
+  renderPlanStops();
+  runPlan();
+}
+
+function removePlanStop(i){
+  planStops.splice(i,1);
+  renderPlanStops();
+  runPlan();
+}
+
+function updatePlanStop(i, field, val){
+  planStops[i][field] = +val;
+  runPlan();
+}
+
+function renderPlanStops(){
+  const el=document.getElementById('planStopsList');
+  if(!planStops.length){ el.innerHTML='<div style="font-size:11px;color:var(--muted)">No stops. Direct trip.</div>'; return; }
+  el.innerHTML=planStops.map((s,i)=>`
+    <div class="form-row" style="margin-bottom:8px;align-items:center">
+      <div style="flex:1"><label>At km</label><input type="number" value="${s.km||''}" placeholder="e.g. 200" oninput="updatePlanStop(${i},'km',this.value)" style="font-size:12px"></div>
+      <div style="flex:1"><label>Charge to %</label><input type="number" value="${s.chargeTo||''}" placeholder="e.g. 80" min="0" max="100" oninput="updatePlanStop(${i},'chargeTo',this.value)" style="font-size:12px"></div>
+      <div style="flex:0"><label>&nbsp;</label><button class="btn-sm btn-del" onclick="removePlanStop(${i})">✕</button></div>
+    </div>
+  `).join('');
+}
+
+function calcWithStops(current, totalDist, kmPerPct, stops){
+  const validStops = stops.filter(s=>s.km>0&&s.chargeTo>0);
+  const legs = [];
+  let batt = current;
+  let coveredKm = 0;
+  
+  for(const stop of validStops){
+    const used = stop.km / kmPerPct;
+    const arriveAt = batt - used;
+    coveredKm += stop.km;
+    // Advice: what's needed to arrive at 20% (comfortable)
+    const needForComfort = Math.ceil(used + 20); // charge to this at prev stop
+    const maxReachKm = Math.floor(batt * kmPerPct); // max km from current charge (to 0%)
+    const safeReachKm = Math.floor((batt - 20) * kmPerPct); // max km staying above 20%
+    legs.push({dist:stop.km, startBatt:batt, arriveBatt:arriveAt, chargeTo:stop.chargeTo, reachable:arriveAt>=0, needForComfort, maxReachKm, safeReachKm});
+    batt = stop.chargeTo;
+  }
+  const remainingDist = totalDist - coveredKm;
+  if(remainingDist > 0){
+    const used = remainingDist / kmPerPct;
+    const arriveAt = batt - used;
+    const needForComfort = Math.ceil(used + 20);
+    const maxReachKm = Math.floor(batt * kmPerPct);
+    const safeReachKm = Math.floor((batt - 20) * kmPerPct);
+    legs.push({dist:remainingDist, startBatt:batt, arriveBatt:arriveAt, chargeTo:null, reachable:arriveAt>=0, needForComfort, maxReachKm, safeReachKm});
+  }
+  
+  const finalArrive = legs.length>0 ? legs[legs.length-1].arriveBatt : current;
+  const allReachable = legs.every(l=>l.reachable);
+  return {legs, finalArrive, allReachable, coveredKm};
+}
+
+function runPlan(){
+  const resultEl=document.getElementById('planResult');
+  const current =+document.getElementById('planCurrent').value;
+  let   dist    =+document.getElementById('planDist').value;
+  const roundTrip=document.getElementById('planRoundTrip').checked;
+
+  if(roundTrip && dist>0) dist*=2;
+
+  updateEffModeDisplay();
+
+  if(!current||!dist){ resultEl.innerHTML='<div class="empty">Enter battery % and trip distance to plan.</div>'; return; }
+
+  const eff=getActiveEff();
+  if(!eff){
+  
+    resultEl.innerHTML=`<div class="card"><div class="empty" style="padding:12px 0">
+      ${planEffMode==='live'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
+    </div></div>`;
+    return;
+  }
+
+  const buffer    = settings.bufferPct||15;
+  const kmPerPct  = (settings.battery*eff)/100;  // km per 1% SOC
+
+  // Current range capacities
+  const reserve=20, critical=10;
+  const totalRangeKm   = current*kmPerPct;                      // km until 0%
+  const safeRangeKm    = Math.max(0,(current-critical)*kmPerPct); // km until critical (must charge)
+  const comfortRangeKm = Math.max(0,(current-reserve)*kmPerPct);  // km until reserve (start looking)
+
+  // Where will we be at destination
+  const pctUsed     = dist/kmPerPct;
+  let pctAtDest   = current-pctUsed;
+  const hasStops = planStops.filter(s=>s.km>0&&s.chargeTo>0).length>0;
+  let stopsResult = null;
+  if(hasStops){
+    stopsResult = calcWithStops(current, dist, kmPerPct, planStops);
+    pctAtDest = stopsResult.finalArrive;
+    if(stopsResult.coveredKm > dist){
+      resultEl.innerHTML='<div class="card"><div class="empty" style="padding:12px 0;color:var(--warn)">Charging stops total ('+stopsResult.coveredKm+' km) exceeds trip distance ('+dist+' km). Reduce leg distances.</div></div>';
+      return;
+    }
+  }
+  // Check worst leg across all stops
+  const anyLegUnreachable = hasStops && stopsResult && !stopsResult.allReachable;
+  const worstLegArrive = hasStops && stopsResult ? Math.min(...stopsResult.legs.map(l=>l.arriveBatt)) : pctAtDest;
+  const kmOfBuffer  = pctAtDest*kmPerPct; // positive = headroom, negative = shortfall
+
+  // Status — three-zone model
+  let status, statusSub;
+  if(anyLegUnreachable){
+    status='critical';
+    statusSub=`One or more legs exceed your range. Adjust stop distances or charge levels.`;
+  } else if(hasStops&&worstLegArrive<critical){
+    status='critical';
+    statusSub=`Leg arrives below ${critical}%. Increase charge at previous stop or reduce leg distance.`;
+  } else if(hasStops&&worstLegArrive<reserve){
+    status='reserve';
+    statusSub=`A leg arrives in reserve zone (${worstLegArrive.toFixed(0)}%). Consider charging more at a previous stop.`;
+  } else if(pctAtDest>=reserve){
+    status='safe';
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — ${(pctAtDest-reserve).toFixed(0)}% above reserve. No action needed.`;
+  } else if(pctAtDest>=critical){
+    status='reserve';
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — entering reserve zone but above critical (${critical}%).`;
+  } else if(pctAtDest>=0){
+    status='critical';
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — below critical (${critical}%). Must charge en-route.`;
+  } else {
+    status='impossible';
+    statusSub=`${Math.abs(pctAtDest).toFixed(0)}% short — you won't make it. Plan a charging stop.`;
+  }
+
+  const statusTitle={safe:'✓ Good to go',reserve:'⚠ Entering reserve',critical:'✗ Critical — charge needed',impossible:'✗ Won\'t make it'}[status];
+
+  // Key distances
+  const kmToReserve   = safeRangeKm;               // how far before hitting buffer%
+  const kmToLookStart = comfortRangeKm;             // start looking for charger here
+  const distAfterDest = safeRangeKm-dist;           // km of safe range beyond destination (can be negative)
+
+  // Charge advice (only if unsafe or marginal)
+  const neededToLeave = Math.ceil(pctUsed+reserve);  // min% needed before leaving
+  const topUpFromCurrent = neededToLeave-current;   // how many % to add
+  const topUpKwh  = topUpFromCurrent>0 ? (topUpFromCurrent/100*settings.battery) : 0;
+  const topUpCost = topUpKwh>0 ? (topUpKwh*settings.homeRate).toFixed(0) : 0;
+
+  // Range bar data — show up to totalRangeKm, mark zones
+  const maxBar = Math.max(totalRangeKm, dist*1.05);
+  const pComfort  = Math.min(100,(comfortRangeKm/maxBar*100)).toFixed(1);
+  const pSafe     = Math.min(100,((safeRangeKm-comfortRangeKm)/maxBar*100)).toFixed(1);
+  const pReserve  = Math.min(100,((buffer*kmPerPct)/maxBar*100)).toFixed(1);
+  const pRest     = Math.max(0,(100-+pComfort-+pSafe-+pReserve)).toFixed(1);
+  const tripLineX = Math.min(99,(dist/maxBar*100)).toFixed(1);
+
+  // Public chargers visited that might be en-route (just show the list)
+  const pubChargers=sessions.filter(x=>x.t==='public'&&x.charger?.location)
+    .map(x=>escapeHtml(x.charger.location)).filter((v,i,a)=>a.indexOf(v)===i);
+
+  
+  // Multi-stop legs display
+  let legsHtml='';
+  if(hasStops&&stopsResult){
+    legsHtml=`<div style="margin-top:14px">
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Route Breakdown</div>
+      ${stopsResult.legs.map((leg,i)=>`
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--text);font-weight:600">Leg ${i+1}: ${leg.dist} km</span>
+            <span style="font-size:11px;color:${leg.arriveBatt>=20?'var(--good)':leg.arriveBatt>=10?'var(--warn)':'var(--danger)'};font-weight:700">${leg.reachable?leg.arriveBatt.toFixed(0)+'%':'\u2717 Short'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${leg.startBatt.toFixed(0)}% \u2192 ${leg.reachable?leg.arriveBatt.toFixed(0)+'%':leg.arriveBatt.toFixed(0)+'% (need '+(Math.abs(leg.arriveBatt)).toFixed(0)+'% more)'}</div>
+          ${leg.chargeTo?'<div style="font-size:11px;color:var(--accent);margin-top:3px">\u26a1 Charge to '+leg.chargeTo+'%</div>':'<div style="font-size:11px;color:var(--good);margin-top:3px">\ud83c\udfc1 Destination</div>'}
+          ${!leg.reachable?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Won\u2019t reach! ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or r':'R'}educe leg to ${leg.safeReachKm} km (arrive at 20%).</div>`:''}
+          ${leg.reachable&&leg.arriveBatt<10?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Critical (${leg.arriveBatt.toFixed(0)}%). ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
+          ${leg.reachable&&leg.arriveBatt>=10&&leg.arriveBatt<20?`<div style="font-size:11px;color:var(--warn);margin-top:3px">\u26a0 Reserve zone. ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  resultEl.innerHTML=`
+    <div class="card">
+      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">${roundTrip?'(round trip · '+dist+' km total)':'(one way · '+dist+' km)'} · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
+
+      <div class="plan-status-box ${status}">
+        <div class="plan-status-title">${statusTitle}</div>
+        <div class="plan-status-sub">${statusSub}</div>
+      </div>
+
+      ${!hasStops?`<!-- Range Bar -->
+      <div class="rbar-wrap">
+        <div class="rbar-label">Range Map</div>
+        <div class="rbar-track">
+          <div class="rbar-seg" style="left:0;width:${pComfort}%;background:rgba(52,211,153,0.35);color:var(--good)">${+pComfort>8?'Safe':''}
+          </div>
+          <div class="rbar-seg" style="left:${pComfort}%;width:${pSafe}%;background:rgba(251,191,36,0.3);color:var(--warn)">${+pSafe>8?'Caution':''}
+          </div>
+          <div class="rbar-seg" style="left:${+pComfort+ +pSafe}%;width:${pReserve}%;background:rgba(244,63,94,0.3);color:var(--danger)">${+pReserve>8?'Reserve':''}
+          </div>
+          <div class="rbar-seg" style="left:${+pComfort+ +pSafe+ +pReserve}%;width:${pRest}%;background:rgba(255,255,255,0.04)"></div>
+          <!-- Trip distance marker -->
+          <div class="rbar-trip-line" style="left:${tripLineX}%" title="Trip end"></div>
+        </div>
+        <div class="rbar-markers">
+          <div class="rbar-marker" style="left:${tripLineX}%">▲ dest</div>
+          ${+pComfort>5?`<div class="rbar-marker" style="left:0">0 km</div>`:''}
+          <div class="rbar-marker" style="left:${Math.min(95,+pComfort+ +pSafe)}%">${safeRangeKm.toFixed(0)} km</div>
+        </div>
+      </div>
+
+      `:''}<!-- Key numbers -->
+      <div style="margin-top:14px">
+        <div class="plan-row">
+          <span class="plan-row-label">Battery at destination</span>
+          <span class="plan-row-val ${pctAtDest>=20?'good':pctAtDest>=10?'warn':'danger'}">${Math.max(0,pctAtDest).toFixed(0)}%${pctAtDest<0?' (not enough)':''}</span>
+        </div>
+        ${(!hasStops&&(status==='reserve'||status==='critical'||status==='impossible'))?`<div class="plan-row" style="margin-top:6px;padding:8px 10px;background:rgba(251,191,36,0.06);border-radius:8px;border:1px solid rgba(251,191,36,0.2)">
+          <span class="plan-row-label" style="font-size:11px;color:var(--warn)">Charge to ${Math.min(100,Math.ceil(pctUsed+20))}% before leaving to arrive comfortably</span>
+        </div>
+        <div class="plan-row">
+          <span class="plan-row-label">Start looking for charger after</span>
+          <span class="plan-row-val warn">${comfortRangeKm.toFixed(0)} km</span>
+        </div>
+        <div class="plan-row">
+          <span class="plan-row-label">Must charge by</span>
+          <span class="plan-row-val danger">${safeRangeKm.toFixed(0)} km</span>
+        </div>`:''}
+        ${!hasStops?`<div class="plan-row">
+          <span class="plan-row-label">Safe range beyond destination</span>
+          <span class="plan-row-val ${distAfterDest>=0?'good':'danger'}">${distAfterDest>=0?'+'+distAfterDest.toFixed(0):distAfterDest.toFixed(0)} km</span>
+        </div>`:''}
+        ${!hasStops?`<div class="plan-row">
+          <span class="plan-row-label">Total usable range at current %</span>
+          <span class="plan-row-val">${safeRangeKm.toFixed(0)} km safe / ${totalRangeKm.toFixed(0)} km max</span>
+        </div>`:''}
+      </div>
+      ${legsHtml}
+
+      ${(status==='critical'||status==='impossible')&&neededToLeave>current&&neededToLeave<=100?`
+      <div class="charge-advice">
+        <div class="charge-advice-title">⚡ Charge Advice</div>
+        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Charge to at least</span><span class="advice-val">${neededToLeave}% before leaving</span></div>
+        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Energy to add</span><span class="advice-val">${topUpKwh.toFixed(1)} kWh</span></div>
+        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (home rate)</span><span class="advice-val">₹${topUpCost}</span></div>
+        ${settings.lastPublicRate?`<div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (public ~₹${settings.lastPublicRate}/unit)</span><span class="advice-val">₹${(topUpKwh*settings.lastPublicRate).toFixed(0)}</span></div>`:''}
+      </div>`:status==='impossible'?`
+      <div class="charge-advice">
+        <div class="charge-advice-title">⚡ Charge Advice</div>
+        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Even a full charge won't cover this trip safely.</span></div>
+        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Plan a charging stop en-route.</span></div>
+      </div>`:''}
+
+      ${pubChargers.length?`
+      <hr class="divider">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Chargers You've Used Before</div>
+      ${pubChargers.map(loc=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">${loc}</div>`).join('')}`:''}
+    </div>`;
+}
+
+
+// ── CHARGER FINDER (Open Charge Map) ─────────────────────────────────────
+let savedChargers = [];try{savedChargers=JSON.parse(safeLS.get('cm-chargers')||'[]');}catch(e){}
+
+function renderSavedChargers(){
+  const el=document.getElementById('savedChargersList');
+  if(!el)return;
+  if(!savedChargers.length){el.innerHTML='<div style="font-size:11px;color:var(--muted)">No saved chargers. Add one below or they\'ll auto-save from public charges with Maps links.</div>';return;}
+  el.innerHTML=savedChargers.map(c=>`
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div style="flex:1;min-width:0">
+        <a href="${c.mapsLink||'#'}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">${escapeHtml(c.name)} \u2197</a>
+        <div style="font-size:11px;color:var(--text)">${c.connector||''} ${c.kw?'\u00b7 '+c.kw+' kW':''}</div>
+      </div>
+      <button class="btn-sm btn-del" onclick="removeSavedCharger(${c.id})">\u2715</button>
+    </div>
+  `).join('');
+}
+
+function addSavedCharger(){
+  const name=document.getElementById('scName').value.trim();
+  const link=document.getElementById('scLink').value.trim();
+  if(!name){toast('Enter a charger name');return;}
+  const connector=document.getElementById('scType').value;
+  const kw=document.getElementById('scKw').value?+document.getElementById('scKw').value:null;
+  savedChargers.push({id:Date.now(),name,mapsLink:link||null,connector,kw});
+  safeLS.set('cm-chargers',JSON.stringify(savedChargers));
+  document.getElementById('scName').value='';
+  document.getElementById('scLink').value='';
+  document.getElementById('scKw').value='';
+  renderSavedChargers();
+  toast('Charger saved \u2713');
+}
+
+function removeSavedCharger(id){
+  savedChargers=savedChargers.filter(c=>c.id!==id);
+  safeLS.set('cm-chargers',JSON.stringify(savedChargers));
+  renderSavedChargers();
+}
+
+function updatePreview(){
+  const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  document.getElementById('kwhPreview').textContent=(e>s&&s>=0)?'⚡ '+calcKwh(s,e).toFixed(2)+' kWh':'';
+  updateDurationPreview();
+  if(document.getElementById('type').value==='public') autoCalcPublic('pct');
+}
+
+function updateDurationPreview(){
+  const mins=calcDuration(document.getElementById('startTime').value,document.getElementById('endTime').value);
+  const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  const kwh=(e>s)?calcKwh(s,e):0;
+  if(mins&&kwh>0) document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)} · avg ${(kwh/(mins/60)).toFixed(1)} kW`;
+  else if(mins)   document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)}`;
+  else            document.getElementById('durationPreview').textContent='';
+}
+
+document.getElementById('startTime').addEventListener('change',updateDurationPreview);
+document.getElementById('endTime').addEventListener('change',updateDurationPreview);
+
+// ── PUBLIC COST AUTO-CALC ──────────────────────────────────────────────────
+function autoCalcPublic(changed){
+  const rEl=document.getElementById('pubRate');
+  const uEl=document.getElementById('pubUnits');
+  const tEl=document.getElementById('pubTotal');
+  const isManualKwh=uEl.dataset.manual==='1';
+
+  // Mark kWh as manual if user typed in it
+  if(changed==='units') uEl.dataset.manual='1';
+
+  // Auto-fill kWh from % if not manually entered and not computing from rate+total
+  if(!isManualKwh&&changed!=='units'){
+    const s=+document.getElementById('start').value, e=+document.getElementById('end').value;
+    if(e>s&&s>=0) uEl.value=(settings.battery*(e-s)/100).toFixed(2);
+  }
+
+  // Now compute the missing 3rd value from any 2 known values
+  const r=+rEl.value, u=+uEl.value, t=+tEl.value;
+  if(r>0&&u>0&&changed!=='total') tEl.value=(u*r).toFixed(0);
+  else if(r>0&&t>0&&changed!=='units'&&!isManualKwh) uEl.value=(t/r).toFixed(2);
+  else if(u>0&&t>0&&changed!=='rate') rEl.value=(t/u).toFixed(2);
+}
+function onTypeChange(){
+  document.getElementById('publicBlock').style.display=
+    document.getElementById('type').value==='public'?'block':'none';
+}
+
+// ── ODO VALIDATION ─────────────────────────────────────────────────────────
+function updateOdoPlaceholder(){
+  const odoInput=document.getElementById('odo');
+  if(odoInput.value) return; // don't override if user typed
+  const withOdo=sessions.filter(s=>s.odo>0);
+  if(!withOdo.length){odoInput.placeholder='e.g. 12450';return;}
+  const last=withOdo.reduce((a,b)=>b.odo>a.odo?b:a);
+  if(editIndex!==null&&sessions[editIndex]?.odo===last.odo){
+    // editing the session that IS the last — find second last
+    const others=withOdo.filter(s=>s!==sessions[editIndex]);
+    odoInput.placeholder=others.length?'prev: '+(others.reduce((a,b)=>b.odo>a.odo?b:a).odo):'e.g. 12450';
+  } else {
+    odoInput.placeholder='prev: '+last.odo;
+  }
+}
+function validateOdo(){
+  const odo=+document.getElementById('odo').value;
+  const warnEl=document.getElementById('odoWarn'),odoEl=document.getElementById('odo');
+  if(!odo){warnEl.textContent='';odoEl.classList.remove('warn-input');return;}
+  const others=sessions.filter((_,i)=>i!==editIndex);
+  const sorted=others.filter(s=>s.odo&&s.odo>0).sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:a.odo-b.odo;});
+  const lastOdo=sorted.length?sorted[sorted.length-1].odo:null;
+  if(lastOdo){
+    if(odo<lastOdo){warnEl.textContent=`⚠ Lower than last recorded odo (${lastOdo.toLocaleString()} km)`;odoEl.classList.add('warn-input');return;}
+    if(odo-lastOdo>500){warnEl.textContent=`⚠ Large jump: +${(odo-lastOdo).toLocaleString()} km since last entry`;odoEl.classList.add('warn-input');return;}
+  }
+  warnEl.textContent='';odoEl.classList.remove('warn-input');
+}
+
+// ── SAVE CHARGE ────────────────────────────────────────────────────────────
+function saveCharge(){
+  const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  const errEl=document.getElementById('formError');
+  if(!document.getElementById('date').value){errEl.textContent='Please set a date.';return;}
+  if(isNaN(s)||isNaN(e)||e<=s){errEl.textContent='End % must be greater than Start %.';return;}
+  if(s<0||s>100||e<0||e>100){errEl.textContent='Battery % must be 0–100.';return;}
+  errEl.textContent='';
+
+  const kwh=calcKwh(s,e),type=document.getElementById('type').value;
+  let cost=null;
+  if(type==='home')   cost=kwh*settings.homeRate;
+  if(type==='office') cost=kwh*(settings.officeRate||0);
+  if(type==='public'){const t=document.getElementById('pubTotal').value;cost=t!==''?+t:null;
+    // track last public rate for plan tab
+    const pr=document.getElementById('pubRate').value;
+    if(pr!==''){settings.lastPublicRate=+pr;safeLS.set('cm-settings',JSON.stringify(settings));}
+  }
+
+  const odo=document.getElementById('odo').value!==''?+document.getElementById('odo').value:null;
+  const startTime=document.getElementById('startTime').value||null;
+  const endTime  =document.getElementById('endTime').value||null;
+  const duration =calcDuration(startTime,endTime);
+  const charger  =type==='public'?{
+    location: document.getElementById('pubLocation').value||null,
+    mapsLink: document.getElementById('pubMapsLink').value||null,
+    connector:document.getElementById('pubConnector').value||null,
+    kw:       document.getElementById('pubKw').value!==''?+document.getElementById('pubKw').value:null,
+    rate:     document.getElementById('pubRate').value!==''?+document.getElementById('pubRate').value:null,
+    units:    document.getElementById('pubUnits').value!==''?+document.getElementById('pubUnits').value:null,
+  }:null;
+
+  const obj={id:editIndex!==null?sessions[editIndex].id:(Date.now()+Math.random()),date:document.getElementById('date').value,
+    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger};
+
+  const wasEditing=editIndex!==null;
+  if(wasEditing){sessions[editIndex]=obj;editIndex=null;
+    document.getElementById('chargeFormTitle').textContent='New Charge';
+    document.getElementById('cancelChargeEdit').style.display='none';
+  } else sessions.unshift(obj);
+
+  recomputeAllKm();persist();clearChargeForm();render();
+  document.getElementById('list').scrollIntoView({behavior:'smooth',block:'start'});
+  toast(wasEditing?'Session updated ✓':'Session saved ✓');
+}
+
+function cancelChargeEdit(){
+  editIndex=null;
+  document.getElementById('chargeFormTitle').textContent='New Charge';
+  document.getElementById('cancelChargeEdit').style.display='none';
+  clearChargeForm();
+}
+
+function clearChargeForm(){
+  ['start','end','odo','pubRate','pubUnits','pubTotal','pubMapsLink','startTime','endTime']
+    .forEach(id=>document.getElementById(id).value='');
+  delete document.getElementById('pubUnits').dataset.manual;
+  document.getElementById('date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('kwhPreview').textContent='';
+  document.getElementById('durationPreview').textContent='';
+  document.getElementById('formError').textContent='';
+  document.getElementById('odoWarn').textContent='';
+  document.getElementById('odo').classList.remove('warn-input');
+}
+
+// ── RECOMPUTE KM ───────────────────────────────────────────────────────────
+function recomputeAllKm(){
+  sessions.forEach(s=>{s.km=null;});
+  const w=sessions.filter(s=>s.odo>0).sort((a,b)=>{
+    const d=new Date(a.date)-new Date(b.date);return d!==0?d:a.odo-b.odo;
+  });
+  for(let i=1;i<w.length;i++){const d=w[i].odo-w[i-1].odo;if(d>0)w[i].km=d;}
+}
+
+// ── PERSIST ────────────────────────────────────────────────────────────────
+function persist(){
+  safeLS.set('cm-data',JSON.stringify(sessions));
+  
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function render(){renderDash();renderCharges();}
+
+function renderCharges(){renderChargeSummary();renderList();renderPubHistory();renderSavedChargers();}
+
+function renderChargeSummary(){
+  const n=sessions.length;
+  if(!n){document.getElementById('chargeSummary').innerHTML='<div class="empty" style="padding:8px 0;grid-column:1/-1">No sessions yet</div>';return;}
+  const avgStart=(sessions.reduce((a,x)=>a+x.s,0)/n).toFixed(0);
+  const avgEnd  =(sessions.reduce((a,x)=>a+x.e,0)/n).toFixed(0);
+  const avgKwh  =(sessions.reduce((a,x)=>a+x.kwh,0)/n).toFixed(1);
+  const durSess =sessions.filter(x=>x.duration);
+  const avgDur  =durSess.length?fmtDuration(Math.round(durSess.reduce((a,x)=>a+x.duration,0)/durSess.length)):'—';
+  const sorted  =[...sessions].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const uDays   =new Set(sessions.map(x=>x.date)).size;
+  const span    =sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
+  const perWeek =span?((n/Math.max(uDays,1))*(uDays/span)*7).toFixed(1):'—';
+  document.getElementById('chargeSummary').innerHTML=
+    statBox(perWeek,'Sessions / Week')+statBox(avgKwh+' kWh','Avg Per Session')+
+    statBox(avgStart+'%','Avg Start %',null,+avgStart<15?'warn':null)+
+    statBox(avgEnd+'%','Avg End %',null,+avgEnd<95?'warn':null)+
+    statBox(avgDur,'Avg Duration')+statBox(n,'Total Sessions');
+}
+
+function renderList(){
+  const el=document.getElementById('list');
+  if(!sessions.length){el.innerHTML='<div class="empty">No sessions yet. Log your first charge above.</div>';return;}
+  const sorted=[...sessions].sort((a,b)=>{
+      const d=new Date(b.date)-new Date(a.date);if(d!==0)return d;
+      if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime>b.startTime?-1:1;
+      if((a.odo||0)!==(b.odo||0))return (b.odo||0)-(a.odo||0);
+      return (b.s||0)-(a.s||0);
+    });
+  const groups={};
+  sorted.forEach(x=>{const m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
+  let _mIdx=0;
+  let out='';
+  Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
+    const[yr,mo]=month.split('-');
+    const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
+    const mCost=rows.filter(x=>x.cost!=null).reduce((a,x)=>a+x.cost,0);
+    const mKwh=rows.reduce((a,x)=>a+x.kwh,0);
+    const mId='mgrp-'+month;
+    const collapsed=_mIdx>0?' style="display:none"':'';
+    out+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} charges \u00b7 ${mKwh.toFixed(1)} kWh${mCost>0?' \u00b7 \u20b9'+mCost.toFixed(0):''} <span style="float:right;font-size:10px">${_mIdx>0?'\u25b6':'\u25bc'}</span></div>`;
+    out+=`<div id="${mId}"${collapsed}>`;
+    rows.forEach((x,ri)=>{
+      const i=sessions.findIndex(s=>s.id===x.id);
+      const costStr=x.cost!=null?(x.cost===0?'Free':'\u20b9'+x.cost.toFixed(0)+(x.charger&&x.charger.rate?' (\u20b9'+x.charger.rate+'/unit)':'')):'';
+      let effStr='';
+      {
+        // Show efficiency only on FIRST charge at each new odo
+        const fullIdx=sorted.indexOf(x);
+        if(x.odo&&fullIdx<sorted.length-1){
+          // Check if this is first at this odo (next older session has different odo)
+          const nextOlder=sorted[fullIdx+1];
+          const isFirstAtOdo=!nextOlder||!nextOlder.odo||nextOlder.odo!==x.odo;
+          if(isFirstAtOdo){
+            // Find prev session at DIFFERENT odo for consumption calc
+            let prevDiffOdo=null;
+            for(let j=fullIdx+1;j<sorted.length;j++){
+              if(sorted[j].odo&&sorted[j].odo!==x.odo){prevDiffOdo=sorted[j];break;}
+            }
+            if(prevDiffOdo){
+              const km=x.odo-prevDiffOdo.odo;
+              const drop=prevDiffOdo.e-x.s;
+              if(km>0&&drop>0){effStr=(km/(settings.battery*drop/100)).toFixed(1)+' km/kWh';}
+            }
+          }
+        }
+      }
+      let line1=`${x.s}% \u2192 ${x.e}% \u00b7 ${x.kwh.toFixed(1)} kWh`;
+      if(x.t==='public'&&x.charger&&x.charger.units) line1+=` <span style="color:var(--muted)">(${(+x.charger.units).toFixed(1)} kWh actual)</span>`;
+      let line2parts=[];
+      if(x.duration){let tStr=fmtDuration(x.duration);if(x.startTime&&x.endTime)tStr+=` (${fmt12hr(x.startTime)}\u2013${fmt12hr(x.endTime)})`;line2parts.push(tStr);}
+      else if(x.startTime&&x.endTime){line2parts.push(fmt12hr(x.startTime)+'\u2013'+fmt12hr(x.endTime));}
+      if(x.km!=null&&x.km>0){let s2=x.km+' km';if(x.odo!=null)s2+=' <span style="color:var(--muted)">(odo '+x.odo.toLocaleString()+')</span>';line2parts.push(s2);}
+      else if(x.odo!=null){line2parts.push('<span style="color:var(--muted)">odo '+x.odo.toLocaleString()+'</span>');}
+      if(effStr) line2parts.push(effStr);
+      let line2=line2parts.join(' \u00b7 ');
+      let line3='';
+      if(x.charger&&x.charger.location){
+        const mLink=x.charger.mapsLink||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.charger.location)}`;line3=`<a href="${mLink}" target="_blank" style="color:var(--accent);text-decoration:none">${escapeHtml(x.charger.location)} \u2197</a>`;
+        let cp=[];
+        if(x.charger.kw&&x.duration&&x.kwh){cp.push(x.charger.kw+' kW rated \u00b7 '+(x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
+        else if(x.charger.kw){cp.push(x.charger.kw+' kW rated');}
+        else if(x.duration&&x.kwh){cp.push((x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
+        if(cp.length) line3+=' <span style="color:var(--muted)">\u00b7 '+cp.join(' \u00b7 ')+'</span>';
+      }
+      out+=`<div class="session-row">
+          <div class="session-top">
+            <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}${costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':''}</div>
+            <div class="session-actions">
+              <button class="btn-sm btn-edit" onclick="editCharge(${i})">Edit</button>
+              <button class="btn-sm btn-del" onclick="delCharge(${i})">\u2715</button>
+            </div>
+          </div>
+          <div style="font-size:12px;margin-top:4px;color:var(--text)">${line1}</div>
+          ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
+          ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
+        </div>`;
+    });
+    out+='</div>';
+    _mIdx++;
+  });
+  el.innerHTML=out;
+}
+function renderPubHistory(){
+  const pub=sessions.filter(x=>x.t==='public'&&x.charger?.location);
+  const card=document.getElementById('pubHistoryCard');
+  if(!pub.length){card.style.display='none';return;}
+  card.style.display='block';
+  const by={};
+  pub.forEach(x=>{const l=escapeHtml(x.charger.location.trim());
+    if(!by[l])by[l]={visits:0,cost:0,kwh:0,totalMin:0,connector:x.charger.connector||'\u2014',kw:x.charger.kw||null,rates:[],mapsLink:null};
+    by[l].visits++;by[l].cost+=x.cost||0;by[l].kwh+=x.kwh||0;
+    if(x.duration)by[l].totalMin+=x.duration;
+    if(x.charger.rate)by[l].rates.push(x.charger.rate);
+    if(x.charger.mapsLink&&!by[l].mapsLink)by[l].mapsLink=x.charger.mapsLink;
+  });
+  document.getElementById('pubHistory').innerHTML=
+    Object.entries(by).sort((a,b)=>b[1].visits-a[1].visits).map(([loc,d])=>{
+      const avgSpeed=d.totalMin>0?(d.kwh/(d.totalMin/60)).toFixed(0)+' kW avg':'';
+      const avgRate=d.rates.length>0?'\u20b9'+(d.rates.reduce((a,b)=>a+b,0)/d.rates.length).toFixed(1)+'/unit':'';
+      const link=d.mapsLink||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc));
+      return `<div class="charger-row">
+        <div><div class="charger-name"><a href="${link}" target="_blank" style="color:var(--accent);text-decoration:none">${loc} \u2197</a></div>
+        <div class="charger-meta"><span style="color:var(--text)">${d.connector}${d.kw?' \u00b7 '+d.kw+' kW rated':''}</span> \u00b7 ${d.visits} visit${d.visits>1?'s':''} \u00b7 ${d.kwh.toFixed(1)} kWh</div>
+        <div class="charger-meta"><span style="color:var(--text)">${avgSpeed}${avgSpeed&&avgRate?' \u00b7 ':''}${avgRate}</span></div></div>
+        <div style="text-align:right"><div style="font-family:'Inter',sans-serif;font-weight:600;color:var(--good);font-size:11px">${d.cost>0?'\u20b9'+d.cost.toFixed(0):'Free'}</div></div>
+      </div>`;
+    }).join('');
+}
+
+function editCharge(i){
+  const x=sessions[i];editIndex=i;switchTab('charges');
+  document.getElementById('chargeFormTitle').textContent='Edit Session';
+  document.getElementById('cancelChargeEdit').style.display='block';
+  document.getElementById('date').value=x.date;
+  document.getElementById('start').value=x.s;document.getElementById('end').value=x.e;
+  document.getElementById('type').value=x.t;document.getElementById('odo').value=x.odo||'';
+  document.getElementById('startTime').value=x.startTime||'';document.getElementById('endTime').value=x.endTime||'';
+  document.getElementById('publicBlock').style.display=x.t==='public'?'block':'none';
+  if(x.t==='public'&&x.charger){
+    document.getElementById('pubLocation').value=x.charger.location||'';
+    document.getElementById('pubMapsLink').value=x.charger.mapsLink||'';
+    document.getElementById('pubConnector').value=x.charger.connector||'';
+    document.getElementById('pubKw').value=x.charger.kw!=null?x.charger.kw:'';
+    document.getElementById('pubRate').value=x.charger.rate!=null?x.charger.rate:'';
+    document.getElementById('pubUnits').value=x.charger.units!=null?x.charger.units:'';
+    document.getElementById('pubTotal').value=x.cost!=null?x.cost.toFixed(0):'';
+  }
+  updatePreview();
+  document.getElementById('chargeFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function delCharge(i){
+  if(!confirm('Delete this session?'))return;
+  sessions.splice(i,1);recomputeAllKm();persist();render();
+  toast('Session deleted');
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function renderDash(){
+  const sorted=[...sessions].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let totalCost=0,hasCost=false,totalKwhCharged=0,totalKm=0;
+  sessions.forEach(x=>{if(x.cost!=null){totalCost+=x.cost;hasCost=true;}totalKwhCharged+=x.kwh||0;totalKm+=x.km||0;});
+
+  const avgEffVal=getAvgEff();
+  const avgEff=avgEffVal?avgEffVal.toFixed(1):null;
+
+  // Efficiency stats for display
+  let effKm=0,effKwh=0,recentEffKm=0,recentEffKwh=0;
+  {const es=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
+  const validPairs=[];
+  for(let i=1;i<es.length;i++){const p=es[i-1],cv=es[i];if(cv.km&&cv.km>0){const con=settings.battery*(p.e-cv.s)/100;if(con>0){effKm+=cv.km;effKwh+=con;validPairs.push({km:cv.km,con});}}}
+  const recentN=validPairs.slice(-10);
+  recentN.forEach(p=>{recentEffKm+=p.km;recentEffKwh+=p.con;});
+  }
+  const recentEff=recentEffKwh>0?(recentEffKm/recentEffKwh).toFixed(1):null;
+
+  const totalIncome=0;
+  const netCost=totalCost-totalIncome;
+  const petrolRatePerKm=settings.petrolPrice/settings.petrolMileage;
+  const evRatePerKm=totalKm>0&&hasCost?totalCost/totalKm:null;
+  const petrolSaved=totalKm>0&&evRatePerKm!=null?((petrolRatePerKm-evRatePerKm)*totalKm):null;
+
+  
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const monthKm=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.km!=null).reduce((a,x)=>a+x.km,0);
+document.getElementById('stats').innerHTML=
+    statBox(hasCost?'\u20b9'+totalCost.toFixed(0):'—','Total Spend')+
+    statBox(totalKwhCharged>0?totalKwhCharged.toFixed(0)+' kWh':'—','Total Charged')+
+    statBox(totalKm>0?totalKm+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
+    statBox(sessions.length>0?sessions.length:'—','Sessions')+
+    statBox(avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km`:'—','Avg Efficiency',avgEff?`${avgEff} km/kWh overall${recentEff?' · '+recentEff+' km/kWh recent'+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:' add odo readings')+
+    statBox(avgEff?`${(+avgEff*settings.battery*0.8).toFixed(0)} km`:'—','Est. Range',avgEff?`at 80% charge (${settings.battery} kWh)`:null);
+
+  const allCostTotal=sessions.filter(x=>x.cost!=null).reduce((a,x)=>a+x.cost,0);
+  const kmForCost   =sessions.filter(x=>x.km!=null).reduce((a,x)=>a+x.km,0);
+  // Home ₹/km via proportional kWh method:
+  // home's share of km = (total home kWh / total kWh consumed) × total km
+  // This correctly handles partial charges regardless of charge level
+  const totalHomeKwh = sessions.filter(x=>x.t==='home').reduce((a,x)=>a+x.kwh,0);
+  const totalHomeCost2 = sessions.filter(x=>x.t==='home'&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
+  // total kWh consumed = sum of inter-session drops
+  const sfk=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
+  let totalKwhConsumedForHome=0;
+  for(let i=1;i<sfk.length;i++){const con=settings.battery*(sfk[i-1].e-sfk[i].s)/100;if(con>0)totalKwhConsumedForHome+=con;}
+  const homeShareKm = totalKwhConsumedForHome>0&&kmForCost>0 ? (totalHomeKwh/totalKwhConsumedForHome)*kmForCost : 0;
+  const homeRpk = homeShareKm>0&&totalHomeCost2>0 ? (totalHomeCost2/homeShareKm).toFixed(2) : null;
+  // Public ₹/km (same proportional method)
+  const totalPubKwh = sessions.filter(x=>x.t==='public').reduce((a,x)=>a+x.kwh,0);
+  const totalPubCost = sessions.filter(x=>x.t==='public'&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
+  const pubShareKm = totalKwhConsumedForHome>0&&kmForCost>0 ? (totalPubKwh/totalKwhConsumedForHome)*kmForCost : 0;
+  const pubRpk = pubShareKm>0&&totalPubCost>0 ? (totalPubCost/pubShareKm).toFixed(2) : null;
+  const effRpk =kmForCost>0&&allCostTotal>0?(allCostTotal/kmForCost).toFixed(2):null;
+  
+  const monthSpend=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
+  let proj=null;
+  if(kmForCost>0&&allCostTotal>0&&sorted.length>=2){
+    const ds=Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000);
+    proj=((allCostTotal/kmForCost)*(kmForCost/ds)*30).toFixed(0);
+  }
+  const avgKwhSess=sessions.length?(sessions.reduce((a,x)=>a+x.kwh,0)/sessions.length).toFixed(1):null;
+
+  document.getElementById('costMetrics').innerHTML=
+    statBox(homeRpk?'\u20b9'+homeRpk:'—','Home \u20b9/km','home cost \u00f7 km')+
+    statBox(pubRpk?'\u20b9'+pubRpk:'—','Public \u20b9/km','public cost \u00f7 km')+
+    statBox(effRpk?'\u20b9'+effRpk:'—','Effective \u20b9/km','all cost \u00f7 total km')+
+    statBox(netRpk?'\u20b9'+netRpk:'—','Net \u20b9/km','after carpool income',netRpk&&effRpk&&+netRpk<+effRpk?'good':null)+
+    statBox(hasCost?'\u20b9'+monthSpend.toFixed(0):'—','This Month \u20b9')+
+    statBox(sessions.length>0&&allCostTotal>0?'\u20b9'+(allCostTotal/totalKwhCharged).toFixed(1):'—','Avg \u20b9/kWh','cost per unit charged');
+
+  const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
+  sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
+  const uDays=new Set(sessions.map(x=>x.date)).size;
+  const tds=sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
+  const spw=tds?((sessions.length/Math.max(uDays,1))*(uDays/tds)*7).toFixed(1):'—';
+  const cps=[...carpools].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let cpw='—';
+  if(cps.length>=2){const d=Math.max(1,(new Date(cps[cps.length-1].date)-new Date(cps[0].date))/86400000);cpw=((carpools.length-1)/d*7).toFixed(1);}
+
+  document.getElementById('habitMetrics').innerHTML=
+    statBox(spw,'Sessions / Week')+
+    statBox(petrolSaved!=null?'₹'+petrolSaved.toFixed(0):'—','Petrol Saved',petrolSaved!=null?`vs ${settings.petrolMileage} km/l car`:null,petrolSaved>0?'good':null);
+
+  document.getElementById('splitBars').innerHTML=
+    makeSplitBar('Charge Split (sessions)',byTypeCount)+(hasCost?makeSplitBar('Spend Split (₹)',byTypeCost):'');
+
+  document.getElementById('rangeCard').innerHTML=avgEff
+    ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on avg efficiency (${avgEff} km/kWh)</div>
+      <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">${(+avgEff*settings.battery*0.8).toFixed(0)} km<span style="font-size:13px;color:var(--muted);font-family:'JetBrains Mono'"> at 80% charge</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Full charge: ${(+avgEff*settings.battery).toFixed(0)} km theoretical</div>
+      <div class="range-meter"><div class="range-track"><div class="range-fill" style="width:80%"></div></div>
+      <div class="range-labels"><span>0 km</span><span>${(+avgEff*settings.battery).toFixed(0)} km</span></div></div>`
+    :'<div class="empty" style="padding:12px 0">Log sessions with odometer readings to see range estimates.</div>';
+
+  requestAnimationFrame(drawAllCharts);
+}
+
+function makeSplitBar(label,data){
+  const tot=((data.home||0)+(data.public||0)+(data.office||0))||1;
+  const pH=((data.home||0)/tot*100).toFixed(0),pP=((data.public||0)/tot*100).toFixed(0),pO=((data.office||0)/tot*100).toFixed(0);
+  return `<div style="margin-bottom:14px">
+    <div class="split-label">${label}</div>
+    <div class="split-track">
+      <div style="width:${pO}%;background:#a3e635;border-radius:4px;min-width:${pO>0?2:0}px"></div>
+      <div style="width:${pH}%;background:var(--good);border-radius:4px;min-width:${pH>0?2:0}px"></div>
+      <div style="width:${pP}%;background:#818cf8;border-radius:4px;min-width:${pP>0?2:0}px"></div>
+    </div>
+    <div class="split-legend">
+      <span class="split-legend-item"><span class="split-dot" style="background:#a3e635"></span>Office ${pO}%</span>
+      <span class="split-legend-item"><span class="split-dot" style="background:var(--good)"></span>Home ${pH}%</span>
+      <span class="split-legend-item"><span class="split-dot" style="background:#818cf8"></span>Public ${pP}%</span>
+    </div></div>`;
+}
+
+// ── CARPOOL ────────────────────────────────────────────────────────────────
+
+function cancelCpEdit(){cpEditIndex=null;document.getElementById('cpFormTitle').textContent='Log Trip';document.getElementById('cancelCpEdit').style.display='none';clearCpForm();}
+
+function clearCpForm(){
+  ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
+}
+
+
+
+function {
+  const ti=carpools.reduce((a,x)=>a+(x.amount||0),0);
+  const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
+  const tp=carpools.reduce((a,x)=>a+(x.pax||0),0);
+  document.getElementById('carpoolStats').innerHTML=
+    statBox('₹'+ti.toFixed(0),'Total Income',null,'good')+statBox(carpools.length,'Total Trips')+
+    statBox(carpools.length>0?'₹'+(ti/carpools.length).toFixed(0):'—','Avg / Trip')+
+    statBox(tp>0?'₹'+(ti/tp).toFixed(0):'—','Avg / Passenger');
+  const listEl=document.getElementById('cpList');
+  if(!carpools.length){listEl.innerHTML='<div class="empty">No trips yet.</div>';return;}
+  const dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home',both:'\u2194 Both Ways'};
+  // Group by month + collapsible
+  const cpGroups={};
+  carpools.forEach((x,i)=>{const m=x.date.slice(0,7);if(!cpGroups[m])cpGroups[m]=[];cpGroups[m].push({...x,_idx:i});});
+  let cpOut='',cpMIdx=0;
+  Object.entries(cpGroups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
+    const[yr,mo]=month.split('-');
+    const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
+    const mAmt=rows.reduce((a,x)=>a+(x.amount||0),0);
+    const mId='cpgrp-'+month;
+    const collapsed=cpMIdx>0?' style="display:none"':'';
+    cpOut+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} trip${rows.length>1?'s':''} \u00b7 \u20b9${mAmt.toFixed(0)} <span style="float:right;font-size:10px">${cpMIdx>0?'\u25b6':'\u25bc'}</span></div>`;
+    cpOut+=`<div id="${mId}"${collapsed}>`;
+    rows.forEach(x=>{
+      const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
+      cpOut+=`<div class="session-row">
+        <div class="session-top">
+          <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.dir||'to_office')}</div>
+          <div class="session-actions">
+            <button class="btn-sm btn-edit" onclick="editCarpool(${x._idx})">Edit</button>
+            <button class="btn-sm btn-del" onclick="delCarpool(${x._idx})">\u2715</button>
+          </div>
+        </div>
+        <div class="session-detail">
+          <span class="session-main" style="font-size:12px">${parts.join(' \u00b7 ')||'\u2014'}</span>
+          <span class="session-cost" style="color:var(--good)">+\u20b9${x.amount.toFixed(0)}</span>
+        </div>
+      </div>`;
+    });
+    cpOut+='</div>';cpMIdx++;
+  });
+  listEl.innerHTML=cpOut;
+}
+
+// ── CHARTS ─────────────────────────────────────────────────────────────────
+function drawChart(id,pts,dates,color){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||canvas.parentElement.offsetWidth||460;
+  const H=parseInt(canvas.getAttribute('height'))||180;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const valid=pts.map((v,i)=>({v,d:dates[i]})).filter(x=>x.v!=null&&!isNaN(x.v));
+  if(valid.length<2){ctx.fillStyle='#94a3b8';ctx.font='11px JetBrains Mono,monospace';ctx.textAlign='left';ctx.fillText('Need at least 2 data points',10,H/2);return;}
+  const values=valid.map(x=>x.v);
+  const pad={l:38,r:36,t:16,b:32},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  let max=Math.max(...values),min=Math.min(...values);if(max===min)max=min+1;
+  const rng=max-min;max+=rng*0.05;min-=rng*0.05;
+  const toX=i=>pad.l+i*(gW/(valid.length-1)),toY=v=>pad.t+gH-((v-min)/(max-min))*gH;
+  ctx.lineWidth=1;
+  [0,0.25,0.5,0.75,1].forEach(f=>{
+    const y=pad.t+gH*(1-f);ctx.strokeStyle=document.body.classList.contains('light')?'#e2e8f0':'#1e2d45';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';ctx.fillText((min+f*(max-min)).toFixed(1),pad.l-4,y+3);
+  });
+  const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);
+  grad.addColorStop(0,document.body.classList.contains('light')?'rgba(0,119,204,0.15)':'rgba(0,229,255,0.18)');grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();
+  for(let i=0;i<valid.length;i++){const x=toX(i),y=toY(valid[i].v);if(i===0){ctx.moveTo(x,y);continue;}const px=toX(i-1),py=toY(valid[i-1].v),cpx=(px+x)/2;ctx.bezierCurveTo(cpx,py,cpx,y,x,y);}
+  ctx.lineTo(toX(valid.length-1),pad.t+gH);ctx.lineTo(toX(0),pad.t+gH);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';
+  for(let i=0;i<valid.length;i++){const x=toX(i),y=toY(valid[i].v);if(i===0){ctx.moveTo(x,y);continue;}const px=toX(i-1),py=toY(valid[i-1].v),cpx=(px+x)/2;ctx.bezierCurveTo(cpx,py,cpx,y,x,y);}
+  ctx.stroke();
+  const avg=values.reduce((a,v)=>a+v,0)/values.length,avgY=toY(avg);
+  ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,avgY);ctx.lineTo(W-pad.r,avgY);ctx.stroke();
+  ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('avg '+avg.toFixed(1),pad.l+4,avgY-3);ctx.restore();
+  
+  valid.forEach(({v},i)=>{ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
+  ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';
+  const maxL=Math.max(2,Math.floor(gW/44));
+  valid.forEach(({d},i)=>{
+    const step=Math.ceil((valid.length-1)/Math.max(1,maxL-1));
+    const isFirst=i===0;
+    const isLast=i===valid.length-1;
+    const isSpaced=valid.length>2&&i%step===0;
+    // Always show first+last. Skip second-to-last if too close to last.
+    const tooCloseToLast=isSpaced&&!isLast&&(valid.length-1-i)<step*0.6;
+    const show=isFirst||isLast||(isSpaced&&!tooCloseToLast);
+    if(show){const lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));ctx.fillText(shortDate(d),lx,H-4);}
+  });
+}
+
+function drawAllCharts(){
+  if(!document.getElementById('dash')||!document.getElementById('dash').classList.contains('active'))return;
+  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
+  // Compute all efficiency points
+  const allEffPts=[];
+  for(let i=1;i<sorted.length;i++){
+    const p=sorted[i-1],c=sorted[i];
+    if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0)allEffPts.push({v:+(c.km/con).toFixed(2),d:c.date});}
+  }
+  // Last 10 individual, older grouped by week
+  const recent=allEffPts.slice(-10);
+  const older=allEffPts.slice(0,-10);
+  const weeks={};
+  older.forEach(p=>{const d=new Date(p.d);const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());const wk=sun.toISOString().slice(0,10);if(!weeks[wk])weeks[wk]={sum:0,n:0};weeks[wk].sum+=p.v;weeks[wk].n++;});
+  const weekPts=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).map(([wk,d])=>({v:+(d.sum/d.n).toFixed(2),d:wk}));
+  const chartData=[...weekPts,...recent];
+  const effPts=chartData.map(p=>p.v);
+  const effDates=chartData.map(p=>p.d);
+  drawChart('effChart',effPts,effDates,'#00e5ff');
+}
+
+// ── EXPORT / IMPORT ────────────────────────────────────────────────────────
+function exportCSV(){safeLS.set('cm-lastExport',''+Date.now());
+  const rows=['Date,Start%,End%,kWh,Cost,Type,Odo,km,StartTime,EndTime,Duration,Location,Connector,ChargerKW'];
+  sessions.forEach(s=>{rows.push([s.date,s.s,s.e,s.kwh!=null?s.kwh.toFixed(2):'',s.cost!=null?s.cost.toFixed(0):'',s.t,s.odo||'',s.km!=null?s.km:'',s.startTime||'',s.endTime||'',s.duration||'',s.charger?.location||'',s.charger?.connector||'',s.charger?.kw||''].join(','));});
+  dl(new Blob([rows.join('\n')],{type:'text/csv'}),'chargemate.csv');toast('CSV exported ✓');
+}
+function exportJSON(){safeLS.set('cm-lastExport',''+Date.now());dl(new Blob([JSON.stringify({version:14,sessions,settings},null,2)],{type:'application/json'}),'chargemate-backup.json');toast('Backup exported ✓');}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{const p=JSON.parse(r.result),iS=p.sessions||p;
+      const sI=new Set(sessions.map(s=>s.id));
+      const sK=new Set(sessions.map(s=>s.date+'|'+s.t+'|'+(s.odo||'')));
+      
+      const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
+      
+      sessions=[...fS,...sessions];
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
+      recomputeAllKm();persist();render();
+      toast(`Imported ${fS.length} charge(s)${p.settings?' + settings':''}`);
+    }catch{alert('Import failed.');}e.target.value='';
+  };r.readAsText(file);
+}
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+function saveSettings(){
+  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',bufferPct:'bufferPct',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice'};
+  Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
+  safeLS.set('cm-settings',JSON.stringify(settings));render();toast('Settings saved ✓');
+}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];persist();render();toast('All data cleared');}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+function populateSettingsInputs(){
+  document.getElementById('battery').value           = settings.battery;
+  document.getElementById('homeRate').value          = settings.homeRate;
+  document.getElementById('defaultOfficeRate').value = settings.officeRate??0;
+  document.getElementById('bufferPct').value         = settings.bufferPct??15;
+  document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
+  document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
+}
+populateSettingsInputs();
+document.getElementById('date').value              = new Date().toISOString().slice(0,10);
+document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
+try{render();}catch(e){console.error('Init error:',e);}
+
+// — Theme Toggle —
+function toggleTheme(){var el=document.getElementById('themeToggle');if(!el)return;document.body.classList.toggle('light',el.checked);safeLS.set('cm-theme',el.checked?'light':'dark');}
+(function(){var s=safeLS.get('cm-theme');if(s==='light'){document.body.classList.add('light');var el=document.getElementById('themeToggle');if(el)el.checked=true;}})();
+
+// — Swipe Navigation —
+(function(){var sx=0,sy=0,tabs=['dash','charges','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+
+// — PWA Service Worker —
+(function(){try{if(navigator.serviceWorker){var sw='self.addEventListener("install",function(){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(clients.claim())});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))})';if(navigator.serviceWorker&&navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
+
+// — Backup Reminder —
+(function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=30&&sessions.length>0)setTimeout(function(){toast('Export a backup - last was '+Math.floor(d)+' days ago');},3000);})();
+</script>
+
+
+</body></html>
