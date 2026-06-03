@@ -1775,14 +1775,20 @@ function drawChart(id,pts,dates,color){
   const avg=values.reduce((a,v)=>a+v,0)/values.length,avgY=toY(avg);
   ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,avgY);ctx.lineTo(W-pad.r,avgY);ctx.stroke();
-  ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';
-  ctx.fillText('avg '+avg.toFixed(1),W-pad.r-2,avgY-3);ctx.restore();
+  ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('avg '+avg.toFixed(1),pad.l+4,avgY-3);ctx.restore();
   
   valid.forEach(({v},i)=>{ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
   ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';
   const maxL=Math.max(2,Math.floor(gW/44));
   valid.forEach(({d},i)=>{
-    const show=i===0||i===valid.length-1||(valid.length>2&&i%Math.ceil((valid.length-1)/(maxL-1))===0);
+    const step=Math.ceil((valid.length-1)/Math.max(1,maxL-1));
+    const isFirst=i===0;
+    const isLast=i===valid.length-1;
+    const isSpaced=valid.length>2&&i%step===0;
+    // Always show first+last. Skip second-to-last if too close to last.
+    const tooCloseToLast=isSpaced&&!isLast&&(valid.length-1-i)<step*0.6;
+    const show=isFirst||isLast||(isSpaced&&!tooCloseToLast);
     if(show){const lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));ctx.fillText(shortDate(d),lx,H-4);}
   });
 }
