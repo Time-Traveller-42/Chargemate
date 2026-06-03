@@ -1256,7 +1256,7 @@ function validateOdo(){
   const warnEl=document.getElementById('odoWarn'),odoEl=document.getElementById('odo');
   if(!odo){warnEl.textContent='';odoEl.classList.remove('warn-input');return;}
   const others=sessions.filter((_,i)=>i!==editIndex);
-  const sorted=others.filter(s=>s.odo).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const sorted=others.filter(s=>s.odo&&s.odo>0).sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:a.odo-b.odo;});
   const lastOdo=sorted.length?sorted[sorted.length-1].odo:null;
   if(lastOdo){
     if(odo<lastOdo){warnEl.textContent=`⚠ Lower than last recorded odo (${lastOdo.toLocaleString()} km)`;odoEl.classList.add('warn-input');return;}
