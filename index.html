@@ -356,13 +356,15 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 
 .card{background:var(--card);padding:16px;border-radius:14px;margin-bottom:12px;border:1px solid var(--border)}
 .card h3{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
-  color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+  color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
 
 label{font-size:11px;color:var(--muted);display:block;margin-top:10px;margin-bottom:3px;letter-spacing:.05em}
 input,select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
   background:#0d1525;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
   outline:none;transition:border-color .2s}
 input:focus,select:focus{border-color:var(--accent)}
+input[type='time']{color-scheme:dark}
+
 input.warn-input{border-color:var(--warn)}
 select option{background:#0d1525}
 
@@ -404,7 +406,7 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 
 .view{display:none}.view.active{display:block}
 
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
 .stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border)}
 .stat-val{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1.2}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
@@ -419,7 +421,7 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 .session-actions{display:flex;gap:6px;flex-shrink:0}
 .session-detail{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .session-main{font-size:12px;color:var(--text);flex:1;min-width:0}
-.session-cost{font-family:'Inter',sans-serif;font-weight:700;color:var(--accent);white-space:nowrap;font-size:13px;flex-shrink:0}
+.session-cost{font-family:'Inter',sans-serif;font-weight:600;color:var(--good);white-space:nowrap;font-size:11px;flex-shrink:0}
 .btn-sm{padding:5px 10px;border-radius:6px;border:none;font-size:11px;
   cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:500;white-space:nowrap}
 .btn-edit{background:#1e2d45;color:var(--accent)}
@@ -763,6 +765,14 @@ function switchTab(tab) {
   if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
+
+function fmt12hr(t){
+  if(!t)return '';
+  const [h,m]=t.split(':').map(Number);
+  const ampm=h>=12?'pm':'am';
+  const hr=h%12||12;
+  return hr+':'+String(m).padStart(2,'0')+ampm;
+}
 // ── HELPERS ────────────────────────────────────────────────────────────────
 const calcKwh=(s,e)=>settings.battery*(e-s)/100;
 function escapeHtml(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
@@ -805,7 +815,7 @@ function calcDuration(st,et){
 
 // ── EFFICIENCY HELPERS ─────────────────────────────────────────────────────
 function getAvgEff(){
-  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:(a.odo||0)-(b.odo||0);});
+  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   let km=0,kwh=0;
   for(let i=1;i<sorted.length;i++){
     const p=sorted[i-1],c=sorted[i];
@@ -816,7 +826,7 @@ function getAvgEff(){
 
 function getLastEff(){
   // Most recent consecutive pair with km + consumed kWh
-  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:(a.odo||0)-(b.odo||0);});
+  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   for(let i=sorted.length-1;i>=1;i--){
     const p=sorted[i-1],c=sorted[i];
     if(c.km&&c.km>0){
@@ -1086,15 +1096,18 @@ function runPlan(){
       <div style="margin-top:14px">
         <div class="plan-row">
           <span class="plan-row-label">Battery at destination</span>
-          <span class="plan-row-val ${pctAtDest>=buffer+10?'good':pctAtDest>=buffer?'warn':'danger'}">${Math.max(0,pctAtDest).toFixed(0)}%${pctAtDest<0?' (not enough)':''}</span>
+          <span class="plan-row-val ${pctAtDest>=20?'good':pctAtDest>=10?'warn':'danger'}">${Math.max(0,pctAtDest).toFixed(0)}%${pctAtDest<0?' (not enough)':''}</span>
         </div>
-        ${(status==='critical'||status==='impossible')?`<div class="plan-row">
+        ${(!hasStops&&(status==='reserve'||status==='critical'||status==='impossible'))?`<div class="plan-row" style="margin-top:6px;padding:8px 10px;background:rgba(251,191,36,0.06);border-radius:8px;border:1px solid rgba(251,191,36,0.2)">
+          <span class="plan-row-label" style="font-size:11px;color:var(--warn)">Charge to ${Math.min(100,Math.ceil(pctUsed+20))}% before leaving to arrive comfortably</span>
+        </div>
+        <div class="plan-row">
           <span class="plan-row-label">Start looking for charger after</span>
           <span class="plan-row-val warn">${comfortRangeKm.toFixed(0)} km</span>
         </div>
         <div class="plan-row">
           <span class="plan-row-label">Must charge by</span>
-          <span class="plan-row-val danger">${safeRangeKm.toFixed(0)} km <span style="font-size:10px;color:var(--muted);font-family:\'JetBrains Mono\',monospace">(${buffer}% reserve = ${(buffer*kmPerPct).toFixed(0)} km left)</span></span>
+          <span class="plan-row-val danger">${safeRangeKm.toFixed(0)} km</span>
         </div>`:''}
         ${!hasStops?`<div class="plan-row">
           <span class="plan-row-label">Safe range beyond destination</span>
@@ -1130,7 +1143,7 @@ function runPlan(){
 
 
 // ── CHARGER FINDER (Open Charge Map) ─────────────────────────────────────
-let savedChargers = JSON.parse(safeLS.get('cm-chargers') || '[]');
+let savedChargers = [];try{savedChargers=JSON.parse(safeLS.get('cm-chargers')||'[]');}catch(e){}
 
 function findNearbyChargers(){
   const statusEl = document.getElementById('chargerSearchStatus');
@@ -1138,8 +1151,8 @@ function findNearbyChargers(){
   statusEl.textContent = 'Getting your location...';
   resultsEl.innerHTML = '';
   
-  if(!navigator.geolocation){
-    statusEl.textContent = 'Geolocation not supported. Try on mobile.';
+  if(!navigator.geolocation||!navigator.geolocation.getCurrentPosition){
+    statusEl.textContent = 'Geolocation not available in this view.';
     return;
   }
   
@@ -1248,22 +1261,20 @@ function autoCalcPublic(changed){
   const isManualKwh=uEl.dataset.manual==='1';
 
   // Mark kWh as manual if user typed in it
-  if(changed==='units'&&uEl.value!=='') uEl.dataset.manual='1';
+  if(changed==='units') uEl.dataset.manual='1';
 
-  // Auto-fill kWh from % if not manually entered
+  // Auto-fill kWh from % if not manually entered and not computing from rate+total
   if(!isManualKwh&&changed!=='units'){
     const s=+document.getElementById('start').value, e=+document.getElementById('end').value;
     if(e>s&&s>=0) uEl.value=(settings.battery*(e-s)/100).toFixed(2);
   }
 
-  // Compute 3rd field from 2 known values
+  // Now compute the missing 3rd value from any 2 known values
   const r=+rEl.value, u=+uEl.value, t=+tEl.value;
-  if(changed==='rate'&&u>0&&r>0) tEl.value=(u*r).toFixed(0);
-  else if(changed==='total'&&r>0&&t>0&&!isManualKwh) uEl.value=(t/r).toFixed(2);
-  else if(changed==='total'&&u>0&&t>0) rEl.value=(t/u).toFixed(2);
-  else if(changed==='units'&&r>0&&u>0) tEl.value=(u*r).toFixed(0);
+  if(r>0&&u>0&&changed!=='total') tEl.value=(u*r).toFixed(0);
+  else if(r>0&&t>0&&changed!=='units'&&!isManualKwh) uEl.value=(t/r).toFixed(2);
+  else if(u>0&&t>0&&changed!=='rate') rEl.value=(t/u).toFixed(2);
 }
-
 function onTypeChange(){
   document.getElementById('publicBlock').style.display=
     document.getElementById('type').value==='public'?'block':'none';
@@ -1380,7 +1391,7 @@ function persist(){
 // ── RENDER ─────────────────────────────────────────────────────────────────
 function render(){renderDash();renderCharges();}
 
-function renderCharges(){renderChargeSummary();renderList();renderPubHistory();}
+function renderCharges(){renderChargeSummary();renderList();renderPubHistory();renderSavedChargers();}
 
 function renderChargeSummary(){
   const n=sessions.length;
@@ -1404,7 +1415,6 @@ function renderChargeSummary(){
 function renderList(){
   const el=document.getElementById('list');
   if(!sessions.length){el.innerHTML='<div class="empty">No sessions yet. Log your first charge above.</div>';return;}
-  el.innerHTML='';
   const sorted=[...sessions].sort((a,b)=>{
       const d=new Date(b.date)-new Date(a.date);if(d!==0)return d;
       if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime>b.startTime?-1:1;
@@ -1413,44 +1423,62 @@ function renderList(){
     });
   const groups={};
   sorted.forEach(x=>{const m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
+  let _mIdx=0;
+  let out='';
   Object.entries(groups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
     const[yr,mo]=month.split('-');
     const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
     const mCost=rows.filter(x=>x.cost!=null).reduce((a,x)=>a+x.cost,0);
     const mKwh=rows.reduce((a,x)=>a+x.kwh,0);
-    el.innerHTML+=`<div class="month-header">${label} · ${mKwh.toFixed(1)} kWh${mCost>0?' · ₹'+mCost.toFixed(0):''}</div>`;
-    rows.forEach(x=>{
+    const mId='mgrp-'+month;
+    const collapsed=_mIdx>0?' style="display:none"':'';
+    out+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} charges \u00b7 ${mKwh.toFixed(1)} kWh${mCost>0?' \u00b7 \u20b9'+mCost.toFixed(0):''} <span style="float:right;font-size:10px">${_mIdx>0?'\u25b6':'\u25bc'}</span></div>`;
+    out+=`<div id="${mId}"${collapsed}>`;
+    rows.forEach((x,ri)=>{
       const i=sessions.findIndex(s=>s.id===x.id);
-      const costStr=x.cost!=null?(x.cost===0?'Free':'₹'+x.cost.toFixed(0)):'—';
-      let detail=`${x.s}% → ${x.e}% · ${x.kwh.toFixed(1)} kWh`;
-      if(x.km!=null) detail+=` · ${x.km} km`;
-      if(x.duration) detail+=` · ${fmtDuration(x.duration)}`;
-      if(x.startTime&&x.endTime) detail+=` <span style="color:var(--muted)">(${x.startTime}–${x.endTime})</span>`;
-      if(x.t==='public'&&x.duration&&x.kwh){
-        const akw=(x.kwh/(x.duration/60)).toFixed(1);
-        detail+=` · ${akw} kW actual`;
-        if(x.charger?.kw) detail+=` <span style="color:var(--muted)">(${(akw/x.charger.kw*100).toFixed(0)}% rated)</span>`;
+      const costStr=x.cost!=null?(x.cost===0?'Free':'\u20b9'+x.cost.toFixed(0)+(x.charger&&x.charger.rate?' (\u20b9'+x.charger.rate+'/unit)':'')):'';
+      let effStr='';
+      if(x.km&&x.km>0){
+        const fullIdx=sorted.indexOf(x);
+        if(fullIdx>0){const prev=sorted[fullIdx-1];const drop=prev.e-x.s;if(drop>0){effStr=(x.km/(settings.battery*drop/100)).toFixed(1)+' km/kWh';}}
       }
-      if(x.odo!=null) detail+=`<br><span style="color:var(--muted);font-size:11px">odo: ${x.odo.toLocaleString()} km</span>`;
-      if(x.charger?.location) detail+=`<br><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.charger.location)}" target="_blank" style="color:var(--accent);font-size:11px;text-decoration:none">${escapeHtml(x.charger.location)} ↗</a><span style="color:var(--muted);font-size:11px">${x.charger.connector?' · '+x.charger.connector:''}${x.charger.kw?' · '+x.charger.kw+' kW rated':''}</span>`;
-      el.innerHTML+=`
-        <div class="session-row">
+      let line1=`${x.s}% \u2192 ${x.e}% \u00b7 ${x.kwh.toFixed(1)} kWh`;
+      if(x.t==='public'&&x.charger&&x.charger.units) line1+=` <span style="color:var(--muted)">(${(+x.charger.units).toFixed(1)} kWh actual)</span>`;
+      if(x.duration){line1+=` \u00b7 ${fmtDuration(x.duration)}`;if(x.startTime&&x.endTime)line1+=` <span style="color:var(--muted)">(${fmt12hr(x.startTime)}\u2013${fmt12hr(x.endTime)})</span>`;}
+      else if(x.startTime&&x.endTime){line1+=` \u00b7 ${fmt12hr(x.startTime)}\u2013${fmt12hr(x.endTime)}`;}
+      let line2parts=[];
+      if(x.km!=null&&x.km>0){let s2=x.km+' km';if(x.odo!=null)s2+=' <span style="color:var(--muted)">(odo '+x.odo.toLocaleString()+')</span>';line2parts.push(s2);}
+      else if(x.odo!=null){line2parts.push('<span style="color:var(--muted)">odo '+x.odo.toLocaleString()+'</span>');}
+      if(effStr) line2parts.push(effStr);
+      let line2=line2parts.join(' \u00b7 ');
+      let line3='';
+      if(x.charger&&x.charger.location){
+        line3=`<a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.charger.location)}" target="_blank" style="color:var(--accent);text-decoration:none">${escapeHtml(x.charger.location)} \u2197</a>`;
+        let cp=[];
+        if(x.charger.kw&&x.duration&&x.kwh){cp.push(x.charger.kw+' kW rated \u00b7 '+(x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
+        else if(x.charger.kw){cp.push(x.charger.kw+' kW rated');}
+        else if(x.duration&&x.kwh){cp.push((x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
+        if(cp.length) line3+=' <span style="color:var(--muted)">\u00b7 '+cp.join(' \u00b7 ')+'</span>';
+      }
+      out+=`<div class="session-row">
           <div class="session-top">
-            <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.t)}</div>
+            <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}</div>
             <div class="session-actions">
+              <span class="session-cost" style="margin-right:8px">${costStr}</span>
               <button class="btn-sm btn-edit" onclick="editCharge(${i})">Edit</button>
-              <button class="btn-sm btn-del"  onclick="delCharge(${i})">✕</button>
+              <button class="btn-sm btn-del" onclick="delCharge(${i})">\u2715</button>
             </div>
           </div>
-          <div class="session-detail">
-            <span class="session-main">${detail}</span>
-            <span class="session-cost">${costStr}</span>
-          </div>
+          <div style="font-size:12px;margin-top:4px;color:var(--text)">${line1}</div>
+          ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
+          ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
         </div>`;
     });
+    out+='</div>';
+    _mIdx++;
   });
+  el.innerHTML=out;
 }
-
 function renderPubHistory(){
   const pub=sessions.filter(x=>x.t==='public'&&x.charger?.location);
   const card=document.getElementById('pubHistoryCard');
@@ -1458,16 +1486,22 @@ function renderPubHistory(){
   card.style.display='block';
   const by={};
   pub.forEach(x=>{const l=escapeHtml(x.charger.location);
-    if(!by[l])by[l]={visits:0,cost:0,kwh:0,connector:x.charger.connector||'—',kw:x.charger.kw||null};
+    if(!by[l])by[l]={visits:0,cost:0,kwh:0,totalMin:0,connector:x.charger.connector||'—',kw:x.charger.kw||null,rates:[]};
     by[l].visits++;by[l].cost+=x.cost||0;by[l].kwh+=x.kwh||0;
+    if(x.duration)by[l].totalMin+=x.duration;
+    if(x.charger.rate)by[l].rates.push(x.charger.rate);
   });
   document.getElementById('pubHistory').innerHTML=
-    Object.entries(by).sort((a,b)=>b[1].visits-a[1].visits).map(([loc,d])=>`
-      <div class="charger-row">
+    Object.entries(by).sort((a,b)=>b[1].visits-a[1].visits).map(([loc,d])=>{
+      const avgSpeed=d.totalMin>0?(d.kwh/(d.totalMin/60)).toFixed(0)+' kW avg':'';
+      const avgRate=d.rates.length>0?'\u20b9'+(d.rates.reduce((a,b)=>a+b,0)/d.rates.length).toFixed(1)+'/unit':'';
+      return `<div class="charger-row">
         <div><div class="charger-name">${loc}</div>
-        <div class="charger-meta">${d.connector}${d.kw?' · '+d.kw+' kW':''} · ${d.visits} visit${d.visits>1?'s':''} · ${d.kwh.toFixed(1)} kWh</div></div>
-        <div style="text-align:right"><div style="font-family:'Inter',sans-serif;font-weight:700;color:var(--accent);font-size:14px">${d.cost>0?'₹'+d.cost.toFixed(0):'Free'}</div></div>
-      </div>`).join('');
+        <div class="charger-meta"><span style="color:var(--text)">${d.connector}${d.kw?' \u00b7 '+d.kw+' kW rated':''}</span> \u00b7 ${d.visits} visit${d.visits>1?'s':''} \u00b7 ${d.kwh.toFixed(1)} kWh</div>
+        <div class="charger-meta"><span style="color:var(--text)">${avgSpeed}${avgSpeed&&avgRate?' \u00b7 ':''}${avgRate}</span></div></div>
+        <div style="text-align:right"><div style="font-family:'Inter',sans-serif;font-weight:600;color:var(--good);font-size:11px">${d.cost>0?'\u20b9'+d.cost.toFixed(0):'Free'}</div></div>
+      </div>`;
+    }).join('');
 }
 
 function editCharge(i){
@@ -1516,11 +1550,14 @@ function renderDash(){
   const evRatePerKm=totalKm>0&&hasCost?totalCost/totalKm:null;
   const petrolSaved=totalKm>0&&evRatePerKm!=null?((petrolRatePerKm-evRatePerKm)*totalKm):null;
 
-  document.getElementById('stats').innerHTML=
+  
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const monthKm=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.km!=null).reduce((a,x)=>a+x.km,0);
+document.getElementById('stats').innerHTML=
     statBox(hasCost?'₹'+totalCost.toFixed(0):'—','Total Spend')+
     statBox(totalIncome>0?'₹'+totalIncome.toFixed(0):'—','Carpool Income',null,totalIncome>0?'good':null)+
     statBox(hasCost&&totalIncome>0?'₹'+netCost.toFixed(0):'—','Net Cost',hasCost&&totalIncome>0?'spend − income':null)+
-    statBox(totalKm>0?totalKm+' km':'—','Total Distance')+
+    statBox(totalKm>0?totalKm+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
     statBox(avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km`:'—','Avg Efficiency',avgEff?`${avgEff} km/kWh · ${effKm} km ÷ ${effKwh.toFixed(1)} kWh`:'add odo readings')+
     statBox(avgEff?`${(+avgEff*settings.battery*0.8).toFixed(0)} km`:'—','Est. Range',avgEff?`at 80% charge (${settings.battery} kWh)`:null);
 
@@ -1532,14 +1569,18 @@ function renderDash(){
   const totalHomeKwh = sessions.filter(x=>x.t==='home').reduce((a,x)=>a+x.kwh,0);
   const totalHomeCost2 = sessions.filter(x=>x.t==='home'&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
   // total kWh consumed = sum of inter-session drops
-  const sfk=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:(a.odo||0)-(b.odo||0);});
+  const sfk=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   let totalKwhConsumedForHome=0;
   for(let i=1;i<sfk.length;i++){const con=settings.battery*(sfk[i-1].e-sfk[i].s)/100;if(con>0)totalKwhConsumedForHome+=con;}
   const homeShareKm = totalKwhConsumedForHome>0&&kmForCost>0 ? (totalHomeKwh/totalKwhConsumedForHome)*kmForCost : 0;
   const homeRpk = homeShareKm>0&&totalHomeCost2>0 ? (totalHomeCost2/homeShareKm).toFixed(2) : null;
+  // Public ₹/km (same proportional method)
+  const totalPubKwh = sessions.filter(x=>x.t==='public').reduce((a,x)=>a+x.kwh,0);
+  const totalPubCost = sessions.filter(x=>x.t==='public'&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
+  const pubShareKm = totalKwhConsumedForHome>0&&kmForCost>0 ? (totalPubKwh/totalKwhConsumedForHome)*kmForCost : 0;
+  const pubRpk = pubShareKm>0&&totalPubCost>0 ? (totalPubCost/pubShareKm).toFixed(2) : null;
   const effRpk =kmForCost>0&&allCostTotal>0?(allCostTotal/kmForCost).toFixed(2):null;
   const netRpk =kmForCost>0&&hasCost&&totalIncome>0?((allCostTotal-totalIncome)/kmForCost).toFixed(2):null;
-  const thisMonth=new Date().toISOString().slice(0,7);
   const monthSpend=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
   let proj=null;
   if(kmForCost>0&&allCostTotal>0&&sorted.length>=2){
@@ -1549,10 +1590,12 @@ function renderDash(){
   const avgKwhSess=sessions.length?(sessions.reduce((a,x)=>a+x.kwh,0)/sessions.length).toFixed(1):null;
 
   document.getElementById('costMetrics').innerHTML=
-    statBox(homeRpk?'₹'+homeRpk:'—','Home ₹/km','home cost ÷ km after home charge')+
-    statBox(effRpk?'₹'+effRpk:'—','Effective ₹/km','all cost ÷ total km')+
-    statBox(netRpk?'₹'+netRpk:'—','Net ₹/km','after carpool income',netRpk&&effRpk&&+netRpk<+effRpk?'good':null)+
-    statBox(hasCost?'₹'+monthSpend.toFixed(0):'—','This Month');
+    statBox(homeRpk?'\u20b9'+homeRpk:'—','Home \u20b9/km','home cost \u00f7 km')+
+    statBox(pubRpk?'\u20b9'+pubRpk:'—','Public \u20b9/km','public cost \u00f7 km')+
+    statBox(effRpk?'\u20b9'+effRpk:'—','Effective \u20b9/km','all cost \u00f7 total km')+
+    statBox(netRpk?'\u20b9'+netRpk:'—','Net \u20b9/km','after carpool income',netRpk&&effRpk&&+netRpk<+effRpk?'good':null)+
+    statBox(hasCost?'\u20b9'+monthSpend.toFixed(0):'—','This Month \u20b9')+
+    statBox(sessions.length>0&&allCostTotal>0?'\u20b9'+(allCostTotal/totalKwhCharged).toFixed(1):'—','Avg \u20b9/kWh','cost per unit charged');
 
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
@@ -1649,25 +1692,38 @@ function renderCarpool(){
     statBox(tp>0?'₹'+(ti/tp).toFixed(0):'—','Avg / Passenger');
   const listEl=document.getElementById('cpList');
   if(!carpools.length){listEl.innerHTML='<div class="empty">No trips yet.</div>';return;}
-  const dl={to_office:'→ To Office',to_home:'← To Home',both:'↔ Both Ways'};
-  listEl.innerHTML='';
-  carpools.forEach((x,i)=>{
-    const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
-    listEl.innerHTML+=`
-      <div class="session-row">
+  const dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home',both:'\u2194 Both Ways'};
+  // Group by month + collapsible
+  const cpGroups={};
+  carpools.forEach((x,i)=>{const m=x.date.slice(0,7);if(!cpGroups[m])cpGroups[m]=[];cpGroups[m].push({...x,_idx:i});});
+  let cpOut='',cpMIdx=0;
+  Object.entries(cpGroups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
+    const[yr,mo]=month.split('-');
+    const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
+    const mAmt=rows.reduce((a,x)=>a+(x.amount||0),0);
+    const mId='cpgrp-'+month;
+    const collapsed=cpMIdx>0?' style="display:none"':'';
+    cpOut+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} trip${rows.length>1?'s':''} \u00b7 \u20b9${mAmt.toFixed(0)} <span style="float:right;font-size:10px">${cpMIdx>0?'\u25b6':'\u25bc'}</span></div>`;
+    cpOut+=`<div id="${mId}"${collapsed}>`;
+    rows.forEach(x=>{
+      const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
+      cpOut+=`<div class="session-row">
         <div class="session-top">
           <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.dir||'to_office')}</div>
           <div class="session-actions">
-            <button class="btn-sm btn-edit" onclick="editCarpool(${i})">Edit</button>
-            <button class="btn-sm btn-del"  onclick="delCarpool(${i})">✕</button>
+            <button class="btn-sm btn-edit" onclick="editCarpool(${x._idx})">Edit</button>
+            <button class="btn-sm btn-del" onclick="delCarpool(${x._idx})">\u2715</button>
           </div>
         </div>
         <div class="session-detail">
-          <span class="session-main" style="font-size:12px">${parts.join(' · ')||'—'}</span>
-          <span class="session-cost" style="color:var(--good)">+₹${x.amount.toFixed(0)}</span>
+          <span class="session-main" style="font-size:12px">${parts.join(' \u00b7 ')||'\u2014'}</span>
+          <span class="session-cost" style="color:var(--good)">+\u20b9${x.amount.toFixed(0)}</span>
         </div>
       </div>`;
+    });
+    cpOut+='</div>';cpMIdx++;
   });
+  listEl.innerHTML=cpOut;
 }
 
 // ── CHARTS ─────────────────────────────────────────────────────────────────
@@ -1719,7 +1775,7 @@ function drawChart(id,pts,dates,color){
 
 function drawAllCharts(){
   if(!document.getElementById('dash')||!document.getElementById('dash').classList.contains('active'))return;
-  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:(a.odo||0)-(b.odo||0);});
+  const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   const effPts=[],effDates=[];
   for(let i=1;i<sorted.length;i++){
     const p=sorted[i-1],c=sorted[i];
@@ -1771,8 +1827,7 @@ document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
 document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
-render();
-renderCarpool();
+try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
 function toggleTheme(){var el=document.getElementById('themeToggle');if(!el)return;document.body.classList.toggle('light',el.checked);safeLS.set('cm-theme',el.checked?'light':'dark');}
@@ -1782,7 +1837,7 @@ function toggleTheme(){var el=document.getElementById('themeToggle');if(!el)retu
 (function(){var sx=0,sy=0,tabs=['dash','charges','carpool','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — PWA Service Worker —
-(function(){try{if(navigator.serviceWorker){var sw='self.addEventListener("install",function(){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(clients.claim())});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))})';navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
+(function(){try{if(navigator.serviceWorker){var sw='self.addEventListener("install",function(){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(clients.claim())});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))})';if(navigator.serviceWorker&&navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
 
 // — Backup Reminder —
 (function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=30&&sessions.length>0)setTimeout(function(){toast('Export a backup - last was '+Math.floor(d)+' days ago');},3000);})();
