@@ -416,7 +416,7 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 .session-row{padding:10px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
 .session-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
-.session-date-badge{display:flex;align-items:center;gap:6px;min-width:0}
+.session-date-badge{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
 .session-date{font-size:11px;color:var(--muted);white-space:nowrap}
 .session-actions{display:flex;gap:6px;flex-shrink:0}
 .session-detail{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -616,7 +616,8 @@ body.light .btn-del{background:#fee2e2}
     <h3>Saved Chargers</h3>
     <div id="savedChargersList"></div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px">Add Charger</div>
+      <div style="font-size:11px;color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;cursor:pointer" onclick="var f=this.nextElementSibling;f.style.display=f.style.display==='none'?'block':'none'">+ Add Charger <span style="font-size:9px;color:var(--muted)">(tap to expand)</span></div>
+      <div style="display:none">
       <input type="text" id="scName" placeholder="Charger name" style="margin-bottom:6px">
       <input type="url" id="scLink" placeholder="Google Maps link (paste share URL)" style="margin-bottom:6px">
       <div class="form-row" style="margin-bottom:6px">
@@ -624,6 +625,7 @@ body.light .btn-del{background:#fee2e2}
         <div><input type="number" id="scKw" placeholder="kW" step="0.1"></div>
       </div>
       <button class="ghost" onclick="addSavedCharger()" style="font-size:11px">+ Save Charger</button>
+      </div>
     </div>
   </div>
   
@@ -1416,9 +1418,9 @@ function renderList(){
       }
       let line1=`${x.s}% \u2192 ${x.e}% \u00b7 ${x.kwh.toFixed(1)} kWh`;
       if(x.t==='public'&&x.charger&&x.charger.units) line1+=` <span style="color:var(--muted)">(${(+x.charger.units).toFixed(1)} kWh actual)</span>`;
-      if(x.duration){line1+=` \u00b7 ${fmtDuration(x.duration)}`;if(x.startTime&&x.endTime)line1+=` <span style="color:var(--muted)">(${fmt12hr(x.startTime)}\u2013${fmt12hr(x.endTime)})</span>`;}
-      else if(x.startTime&&x.endTime){line1+=` \u00b7 ${fmt12hr(x.startTime)}\u2013${fmt12hr(x.endTime)}`;}
       let line2parts=[];
+      if(x.duration){let tStr=fmtDuration(x.duration);if(x.startTime&&x.endTime)tStr+=` (${fmt12hr(x.startTime)}\u2013${fmt12hr(x.endTime)})`;line2parts.push(tStr);}
+      else if(x.startTime&&x.endTime){line2parts.push(fmt12hr(x.startTime)+'\u2013'+fmt12hr(x.endTime));}
       if(x.km!=null&&x.km>0){let s2=x.km+' km';if(x.odo!=null)s2+=' <span style="color:var(--muted)">(odo '+x.odo.toLocaleString()+')</span>';line2parts.push(s2);}
       else if(x.odo!=null){line2parts.push('<span style="color:var(--muted)">odo '+x.odo.toLocaleString()+'</span>');}
       if(effStr) line2parts.push(effStr);
@@ -1434,9 +1436,8 @@ function renderList(){
       }
       out+=`<div class="session-row">
           <div class="session-top">
-            <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}</div>
+            <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}${costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':''}</div>
             <div class="session-actions">
-              <span class="session-cost" style="margin-right:8px">${costStr}</span>
               <button class="btn-sm btn-edit" onclick="editCharge(${i})">Edit</button>
               <button class="btn-sm btn-del" onclick="delCharge(${i})">\u2715</button>
             </div>
@@ -1778,8 +1779,9 @@ function importData(e){
       const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
       const fC=iC.filter(c=>!cI.has(c.id));
       sessions=[...fS,...sessions];carpools=[...fC,...carpools];
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));}
       recomputeAllKm();persist();render();renderCarpool();
-      toast(`Imported ${fS.length} charge(s), ${fC.length} trip(s)`);
+      toast(`Imported ${fS.length} charge(s), ${fC.length} trip(s)${p.settings?' + settings':''}`);
     }catch{alert('Import failed.');}e.target.value='';
   };r.readAsText(file);
 }
