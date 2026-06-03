@@ -339,7 +339,7 @@ a { color: var(--color-link, var(--color-primary)); }</style>
 
 :root{
   --bg:#0b1220;--card:#121a2b;--accent:#00e5ff;--accent2:#7c3aed;
-  --text:#e2e8f0;--muted:#94a3b8;--danger:#f43f5e;--border:#1e2d45;
+  --text:#e2e8f0;--muted:#b4c0cc;--danger:#f43f5e;--border:#1e2d45;
   --good:#34d399;--warn:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -526,6 +526,40 @@ body.light .stat-box,body.light .toggle-row{background:#f8fafc;border-color:#e2e
 body.light #toast{color:#fff}
 body.light .btn-edit{background:#e2e8f0}
 body.light .btn-del{background:#fee2e2}
+body.light .eff-tab{border-color:#e2e8f0;color:#64748b}
+body.light .eff-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+body.light .eff-display{background:#f1f5f9;border-color:#e2e8f0}
+body.light .month-header{color:var(--accent)}
+body.light .badge-home{background:#dcfce7;color:#166534}
+body.light .badge-office{background:#ecfccb;color:#3f6212}
+body.light .badge-AC{background:#dcfce7;color:#166534}
+body.light .badge-DC{background:#e0e7ff;color:#3730a3}
+body.light .badge-public{background:#e0e7ff;color:#3730a3}
+body.light .badge-tooffice{background:#e0e7ff;color:#3730a3}
+body.light .badge-tohome{background:#dcfce7;color:#166534}
+body.light .badge-both{background:#f3e8ff;color:#6b21a8}
+body.light .toggle-slider{background:#cbd5e1}
+body.light .toggle input:checked+.toggle-slider{background:var(--accent)}
+body.light .charger-row{border-color:#e2e8f0}
+body.light .plan-status-box.safe{background:#dcfce7;border-color:#86efac}
+body.light .plan-status-box.reserve{background:#fef9c3;border-color:#fde047}
+body.light .plan-status-box.critical{background:#fee2e2;border-color:#fca5a5}
+body.light .plan-status-box.impossible{background:#fee2e2;border-color:#f87171}
+body.light .session-row{border-color:#e2e8f0}
+body.light .divider{border-color:#e2e8f0}
+body.light .ghost{border-color:#e2e8f0;color:#64748b}
+body.light .ghost:hover{border-color:var(--accent);color:var(--accent)}
+body.light .primary{background:var(--accent);color:#fff}
+body.light .tab.active{background:var(--accent);color:#fff}
+body.light .secondary{background:#e2e8f0;color:var(--accent)}
+body.light .tab{color:#64748b}
+body.light .rbar-track{background:#f1f5f9}
+
+body.light .stat-label{color:#374151}
+body.light .stat-sub{color:#4b5563}
+body.light .charger-meta{color:#4b5563}
+body.light .month-header{color:#1e40af}
+body.light .session-date{color:#1e293b}
 </style>
 </head>
 <body>
@@ -1517,8 +1551,14 @@ function renderDash(){
   const avgEff=avgEffVal?avgEffVal.toFixed(1):null;
 
   // Efficiency stats for display
-  let effKm=0,effKwh=0;
-  {const es=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:(a.odo||0)-(b.odo||0);});for(let i=1;i<es.length;i++){const p=es[i-1],cv=es[i];if(cv.km&&cv.km>0){const con=settings.battery*(p.e-cv.s)/100;if(con>0){effKm+=cv.km;effKwh+=con;}}}}
+  let effKm=0,effKwh=0,recentEffKm=0,recentEffKwh=0;
+  {const es=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
+  const validPairs=[];
+  for(let i=1;i<es.length;i++){const p=es[i-1],cv=es[i];if(cv.km&&cv.km>0){const con=settings.battery*(p.e-cv.s)/100;if(con>0){effKm+=cv.km;effKwh+=con;validPairs.push({km:cv.km,con});}}}
+  const recentN=validPairs.slice(-10);
+  recentN.forEach(p=>{recentEffKm+=p.km;recentEffKwh+=p.con;});
+  }
+  const recentEff=recentEffKwh>0?(recentEffKm/recentEffKwh).toFixed(1):null;
 
   const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
   const netCost=totalCost-totalIncome;
@@ -1534,7 +1574,7 @@ document.getElementById('stats').innerHTML=
     statBox(totalIncome>0?'₹'+totalIncome.toFixed(0):'—','Carpool Income',null,totalIncome>0?'good':null)+
     statBox(hasCost&&totalIncome>0?'₹'+netCost.toFixed(0):'—','Net Cost',hasCost&&totalIncome>0?'spend − income':null)+
     statBox(totalKm>0?totalKm+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
-    statBox(avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km`:'—','Avg Efficiency',avgEff?`${avgEff} km/kWh · ${effKm} km ÷ ${effKwh.toFixed(1)} kWh`:'add odo readings')+
+    statBox(avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km`:'—','Avg Efficiency',avgEff?`${avgEff} km/kWh overall${recentEff?' · '+recentEff+' km/kWh recent'+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:' add odo readings')+
     statBox(avgEff?`${(+avgEff*settings.battery*0.8).toFixed(0)} km`:'—','Est. Range',avgEff?`at 80% charge (${settings.battery} kWh)`:null);
 
   const allCostTotal=sessions.filter(x=>x.cost!=null).reduce((a,x)=>a+x.cost,0);
@@ -1706,9 +1746,12 @@ function renderCarpool(){
 function drawChart(id,pts,dates,color){
   const canvas=document.getElementById(id);if(!canvas)return;
   const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
   const W=canvas.offsetWidth||canvas.parentElement.offsetWidth||460;
   const H=parseInt(canvas.getAttribute('height'))||180;
-  canvas.width=W;canvas.height=H;ctx.clearRect(0,0,W,H);
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
   const valid=pts.map((v,i)=>({v,d:dates[i]})).filter(x=>x.v!=null&&!isNaN(x.v));
   if(valid.length<2){ctx.fillStyle='#94a3b8';ctx.font='11px JetBrains Mono,monospace';ctx.textAlign='left';ctx.fillText('Need at least 2 data points',10,H/2);return;}
   const values=valid.map(x=>x.v);
@@ -1718,11 +1761,11 @@ function drawChart(id,pts,dates,color){
   const toX=i=>pad.l+i*(gW/(valid.length-1)),toY=v=>pad.t+gH-((v-min)/(max-min))*gH;
   ctx.lineWidth=1;
   [0,0.25,0.5,0.75,1].forEach(f=>{
-    const y=pad.t+gH*(1-f);ctx.strokeStyle='#1e2d45';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-    ctx.fillStyle='#64748b';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';ctx.fillText((min+f*(max-min)).toFixed(1),pad.l-4,y+3);
+    const y=pad.t+gH*(1-f);ctx.strokeStyle=document.body.classList.contains('light')?'#e2e8f0':'#1e2d45';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';ctx.fillText((min+f*(max-min)).toFixed(1),pad.l-4,y+3);
   });
   const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);
-  grad.addColorStop(0,'rgba(0,229,255,0.18)');grad.addColorStop(1,'rgba(0,0,0,0)');
+  grad.addColorStop(0,document.body.classList.contains('light')?'rgba(0,119,204,0.15)':'rgba(0,229,255,0.18)');grad.addColorStop(1,'rgba(0,0,0,0)');
   ctx.beginPath();
   for(let i=0;i<valid.length;i++){const x=toX(i),y=toY(valid[i].v);if(i===0){ctx.moveTo(x,y);continue;}const px=toX(i-1),py=toY(valid[i-1].v),cpx=(px+x)/2;ctx.bezierCurveTo(cpx,py,cpx,y,x,y);}
   ctx.lineTo(toX(valid.length-1),pad.t+gH);ctx.lineTo(toX(0),pad.t+gH);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
@@ -1730,18 +1773,13 @@ function drawChart(id,pts,dates,color){
   for(let i=0;i<valid.length;i++){const x=toX(i),y=toY(valid[i].v);if(i===0){ctx.moveTo(x,y);continue;}const px=toX(i-1),py=toY(valid[i-1].v),cpx=(px+x)/2;ctx.bezierCurveTo(cpx,py,cpx,y,x,y);}
   ctx.stroke();
   const avg=values.reduce((a,v)=>a+v,0)/values.length,avgY=toY(avg);
-  ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;
+  ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,avgY);ctx.lineTo(W-pad.r,avgY);ctx.stroke();
-  ctx.setLineDash([]);ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';
+  ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';
   ctx.fillText('avg '+avg.toFixed(1),W-pad.r-2,avgY-3);ctx.restore();
-  if(values.length>=3){
-    const ma=values.map((_,i)=>i<2?null:values.slice(i-2,i+1).reduce((a,v)=>a+v,0)/3).filter(v=>v!==null);
-    ctx.save();ctx.strokeStyle='#7c3aed';ctx.lineWidth=1.5;ctx.globalAlpha=0.7;ctx.beginPath();
-    ma.forEach((v,i)=>{const xi=toX(i+2),yi=toY(v);i===0?ctx.moveTo(xi,yi):ctx.lineTo(xi,yi);});
-    ctx.stroke();ctx.restore();
-  }
+  
   valid.forEach(({v},i)=>{ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
-  ctx.textAlign='center';ctx.fillStyle='#64748b';ctx.font='9px JetBrains Mono,monospace';
+  ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';
   const maxL=Math.max(2,Math.floor(gW/44));
   valid.forEach(({d},i)=>{
     const show=i===0||i===valid.length-1||(valid.length>2&&i%Math.ceil((valid.length-1)/(maxL-1))===0);
@@ -1752,12 +1790,21 @@ function drawChart(id,pts,dates,color){
 function drawAllCharts(){
   if(!document.getElementById('dash')||!document.getElementById('dash').classList.contains('active'))return;
   const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
-  const effPts=[],effDates=[];
+  // Compute all efficiency points
+  const allEffPts=[];
   for(let i=1;i<sorted.length;i++){
     const p=sorted[i-1],c=sorted[i];
-    effPts.push(c.km&&c.km>0?(()=>{const con=settings.battery*(p.e-c.s)/100;return con>0?+(c.km/con).toFixed(2):null;})():null);
-    effDates.push(c.date);
+    if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0)allEffPts.push({v:+(c.km/con).toFixed(2),d:c.date});}
   }
+  // Last 10 individual, older grouped by week
+  const recent=allEffPts.slice(-10);
+  const older=allEffPts.slice(0,-10);
+  const weeks={};
+  older.forEach(p=>{const d=new Date(p.d);const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());const wk=sun.toISOString().slice(0,10);if(!weeks[wk])weeks[wk]={sum:0,n:0};weeks[wk].sum+=p.v;weeks[wk].n++;});
+  const weekPts=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).map(([wk,d])=>({v:+(d.sum/d.n).toFixed(2),d:wk}));
+  const chartData=[...weekPts,...recent];
+  const effPts=chartData.map(p=>p.v);
+  const effDates=chartData.map(p=>p.d);
   drawChart('effChart',effPts,effDates,'#00e5ff');
 }
 
