@@ -363,7 +363,6 @@ input,select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(
   background:#0d1525;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
   outline:none;transition:border-color .2s}
 input:focus,select:focus{border-color:var(--accent)}
-input[type='time']{color-scheme:dark}
 
 input.warn-input{border-color:var(--warn)}
 select option{background:#0d1525}
@@ -568,8 +567,8 @@ body.light .btn-del{background:#fee2e2}
     </div>
     <div id="kwhPreview" class="small"></div>
     <div class="form-row">
-      <div><label>Start Time <span style="color:var(--muted);font-size:10px">(opt)</span></label><input type="time" id="startTime"></div>
-      <div><label>End Time <span style="color:var(--muted);font-size:10px">(opt)</span></label><input type="time" id="endTime"></div>
+      <div><label>Start Time <span style="color:var(--muted);font-size:10px">(opt)</span></label><input type="text" id="startTime" placeholder="e.g. 4:24pm" inputmode="text"></div>
+      <div><label>End Time <span style="color:var(--muted);font-size:10px">(opt)</span></label><input type="text" id="endTime" placeholder="e.g. 4:52pm" inputmode="text"></div>
     </div>
     <div id="durationPreview" class="small"></div>
     <label>Type</label>
@@ -775,6 +774,25 @@ function switchTab(tab) {
 }
 
 
+
+function to12hr(t){
+  if(!t)return '';
+  const [h,m]=t.split(':').map(Number);
+  if(isNaN(h)||isNaN(m))return t;
+  const ampm=h>=12?'pm':'am';
+  const hr=h%12||12;
+  return hr+':'+String(m).padStart(2,'0')+ampm;
+}
+function to24hr(t){
+  if(!t)return '';
+  t=t.trim().toLowerCase().replace(/\s+/g,'');
+  // Already 24hr format (e.g. "16:24")
+  if(/^\d{1,2}:\d{2}$/.test(t)){const[h,m]=t.split(':').map(Number);if(h>=0&&h<=23&&m>=0&&m<=59)return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+  // 12hr format (e.g. "4:24pm", "12:00am")
+  const match=t.match(/^(\d{1,2}):(\d{2})(am|pm)$/);
+  if(match){let h=+match[1],m=+match[2];const pm=match[3]==='pm';if(h===12)h=pm?12:0;else if(pm)h+=12;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+  return '';
+}
 function fmt12hr(t){
   if(!t)return '';
   const [h,m]=t.split(':').map(Number);
@@ -1198,7 +1216,7 @@ function updatePreview(){
 }
 
 function updateDurationPreview(){
-  const mins=calcDuration(document.getElementById('startTime').value,document.getElementById('endTime').value);
+  const mins=calcDuration(to24hr(document.getElementById('startTime').value),to24hr(document.getElementById('endTime').value));
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
   const kwh=(e>s)?calcKwh(s,e):0;
   if(mins&&kwh>0) document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)} · avg ${(kwh/(mins/60)).toFixed(1)} kW`;
@@ -1285,8 +1303,8 @@ function saveCharge(){
   }
 
   const odo=document.getElementById('odo').value!==''?+document.getElementById('odo').value:null;
-  const startTime=document.getElementById('startTime').value||null;
-  const endTime  =document.getElementById('endTime').value||null;
+  const startTime=to24hr(document.getElementById('startTime').value)||null;
+  const endTime  =to24hr(document.getElementById('endTime').value)||null;
   const duration =calcDuration(startTime,endTime);
   const charger  =type==='public'?{
     location: document.getElementById('pubLocation').value||null,
@@ -1486,7 +1504,7 @@ function editCharge(i){
   document.getElementById('date').value=x.date;
   document.getElementById('start').value=x.s;document.getElementById('end').value=x.e;
   document.getElementById('type').value=x.t;document.getElementById('odo').value=x.odo||'';
-  document.getElementById('startTime').value=x.startTime||'';document.getElementById('endTime').value=x.endTime||'';
+  document.getElementById('startTime').value=to12hr(x.startTime)||'';document.getElementById('endTime').value=to12hr(x.endTime)||'';
   document.getElementById('publicBlock').style.display=x.t==='public'?'block':'none';
   if(x.t==='public'&&x.charger){
     document.getElementById('pubLocation').value=x.charger.location||'';
