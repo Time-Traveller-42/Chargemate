@@ -763,8 +763,8 @@ var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},s
 let settings = JSON.parse(safeLS.get('cm-settings') ||
   '{"battery":40,"homeRate":7,"officeRate":0,"bufferPct":15,"petrolMileage":15,"petrolPrice":103}');
 let sessions  = JSON.parse(safeLS.get('cm-data')    || '[]');
-let carpools  = JSON.parse(safeLS.get('cm-carpool') || '[]');
-let editIndex=null, cpEditIndex=null;
+let carpools=[];
+let editIndex=null;
 let planEffMode = 'avg'; // 'avg' | 'last' | 'live'
 
 // ── TABS ───────────────────────────────────────────────────────────────────
@@ -776,7 +776,6 @@ function switchTab(tab) {
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    requestAnimationFrame(drawAllCharts);
   if (tab==='charges') renderCharges();
-  if (tab==='carpool') 
   if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
@@ -1591,9 +1590,7 @@ document.getElementById('stats').innerHTML=
   const uDays=new Set(sessions.map(x=>x.date)).size;
   const tds=sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
   const spw=tds?((sessions.length/Math.max(uDays,1))*(uDays/tds)*7).toFixed(1):'—';
-  const cps=[...carpools].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  let cpw='—';
-  if(cps.length>=2){const d=Math.max(1,(new Date(cps[cps.length-1].date)-new Date(cps[0].date))/86400000);cpw=((carpools.length-1)/d*7).toFixed(1);}
+  
 
   document.getElementById('habitMetrics').innerHTML=
     statBox(spw,'Sessions / Week')+
@@ -1632,59 +1629,9 @@ function makeSplitBar(label,data){
 
 // ── CARPOOL ────────────────────────────────────────────────────────────────
 
-function cancelCpEdit(){cpEditIndex=null;document.getElementById('cpFormTitle').textContent='Log Trip';document.getElementById('cancelCpEdit').style.display='none';clearCpForm();}
-
-function clearCpForm(){
-  ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
-  document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
-}
 
 
 
-function {
-  const ti=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
-  const tp=carpools.reduce((a,x)=>a+(x.pax||0),0);
-  document.getElementById('carpoolStats').innerHTML=
-    statBox('₹'+ti.toFixed(0),'Total Income',null,'good')+statBox(carpools.length,'Total Trips')+
-    statBox(carpools.length>0?'₹'+(ti/carpools.length).toFixed(0):'—','Avg / Trip')+
-    statBox(tp>0?'₹'+(ti/tp).toFixed(0):'—','Avg / Passenger');
-  const listEl=document.getElementById('cpList');
-  if(!carpools.length){listEl.innerHTML='<div class="empty">No trips yet.</div>';return;}
-  const dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home',both:'\u2194 Both Ways'};
-  // Group by month + collapsible
-  const cpGroups={};
-  carpools.forEach((x,i)=>{const m=x.date.slice(0,7);if(!cpGroups[m])cpGroups[m]=[];cpGroups[m].push({...x,_idx:i});});
-  let cpOut='',cpMIdx=0;
-  Object.entries(cpGroups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
-    const[yr,mo]=month.split('-');
-    const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
-    const mAmt=rows.reduce((a,x)=>a+(x.amount||0),0);
-    const mId='cpgrp-'+month;
-    const collapsed=cpMIdx>0?' style="display:none"':'';
-    cpOut+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} trip${rows.length>1?'s':''} \u00b7 \u20b9${mAmt.toFixed(0)} <span style="float:right;font-size:10px">${cpMIdx>0?'\u25b6':'\u25bc'}</span></div>`;
-    cpOut+=`<div id="${mId}"${collapsed}>`;
-    rows.forEach(x=>{
-      const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
-      cpOut+=`<div class="session-row">
-        <div class="session-top">
-          <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.dir||'to_office')}</div>
-          <div class="session-actions">
-            <button class="btn-sm btn-edit" onclick="editCarpool(${x._idx})">Edit</button>
-            <button class="btn-sm btn-del" onclick="delCarpool(${x._idx})">\u2715</button>
-          </div>
-        </div>
-        <div class="session-detail">
-          <span class="session-main" style="font-size:12px">${parts.join(' \u00b7 ')||'\u2014'}</span>
-          <span class="session-cost" style="color:var(--good)">+\u20b9${x.amount.toFixed(0)}</span>
-        </div>
-      </div>`;
-    });
-    cpOut+='</div>';cpMIdx++;
-  });
-  listEl.innerHTML=cpOut;
-}
 
 // ── CHARTS ─────────────────────────────────────────────────────────────────
 function drawChart(id,pts,dates,color){
@@ -1790,7 +1737,7 @@ function saveSettings(){
   Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
   safeLS.set('cm-settings',JSON.stringify(settings));render();toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];persist();render();toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];persist();render();toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
@@ -1803,7 +1750,6 @@ function populateSettingsInputs(){
 }
 populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
-document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
 try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
