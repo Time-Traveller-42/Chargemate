@@ -1581,7 +1581,7 @@ document.getElementById('stats').innerHTML=
     statBox(homeRpk?'\u20b9'+homeRpk:'—','Home \u20b9/km','home cost \u00f7 km')+
     statBox(pubRpk?'\u20b9'+pubRpk:'—','Public \u20b9/km','public cost \u00f7 km')+
     statBox(effRpk?'\u20b9'+effRpk:'—','Effective \u20b9/km','all cost \u00f7 total km')+
-    statBox(netRpk?'\u20b9'+netRpk:'—','Net \u20b9/km','after carpool income',netRpk&&effRpk&&+netRpk<+effRpk?'good':null)+
+    statBox(sessions.length>0&&allCostTotal>0?'\u20b9'+(allCostTotal/Math.max(1,sessions.filter(x=>x.cost!=null&&x.cost>0).length)).toFixed(0):'\u2014','Avg \u20b9/charge','avg cost per paid session')+
     statBox(hasCost?'\u20b9'+monthSpend.toFixed(0):'—','This Month \u20b9')+
     statBox(sessions.length>0&&allCostTotal>0?'\u20b9'+(allCostTotal/totalKwhCharged).toFixed(1):'—','Avg \u20b9/kWh','cost per unit charged');
 
