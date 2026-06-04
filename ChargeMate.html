@@ -1638,7 +1638,8 @@ function drawChart(id,pts,dates,color){
   const canvas=document.getElementById(id);if(!canvas)return;
   const ctx=canvas.getContext('2d');
   const dpr=window.devicePixelRatio||1;
-  const W=canvas.offsetWidth||canvas.parentElement.offsetWidth||460;
+  const W=canvas.offsetWidth||canvas.parentElement.offsetWidth;
+  if(!W)return false;
   const H=parseInt(canvas.getAttribute('height'))||180;
   canvas.width=W*dpr;canvas.height=H*dpr;
   canvas.style.width=W+'px';canvas.style.height=H+'px';
@@ -1648,7 +1649,8 @@ function drawChart(id,pts,dates,color){
   const values=valid.map(x=>x.v);
   const pad={l:38,r:36,t:16,b:32},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
   let max=Math.max(...values),min=Math.min(...values);if(max===min)max=min+1;
-  const rng=max-min;max+=rng*0.05;min-=rng*0.05;
+  min=Math.min(min,5);max=Math.max(max,min+4);
+  const rng=max-min;max+=rng*0.02;min-=rng*0.02;
   const toX=i=>pad.l+i*(gW/(valid.length-1)),toY=v=>pad.t+gH-((v-min)/(max-min))*gH;
   ctx.lineWidth=1;
   [0,0.25,0.5,0.75,1].forEach(f=>{
@@ -1684,6 +1686,7 @@ function drawChart(id,pts,dates,color){
   });
 }
 
+var _chartRetries=0;
 function drawAllCharts(){
   if(!document.getElementById('dash')||!document.getElementById('dash').classList.contains('active'))return;
   const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
@@ -1702,7 +1705,10 @@ function drawAllCharts(){
   const chartData=[...weekPts,...recent];
   const effPts=chartData.map(p=>p.v);
   const effDates=chartData.map(p=>p.d);
-  drawChart('effChart',effPts,effDates,'#00e5ff');
+  if(drawChart('effChart',effPts,effDates,'#00e5ff')===false&&_chartRetries<3){
+    _chartRetries++;requestAnimationFrame(drawAllCharts);return;
+  }
+  _chartRetries=0;
 }
 
 // ── EXPORT / IMPORT ────────────────────────────────────────────────────────
