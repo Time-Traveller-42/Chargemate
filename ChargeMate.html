@@ -686,12 +686,19 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       </div>
     </div>
     <div id="durationPreview" class="small"></div>
-    <label>Type</label>
-    <div class="popup-trigger" onclick="openTypeSelect()">
-      <span id="typeDisplay">Office</span>
-      <span class="arrow">▼</span>
+        <div class="form-row" style="margin-top:10px">
+      <div><label>Type</label>
+        <div class="popup-trigger" onclick="openTypeSelect()">
+          <span id="typeDisplay">Office</span>
+          <span class="arrow">▼</span>
+        </div>
+        <input type="hidden" id="type" value="office">
+      </div>
+      <div><label>Odometer (km)</label>
+        <input type="number" id="odo" placeholder="" oninput="validateOdo()">
+      </div>
     </div>
-    <input type="hidden" id="type" value="office">
+    <div id="odoWarn" class="warn-msg"></div>
     <div id="publicBlock" style="display:none">
       <hr class="divider">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -721,8 +728,6 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <label>Total ₹</label>
       <input type="number" id="pubTotal" placeholder="auto-calculated" oninput="autoCalcPublic('total')">
     </div>
-    <label>Odometer (km)</label>
-    <input type="number" id="odo" placeholder="" oninput="validateOdo()">
     <div id="odoWarn" class="warn-msg"></div>
     <div id="notesBlock" style="display:none">
     <label>Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
@@ -838,7 +843,7 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v1.3</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v1.5.4</div>
   </div>
   <div class="card">
     <h3>Export</h3>
@@ -861,33 +866,70 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v1.5.4 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Export: uses Capacitor Filesystem plugin to save directly to Documents/ChargeMate/</li>
+      <li>Falls back to Share API if permission denied</li>
+      <li>Browser export still uses anchor download</li>
+    </ul>
+    <div class="cl-ver">v1.5.3 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Export: Share API → clipboard copy → textarea fallback</li>
+      <li>Removed window.open fallback (was opening JSON instead of saving)</li>
+    </ul>
+    <div class="cl-ver">v1.5.2 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Export: 3-method fallback (Share API → anchor download → window.open)</li>
+      <li>Export: removed false "Backup exported" toast (share sheet is confirmation)</li>
+    </ul>
+    <div class="cl-ver">v1.5.1 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Export fix: uses Share API in APK (opens share sheet to save/send file)</li>
+      <li>APK versionCode auto-increments (fixes "App not installed" error)</li>
+      <li>APK file named chargemate-v1.5.apk (not app-release.apk)</li>
+    </ul>
+    <div class="cl-ver">v1.5 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Carpool form condensed: Date+Direction row, Passengers+Amount row</li>
+      <li>Charging form: Type + Odometer on same row</li>
+    </ul>
+    <div class="cl-ver">v1.4 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Export download fix (now works in APK/WebView)</li>
+      <li>Carpool: distance field removed, auto-fills from Settings</li>
+      <li>Public charges auto-fill location, connector, kW &amp; rate from last session</li>
+      <li>Charge type remembers last used (persists across sessions)</li>
+      <li>Splash screen removed (was pixelated in APK)</li>
+      <li>Theme: Dark / Light / System pill selector (replaces toggle)</li>
+      <li>Plan tab: status box removed, only Charge Advice shown</li>
+      <li>Plan stops: delete button aligned inline with inputs</li>
+      <li>Start % &gt; 100 shows error immediately on input</li>
+      <li>Carpool list sorted by date (newest first)</li>
+      <li>Session date: full white (dark) / black (light) for readability</li>
+      <li>Time picker: Done/Clear buttons same size</li>
+      <li>Notes field only visible for Public charges</li>
+      <li>Tab tap highlight: rounded (not rectangular flash)</li>
+      <li>Toggle row padding fixed for visual centering</li>
+      <li>Session row: edit/delete no longer wrap to next line</li>
+    </ul>
     <div class="cl-ver">v1.3 <span class="cl-date">6 Jun 2026</span></div>
     <ul class="cl-list">
-      <li>Splash animation on app launch</li>
+      <li>Charger picker: shows saved + public history chargers</li>
       <li>Charger picker auto-fills last used ₹/unit rate</li>
-      <li>Session list: edit/delete buttons no longer wrap to next line</li>
+      <li>Commute distance added to Settings (office/home km)</li>
+      <li>Pencil icon: filled Material Design style with visible nib</li>
+      <li>Time picker: light mode fix (AM/PM, arrows, buttons themed)</li>
+      <li>APK workflow: auto-reads version from package.json</li>
+      <li>APK icon: removes adaptive XML (forces PNG usage)</li>
     </ul>
     <div class="cl-ver">v1.2 <span class="cl-date">5 Jun 2026</span></div>
     <ul class="cl-list">
-      <li>Charger picker includes public charge history</li>
-      <li>Commute distance in Settings (auto-fills distance)</li>
-      <li>Theme syncs with device (prefers-color-scheme)</li>
-      <li>Tab tap highlight fixed (curved, not rectangular)</li>
-      <li>Pencil icon: filled with visible nib</li>
-      <li>Date text: full white/black for readability</li>
-      <li>Time picker Done/Clear same size</li>
-      <li>Notes only for public charges</li>
-      <li>App icon with rounded corners</li>
+      <li>Session notes (optional, public charges only)</li>
+      <li>Charger picker from saved chargers</li>
+      <li>Session date text made bolder</li>
+      <li>In-app changelog (What's New in Settings)</li>
     </ul>
     <div class="cl-ver">v1.1 <span class="cl-date">5 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Charger picker — fill from saved chargers when logging public charges</li>
-      <li>Session notes — optional text per charge</li>
-      <li>Date text made bolder in charge list for readability</li>
-      <li>Time picker light mode fix (AM/PM, arrows, buttons)</li>
-      <li>Pencil icon redesigned (GitHub-style angled)</li>
-          </ul>
-    <div class="cl-ver">v1.0 <span class="cl-date">3 Jun 2026</span></div>
     <ul class="cl-list">
       <li>Popup selectors for charge type, connector &amp; direction</li>
       <li>Popup time picker with long-press fast scroll</li>
@@ -900,7 +942,6 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <li>Light/dark theme</li>
       <li>PWA support (install as app)</li>
       <li>Smart import with dedup</li>
-      <li>In-app changelog &amp; icon gallery</li>
     </ul>
     <div class="cl-ver">β (Beta) <span class="cl-date">18 May 2026</span></div>
     <ul class="cl-list">
@@ -916,6 +957,7 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
     <ul class="cl-list">
       <li>Initial session logging (start/end %, times, odo, cost)</li>
       <li>Dashboard with basic stats</li>
+      <li>Carpool income tracking</li>
       <li>Trip planner (single destination)</li>
       <li>Export/Import JSON &amp; CSV</li>
       <li>Canvas efficiency chart</li>
@@ -1600,6 +1642,18 @@ function onTypeChange(){
   var isPub=document.getElementById('type').value==='public';
   document.getElementById('publicBlock').style.display=isPub?'block':'none';
   document.getElementById('notesBlock').style.display=isPub?'block':'none';
+  // Auto-fill from last public charge if fields are empty
+  if(isPub&&!document.getElementById('pubLocation').value){
+    var lastPub=sessions.find(function(s){return s.t==='public'&&s.charger&&s.charger.location;});
+    if(lastPub&&lastPub.charger){
+      document.getElementById('pubLocation').value=lastPub.charger.location||'';
+      document.getElementById('pubMapsLink').value=lastPub.charger.mapsLink||'';
+      document.getElementById('pubConnector').value=lastPub.charger.connector||'DC';
+      document.getElementById('connDisplay').textContent=lastPub.charger.connector||'DC';
+      if(lastPub.charger.kw)document.getElementById('pubKw').value=lastPub.charger.kw;
+      if(lastPub.charger.rate)document.getElementById('pubRate').value=lastPub.charger.rate;
+    }
+  }
 }
 
 // ── ODO VALIDATION ─────────────────────────────────────────────────────────
@@ -1674,7 +1728,7 @@ function saveCharge(){
     document.getElementById('cancelChargeEdit').style.display='none';
   } else sessions.unshift(obj);
 
-  recomputeAllKm();persist();clearChargeForm();render();
+  recomputeAllKm();safeLS.set('cm-lastType',type);persist();clearChargeForm();render();
   document.getElementById('list').scrollIntoView({behavior:'smooth',block:'start'});
   toast(wasEditing?'Session updated ✓':'Session saved ✓');
 }
@@ -2065,7 +2119,7 @@ function exportCSV(){safeLS.set('cm-lastExport',''+Date.now());
   sessions.forEach(s=>{rows.push([s.date,s.s,s.e,s.kwh!=null?s.kwh.toFixed(2):'',s.cost!=null?s.cost.toFixed(0):'',s.t,s.odo||'',s.km!=null?s.km:'',s.startTime||'',s.endTime||'',s.duration||'',s.charger?.location||'',s.charger?.connector||'',s.charger?.kw||''].join(','));});
   dl(new Blob([rows.join('\n')],{type:'text/csv'}),'chargemate.csv');toast('CSV exported ✓');
 }
-function exportJSON(){safeLS.set('cm-lastExport',''+Date.now());dl(new Blob([JSON.stringify({version:14,sessions,settings},null,2)],{type:'application/json'}),'chargemate-backup.json');toast('Backup exported ✓');}
+function exportJSON(){safeLS.set('cm-lastExport',''+Date.now());dl(new Blob([JSON.stringify({version:14,sessions,settings},null,2)],{type:'application/json'}),'chargemate-backup.json');}
 function importData(e){
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();
@@ -2081,7 +2135,44 @@ function importData(e){
     }catch{alert('Import failed.');}e.target.value='';
   };r.readAsText(file);
 }
-function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function dl(blob,name){
+  blob.text().then(function(text){
+    // Try Capacitor Filesystem (APK)
+    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Filesystem){
+      var FS=window.Capacitor.Plugins.Filesystem;
+      FS.writeFile({
+        path:'ChargeMate/'+name,
+        data:btoa(unescape(encodeURIComponent(text))),
+        directory:'DOCUMENTS',
+        recursive:true
+      }).then(function(r){
+        toast('Saved to Documents/ChargeMate/ \u2713');
+      }).catch(function(e){
+        // Permission denied or unavailable — try share
+        dlShare(blob,name,text);
+      });
+      return;
+    }
+    // Browser: anchor download
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+    a.style.display='none';document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+    toast('Backup exported \u2713');
+  });
+}
+function dlShare(blob,name,text){
+  try{
+    var file=new File([blob],name,{type:'application/json'});
+    if(navigator.share){
+      navigator.share({files:[file]}).then(function(){
+        toast('Backup shared \u2713');
+      }).catch(function(){toast('Export cancelled');});
+      return;
+    }
+  }catch(e){}
+  toast('Export failed — check app permissions');
+}
+
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 function saveSettings(){
@@ -2104,6 +2195,7 @@ function populateSettingsInputs(){
 }
 populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
+(function(){var lt=safeLS.get('cm-lastType');if(lt){selectType(lt);}})();
 try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
