@@ -370,7 +370,7 @@ input:focus,select:focus{border-color:var(--accent)}
 input.warn-input{border-color:var(--warn)}
 select option{background:#0d1525}
 
-button.primary{width:100%;padding:11px;margin-top:14px;border-radius:10px;border:none;
+button.primary{width:100%;padding:11px;margin-top:10px;border-radius:10px;border:none;
   background:var(--accent);color:#000;font-family:'Inter',sans-serif;
   font-weight:700;font-size:13px;letter-spacing:.05em;cursor:pointer;transition:opacity .15s,transform .1s}
 button.primary:hover{opacity:.9}
@@ -424,7 +424,7 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 .popup-opt:hover{border-color:var(--accent)}
 .popup-trigger{padding:9px 12px;border-radius:8px;border:1px solid var(--border);
   background:#0d1525;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;
-  cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+  cursor:pointer;display:flex;align-items:center;justify-content:space-between}
 .popup-trigger .arrow{color:var(--muted);font-size:10px}
 body.light .popup-overlay{background:rgba(0,0,0,0.4)}
 body.light .popup-card{background:#fff;border-color:#dfe1e6}
@@ -486,9 +486,9 @@ body.light .popup-trigger{background:#f0f4f8;border-color:#dfe1e6;color:#172b4d}
   font-weight:700;letter-spacing:.06em;padding:8px 0 4px;text-transform:uppercase;
   border-bottom:1px solid var(--border);margin-bottom:2px}
 
-.small{font-size:11px;color:var(--accent);margin-top:4px;min-height:16px}
-.warn-msg{font-size:11px;color:var(--warn);margin-top:4px}
-.error-msg{font-size:11px;color:var(--danger);margin-top:4px;min-height:16px}
+.small{font-size:11px;color:var(--accent)}
+.warn-msg{font-size:11px;color:var(--warn)}
+.error-msg{font-size:11px;color:var(--danger);margin-top:4px}
 .chart-wrap{position:relative;width:100%;margin-top:8px}
 canvas{width:100%;display:block;border-radius:8px}
 
@@ -584,6 +584,7 @@ body.light .btn-edit{background:#e2e8f0}
 body.light .btn-del{background:#fee2e2}
 body.light .eff-tab{border-color:#e2e8f0;color:#64748b}
 body.light .eff-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+body.light .type-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.light .eff-display{background:#f1f5f9;border-color:#e2e8f0}
 body.light .month-header{color:var(--accent)}
 body.light .badge-home{background:#dcfce7;color:#166534}
@@ -676,14 +677,19 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
   <div class="card"><h3>Summary</h3><div class="stats-grid" id="chargeSummary"></div></div>
   <div class="card">
     <h3 id="chargeFormTitle">New Charge</h3>
-    <label>Date</label>
-    <input type="date" id="date">
-    <div class="form-row" style="margin-top:10px">
+    <div class="form-row">
+      <div><label>Date</label><input type="date" id="date"></div>
+      <div><label>Type</label>
+        <div class="popup-trigger" onclick="openTypeSelect()"><span id="typeDisplay">Office</span><span class="arrow">▼</span></div>
+        <input type="hidden" id="type" value="office">
+      </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
       <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='Start % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
       <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='End % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
+      <div><label>Odo (km)</label><input type="number" id="odo" placeholder="" oninput="validateOdo()"></div>
     </div>
-    <div id="kwhPreview" class="small"></div>
-    <div class="form-row">
+    <div class="form-row" style="margin-top:10px">
       <div><label>Start Time <span style="color:var(--muted);font-size:10px">(opt)</span></label>
         <div class="popup-trigger" onclick="openStartTime()"><span id="startTimeDisplay">Set time</span><span class="arrow">▼</span></div>
         <input type="hidden" id="startTime">
@@ -693,20 +699,6 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
         <input type="hidden" id="endTime">
       </div>
     </div>
-    <div id="durationPreview" class="small"></div>
-        <div class="form-row" style="margin-top:10px">
-      <div><label>Type</label>
-        <div class="popup-trigger" onclick="openTypeSelect()">
-          <span id="typeDisplay">Office</span>
-          <span class="arrow">▼</span>
-        </div>
-        <input type="hidden" id="type" value="office">
-      </div>
-      <div><label>Odometer (km)</label>
-        <input type="number" id="odo" placeholder="" oninput="validateOdo()">
-      </div>
-    </div>
-    <div id="odoWarn" class="warn-msg"></div>
     <div id="publicBlock" style="display:none">
       <hr class="divider">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -741,6 +733,9 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
     <label>Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="chargeNotes" placeholder="e.g. queue 15 min, 2 guns working">
     </div>
+    <div id="kwhPreview" class="small"></div>
+    <div id="durationPreview" class="small"></div>
+    <div id="odoWarn" class="warn-msg"></div>
     <div id="formError" class="error-msg"></div>
     <button class="primary" onclick="saveCharge()">Save</button>
     <button class="ghost" onclick="clearChargeForm()" style="margin-top:8px">Reset</button>
@@ -808,10 +803,6 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <div><label>Distance (km)</label><input type="number" id="planDist" min="0" placeholder="e.g. 45" oninput="runPlan()"></div>
     </div>
 
-    <div class="toggle-row" style="margin-top:12px">
-      <span class="toggle-label">Round trip</span>
-      <label class="toggle"><input type="checkbox" id="planRoundTrip" onchange="runPlan()"><span class="toggle-slider"></span></label>
-    </div>
 
     <hr class="divider">
     <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
@@ -869,28 +860,28 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
     <label>Petrol Price (₹/litre)</label><input type="number" id="petrolPrice" placeholder="e.g. 103">
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
-  <div class="card"><h3>Appearance</h3><div style="margin-top:4px">
-      <label>Theme</label>
-      <div class="type-pills" id="themePills" style="margin-top:6px">
-        <div class="type-pill" data-theme="dark" onclick="setTheme('dark')">Dark</div>
-        <div class="type-pill" data-theme="light" onclick="setTheme('light')">Light</div>
-        <div class="type-pill" data-theme="system" onclick="setTheme('system')">System</div>
-      </div>
-    </div></div>
+  <div class="card"><h3>Appearance</h3>
+    <label>Theme</label>
+    <div class="type-pills" id="themePills">
+      <div class="type-pill" data-theme="dark" onclick="setTheme('dark')">Dark</div>
+      <div class="type-pill" data-theme="light" onclick="setTheme('light')">Light</div>
+      <div class="type-pill" data-theme="system" onclick="setTheme('system')">System</div>
+    </div>
+  </div>
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v1.5.4</div>
-  </div>
-  <div class="card">
-    <h3>Export</h3>
-    <button class="ghost" onclick="exportJSON()" style="margin-bottom:8px">⬇ Export Full Backup (JSON)</button>
-    <button class="ghost" onclick="exportCSV()">⬇ Export Charges CSV</button>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v1.6.8</div>
   </div>
   <div class="card">
     <h3>Import</h3>
     <label class="file-label" for="importInput" style="margin-top:0">⬆ Import Backup (JSON)</label>
     <input type="file" id="importInput" accept=".json" onchange="importData(event)">
+  </div>
+  <div class="card">
+    <h3>Export</h3>
+    <button class="ghost" onclick="exportJSON()" style="margin-bottom:8px">⬇ Export Full Backup (JSON)</button>
+    <button class="ghost" onclick="exportCSV()">⬇ Export Charges CSV</button>
   </div>
   <div class="card">
     <h3>Advanced</h3>
@@ -903,6 +894,48 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v1.6.8 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Light mode fix: active type-pill (Theme/Type/Connector) text now white on blue</li>
+    </ul>
+    <div class="cl-ver">v1.6.7 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Appearance card: removed extra wrapper div, consistent with other cards</li>
+      <li>Theme pills: removed redundant inline margin</li>
+    </ul>
+    <div class="cl-ver">v1.6.6 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Form spacing fix: labels in Start%/End%/Odo row now have margin-top:0 (matching other rows)</li>
+      <li>Removed popup-trigger margin-top:4px (consistent input heights across all rows)</li>
+    </ul>
+    <div class="cl-ver">v1.6.5 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Form: moved kWh preview, duration preview &amp; odo warning above Save button</li>
+      <li>Eliminated all phantom gaps between input rows</li>
+    </ul>
+    <div class="cl-ver">v1.6.4 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Form row spacing: equal 10px gaps, removed phantom margins from empty preview/warning divs</li>
+    </ul>
+    <div class="cl-ver">v1.6.3 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Form row spacing made consistent (8px between all rows)</li>
+      <li>Settings: Import moved before Export</li>
+      <li>Plan: Round Trip toggle removed</li>
+    </ul>
+    <div class="cl-ver">v1.6.2 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Removed dead space below time row (min-height on empty preview/error divs)</li>
+    </ul>
+    <div class="cl-ver">v1.6.1 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Form layout: Date+Type row, Start%+End%+Odo row, Times row (less cramped)</li>
+    </ul>
+    <div class="cl-ver">v1.6 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Charge form condensed to 3 rows (Date+Type+Odo, Start%+End%, Times)</li>
+      <li>Summary: 6 stats → 4 (sessions+frequency clubbed, start/end clubbed)</li>
+    </ul>
     <div class="cl-ver">v1.5.4 <span class="cl-date">9 Jun 2026</span></div>
     <ul class="cl-list">
       <li>Export: uses Capacitor Filesystem plugin to save directly to Documents/ChargeMate/</li>
@@ -1840,10 +1873,8 @@ function renderChargeSummary(){
   const span    =sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
   const perWeek =span?((n/Math.max(uDays,1))*(uDays/span)*7).toFixed(1):'—';
   document.getElementById('chargeSummary').innerHTML=
-    statBox(perWeek,'Sessions / Week')+statBox(avgKwh+' kWh','Avg Per Session')+
-    statBox(avgStart+'%','Avg Start %',null,+avgStart<15?'warn':null)+
-    statBox(avgEnd+'%','Avg End %',null,+avgEnd<95?'warn':null)+
-    statBox(avgDur,'Avg Duration')+statBox(n,'Total Sessions');
+    statBox(n+' total \u00b7 '+perWeek+'/wk','Sessions')+statBox(avgKwh+' kWh','Avg Per Session')+
+    statBox(avgStart+'% \u2192 '+avgEnd+'%','Avg Start \u2192 End')+statBox(avgDur,'Avg Duration');
 }
 
 function renderList(){
