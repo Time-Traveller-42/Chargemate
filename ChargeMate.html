@@ -44,6 +44,7 @@
   --color-primary-gradient-end: #e8e6ff;
   --color-primary-bg-solid: #eae8ed;
   --color-user-bubble: #F3F3F7;
+  --color-user-bubble-text: #352f3d;
   --color-text-secondary: #5e5966;
   --color-text-tertiary: #7a7582;
   --color-text-muted: #938f9b;
@@ -114,6 +115,17 @@
   --text-3xl: 1.25rem;
   --text-4xl: 1.5rem;
   --text-5xl: 2rem;
+  --spacing-1: calc(.25rem * 1);
+  --spacing-1-5: calc(.25rem * 1.5);
+  --spacing-2: calc(.25rem * 2);
+  --spacing-3: calc(.25rem * 3);
+  --spacing-4: calc(.25rem * 4);
+  --spacing-5: calc(.25rem * 5);
+  --spacing-6: calc(.25rem * 6);
+  --spacing-7: calc(.25rem * 7);
+  --spacing-8: calc(.25rem * 8);
+  --spacing-9: calc(.25rem * 9);
+  --spacing-10: calc(.25rem * 10);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-card: 12px;
@@ -301,9 +313,10 @@
   --qs-error-foreground: #db0000;
   --qs-contrast-foreground: #131920;
   --qs-main-foreground: #131920;
+  --qs-main-secondary-foreground: #656871;
   --qs-action-disabled: #f3f3f7;
   --qs-action-active: #e8e6ff;
-  --qs-default-badge: #b4b4bb;
+  --qs-default-badge: #dedee3;
   --qs-tag-default: #dedee3;
   --qs-tag-soft-border: #b4b4bb;
   --qs-focus-offset: 1px;
@@ -368,7 +381,6 @@ input,select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(
 input:focus,select:focus{border-color:var(--accent)}
 
 input.warn-input{border-color:var(--warn)}
-select option{background:#0d1525}
 
 button.primary{width:100%;padding:11px;margin-top:10px;border-radius:10px;border:none;
   background:var(--accent);color:#000;font-family:'Inter',sans-serif;
@@ -403,7 +415,7 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 .eff-tab{flex:1;text-align:center;padding:7px 4px;border-radius:8px;border:1px solid var(--border);
   font-size:10px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;
   color:var(--muted);transition:background-color .15s,color .15s,border-color .15s;text-transform:uppercase;letter-spacing:.03em}
-.eff-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.eff-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .eff-tab:hover:not(.active){border-color:var(--muted);color:var(--text)}
 
 
@@ -432,26 +444,29 @@ body.light .popup-opt{border-color:#dfe1e6;color:#172b4d}
 body.light .popup-opt:active,body.light .popup-opt.selected{background:var(--accent);color:#fff}
 body.light .popup-trigger{background:#f0f4f8;border-color:#dfe1e6;color:#172b4d}
 
-/* -- Popup Time Picker -- */
-.tp-modal{display:flex;flex-direction:column;align-items:center;gap:16px}
-.tp-display{display:flex;align-items:center;gap:4px}
-.tp-col-wrap{display:flex;flex-direction:column;align-items:center;gap:2px}
-.tp-col-wrap .tp-arrow{width:36px;height:28px;display:flex;align-items:center;justify-content:center;
-  font-size:14px;color:var(--muted);cursor:pointer;border-radius:6px;transition:background .15s;user-select:none}
-.tp-col-wrap .tp-arrow:active{background:rgba(0,229,255,0.15);color:var(--accent)}
-.tp-col-wrap .tp-val{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:600;
-  color:var(--accent);min-width:44px;text-align:center}
-.tp-sep{font-size:28px;color:var(--muted);margin:0 2px}
-.tp-ampm-col{display:flex;flex-direction:column;gap:4px;margin-left:12px}
-.tp-ampm-col div{padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;
-  font-family:'Inter',sans-serif;color:var(--muted);cursor:pointer;text-align:center;
-  border:1px solid var(--border);transition:all .15s}
-.tp-ampm-col div.active{background:var(--accent);color:#000;border-color:var(--accent)}
-.tp-done{margin-top:4px;padding:10px 32px;border-radius:8px;border:none;
-  background:var(--accent);color:#000;font-family:'Inter',sans-serif;font-weight:700;
-  font-size:13px;cursor:pointer;min-width:120px}
-.tp-clear{background:transparent;border:1px solid var(--border);color:var(--muted);
-  padding:9px 32px;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;margin-top:4px;min-width:120px}
+/* Native time inputs (Public charges only) */
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.time-row input[type="time"]{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
+  background:#0d1525;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
+  color-scheme:dark}
+body.light .time-row input[type="time"]{background:#f8fafc;color:#1e293b;border-color:#e2e8f0;color-scheme:light}
+.auto-duration{font-size:11px;color:var(--accent);margin-top:6px;font-style:italic}
+
+/* Entry mode toggle (Charge vs Trip) */
+.entry-mode-toggle{display:flex;gap:4px;margin-bottom:14px}
+.entry-mode-btn{flex:1;text-align:center;padding:9px 4px;border-radius:8px;border:1px solid var(--border);
+  font-size:12px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;
+  color:var(--muted);transition:background-color .15s,color .15s,border-color .15s;text-transform:uppercase;letter-spacing:.03em}
+.entry-mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.entry-mode-btn:hover:not(.active){border-color:var(--muted);color:var(--text)}
+body.light .entry-mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Charged-since checkbox */
+.charged-since-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;
+  background:#0d1525;border:1px solid var(--border);border-radius:8px}
+.charged-since-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent)}
+.charged-since-row label{margin:0;font-size:11px;color:var(--muted)}
+body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 
 .type-pills{display:flex;gap:6px;margin-top:4px}
 .type-pill{flex:1;text-align:center;padding:9px 4px;border-radius:8px;border:1px solid var(--border);
@@ -463,7 +478,7 @@ body.light .popup-trigger{background:#f0f4f8;border-color:#dfe1e6;color:#172b4d}
 
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
 .stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border)}
-.stat-val{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1.2}
+.stat-val{font-family:'Inter',sans-serif;font-size:17px;font-weight:700;color:var(--accent);line-height:1.2}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
 .stat-label{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
 .stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
@@ -496,6 +511,12 @@ canvas{width:100%;display:block;border-radius:8px}
 .badge-home{background:#0c2a1c;color:var(--good)}
 .badge-public{background:#1a1a2e;color:#818cf8}
 .badge-office{background:#1a2810;color:#a3e635}
+.badge-tooffice{background:#1a1a2e;color:#818cf8}
+.badge-tohome{background:#0c2a1c;color:var(--good)}
+.badge-both{background:#1e1a2e;color:#c084fc}
+.badge-trip{background:#1a2040;color:#f59e0b}
+body.light .badge-trip{background:#fef3c7;color:#92400e}
+
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
   background:var(--accent);color:#000;padding:9px 18px;border-radius:20px;
   font-family:'Inter',sans-serif;font-size:12px;font-weight:700;
@@ -579,7 +600,7 @@ body.light #toast{color:#fff}
 body.light .btn-edit{background:#e2e8f0}
 body.light .btn-del{background:#fee2e2}
 body.light .eff-tab{border-color:#e2e8f0;color:#64748b}
-body.light .eff-tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+body.light .eff-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.light .type-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.light .eff-display{background:#f1f5f9;border-color:#e2e8f0}
 body.light .month-header{color:var(--accent)}
@@ -588,7 +609,10 @@ body.light .badge-office{background:#ecfccb;color:#3f6212}
 body.light .badge-AC{background:#dcfce7;color:#166534}
 body.light .badge-DC{background:#e0e7ff;color:#3730a3}
 body.light .badge-public{background:#e0e7ff;color:#3730a3}
-body.light body.light body.light body.light .toggle-slider{background:#cbd5e1}
+body.light .badge-tooffice{background:#e0e7ff;color:#3730a3}
+body.light .badge-tohome{background:#dcfce7;color:#166534}
+body.light .badge-both{background:#f3e8ff;color:#6b21a8}
+body.light .toggle-slider{background:#cbd5e1}
 body.light .toggle input:checked+.toggle-slider{background:var(--accent)}
 body.light .charger-row{border-color:#e2e8f0}
 body.light .plan-status-box.safe{background:#dcfce7;border-color:#86efac}
@@ -612,14 +636,6 @@ body.light .month-header{color:#1e40af}
 body.light .session-date{color:#000}
 
 /* Time Picker Light Mode */
-body.light .tp-col-wrap .tp-val{color:var(--accent)}
-body.light .tp-col-wrap .tp-arrow{color:#64748b}
-body.light .tp-col-wrap .tp-arrow:active{background:rgba(0,119,204,0.1);color:var(--accent)}
-body.light .tp-sep{color:#64748b}
-body.light .tp-ampm-col div{color:#64748b;border-color:#e2e8f0}
-body.light .tp-ampm-col div.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-body.light .tp-done{background:var(--accent);color:#fff}
-body.light .tp-clear{border-color:#e2e8f0;color:#64748b}
 
 /* Changelog */
 .changelog-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;
@@ -638,6 +654,18 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
 
 
 
+
+/* Inline dropdown */
+.inline-dropdown{position:absolute;top:100%;left:0;right:0;z-index:50;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  margin-top:4px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.inline-dropdown div{padding:10px 12px;font-family:'Inter',sans-serif;font-size:13px;
+  color:var(--text);cursor:pointer;transition:background .15s}
+.inline-dropdown div:hover{background:rgba(0,229,255,0.1)}
+.inline-dropdown div:active{background:var(--accent);color:#000}
+body.light .inline-dropdown{background:#fff;border-color:#e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+body.light .inline-dropdown div:hover{background:rgba(0,119,204,0.08)}
+body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
@@ -668,12 +696,48 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
 <div id="charges" class="view">
   <div class="card"><h3>Summary</h3><div class="stats-grid" id="chargeSummary"></div></div>
   <div class="card">
+    <div class="entry-mode-toggle">
+      <div class="entry-mode-btn active" id="mode-charge" onclick="setEntryMode('charge')">⚡ Charge</div>
+      <div class="entry-mode-btn" id="mode-trip" onclick="setEntryMode('trip')">🚗 Trip</div>
+    </div>
+    <div id="tripForm" style="display:none">
+      <h3 id="tripFormTitle">New Trip</h3>
+      <label>Date</label><input type="date" id="tripDate">
+      <div class="form-row" style="margin-top:10px">
+        <div><label>Start Odo</label><input type="number" id="tripStartOdo" placeholder="e.g. 4000" oninput="updateTripPreview()"></div>
+        <div><label>End Odo</label><input type="number" id="tripEndOdo" placeholder="e.g. 4070" oninput="updateTripPreview()"></div>
+      </div>
+      <div class="form-row" style="margin-top:10px">
+        <div><label>Start %</label><input type="number" id="tripStartPct" min="0" max="100" placeholder="e.g. 90" oninput="updateTripPreview()"></div>
+        <div><label>End %</label><input type="number" id="tripEndPct" min="0" max="100" placeholder="e.g. 67" oninput="updateTripPreview()"></div>
+      </div>
+      <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
+      <input type="text" id="tripNote" placeholder="e.g. highway, rain, AC on">
+      <div class="charged-since-row">
+        <input type="checkbox" id="tripChargedSince">
+        <label for="tripChargedSince">Charged since last entry (breaks efficiency chain)</label>
+      </div>
+      <div id="tripPreview" class="small" style="margin-top:8px"></div>
+      <div id="tripError" class="error-msg"></div>
+      <button class="primary" onclick="saveTrip()" style="margin-top:10px">Save Trip</button>
+      <button class="ghost" onclick="clearTripForm()" style="margin-top:8px">Reset</button>
+      <button class="secondary" id="cancelTripEdit" style="display:none" onclick="cancelTripEdit()">Cancel Edit</button>
+    </div>
+    <div id="chargeFormWrap">
     <h3 id="chargeFormTitle">New Charge</h3>
     <div class="form-row">
       <div><label>Date</label><input type="date" id="date"></div>
-      <div><label>Type</label>
-        <div class="popup-trigger" onclick="openTypeSelect()"><span id="typeDisplay">Office</span><span class="arrow">▼</span></div>
+      <div style="position:relative"><label>Type</label>
+        <div class="popup-trigger" onclick="toggleDropdown('typeDropdown')">
+          <span id="typeDisplay">Office</span>
+          <span class="arrow">▼</span>
+        </div>
         <input type="hidden" id="type" value="office">
+        <div id="typeDropdown" class="inline-dropdown" style="display:none">
+          <div onclick="pickType('office')">Office</div>
+          <div onclick="pickType('home')">Home</div>
+          <div onclick="pickType('public')">Public</div>
+        </div>
       </div>
     </div>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
@@ -681,16 +745,11 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='End % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
       <div><label>Odo (km)</label><input type="number" id="odo" placeholder="" oninput="validateOdo()"></div>
     </div>
-    <div class="form-row" style="margin-top:10px">
-      <div><label>Start Time <span style="color:var(--muted);font-size:10px">(opt)</span></label>
-        <div class="popup-trigger" onclick="openStartTime()"><span id="startTimeDisplay">Set time</span><span class="arrow">▼</span></div>
-        <input type="hidden" id="startTime">
-      </div>
-      <div><label>End Time <span style="color:var(--muted);font-size:10px">(opt)</span></label>
-        <div class="popup-trigger" onclick="openEndTime()"><span id="endTimeDisplay">Set time</span><span class="arrow">▼</span></div>
-        <input type="hidden" id="endTime">
-      </div>
+    <div id="timeRow" class="time-row" style="display:none">
+      <div><label>Start Time</label><input type="time" id="startTime" oninput="updateDurationPreview()"></div>
+      <div><label>End Time</label><input type="time" id="endTime" oninput="updateDurationPreview()"></div>
     </div>
+    <div id="autoDuration" class="auto-duration" style="display:none"></div>
     <div id="publicBlock" style="display:none">
       <hr class="divider">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -702,12 +761,16 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <label>Maps Link <span style="color:var(--muted);font-size:10px">(paste Google Maps share link)</span></label>
       <input type="url" id="pubMapsLink" placeholder="https://maps.app.goo.gl/...">
       <div class="form-row" style="margin-top:10px">
-        <div><label>Connector</label>
-          <div class="popup-trigger" onclick="openConnSelect()" style="width:fit-content;min-width:100px">
+        <div style="position:relative"><label>Connector</label>
+          <div class="popup-trigger" onclick="toggleDropdown('connDropdown')">
             <span id="connDisplay">DC</span>
             <span class="arrow">▼</span>
           </div>
           <input type="hidden" id="pubConnector" value="DC">
+          <div id="connDropdown" class="inline-dropdown" style="display:none">
+            <div onclick="pickConn('AC')">AC (Slow)</div>
+            <div onclick="pickConn('DC')">DC (Fast)</div>
+          </div>
         </div>
         <div><label>Rated kW</label><input type="number" id="pubKw" placeholder="—" step="0.1"></div>
       </div>
@@ -720,7 +783,7 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <label>Total ₹</label>
       <input type="number" id="pubTotal" placeholder="auto-calculated" oninput="autoCalcPublic('total')">
     </div>
-    <div id="odoWarn" class="warn-msg"></div>
+    
     <div id="notesBlock" style="display:none">
     <label>Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="chargeNotes" placeholder="e.g. queue 15 min, 2 guns working">
@@ -728,6 +791,10 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
     <div id="kwhPreview" class="small"></div>
     <div id="durationPreview" class="small"></div>
     <div id="odoWarn" class="warn-msg"></div>
+    <div class="charged-since-row">
+      <input type="checkbox" id="chargeChargedSince">
+      <label for="chargeChargedSince">Missed a charge before this (breaks efficiency chain)</label>
+    </div>
     <div id="formError" class="error-msg"></div>
     <button class="primary" onclick="saveCharge()">Save</button>
     <button class="ghost" onclick="clearChargeForm()" style="margin-top:8px">Reset</button>
@@ -743,7 +810,7 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
       <input type="text" id="scName" placeholder="Charger name" style="margin-bottom:6px">
       <input type="url" id="scLink" placeholder="Google Maps link (paste share URL)" style="margin-bottom:6px">
       <div class="form-row" style="margin-bottom:6px">
-        <div><div class="popup-trigger" onclick="openScTypeSelect()" style="width:fit-content;min-width:80px"><span id="scTypeDisplay">DC</span><span class="arrow">▼</span></div><input type="hidden" id="scType" value="DC"></div>
+        <div style="position:relative"><div class="popup-trigger" onclick="toggleDropdown('scTypeDropdown')" style="width:fit-content;min-width:80px"><span id="scTypeDisplay">DC</span><span class="arrow">▼</span></div><input type="hidden" id="scType" value="DC"><div id="scTypeDropdown" class="inline-dropdown" style="display:none;min-width:120px"><div onclick="pickScType('DC')">DC (Fast)</div><div onclick="pickScType('AC')">AC (Slow)</div></div></div>
         <div><input type="number" id="scKw" placeholder="kW" step="0.1"></div>
       </div>
       <button class="ghost" onclick="addSavedCharger()" style="font-size:11px">+ Save Charger</button>
@@ -754,6 +821,7 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
   <div class="card" id="pubHistoryCard" style="display:none">
     <h3>Public Charger History</h3><div id="pubHistory"></div>
   </div>
+</div>
 </div>
 
 <!-- ═══════════════════ PLAN ═══════════════════ -->
@@ -834,17 +902,13 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v1.6.8</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v2.1.2-lite</div>
   </div>
   <div class="card">
-    <h3>Import</h3>
-    <label class="file-label" for="importInput" style="margin-top:0">⬆ Import Backup (JSON)</label>
+    <h3>Backup</h3>
+    <button class="ghost" onclick="exportJSON()" style="margin-bottom:8px">📤 Export Backup</button>
+    <label class="file-label" for="importInput" style="margin-top:0">📥 Import Backup</label>
     <input type="file" id="importInput" accept=".json" onchange="importData(event)">
-  </div>
-  <div class="card">
-    <h3>Export</h3>
-    <button class="ghost" onclick="exportJSON()" style="margin-bottom:8px">⬇ Export Full Backup (JSON)</button>
-    <button class="ghost" onclick="exportCSV()">⬇ Export Charges CSV</button>
   </div>
   <div class="card">
     <h3>Advanced</h3>
@@ -857,6 +921,105 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v2.1.2 <span class="cl-date">22 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Carpool distance fix</b>: km now derived from Settings at save time (not form state). Fixes "randomly missing distance" bug — first entry after page load was always empty.</li>
+      <li><b>Carpool field</b>: Distance hidden again (pulled from Settings silently)</li>
+    </ul>
+    <div class="cl-ver">v2.1.1 <span class="cl-date">22 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Critical fix</b>: Efficiency calculation completely rewritten — charges now produce arrival (start%) + departure (end%) waypoints. Consolidates multiple charges at same odo.</li>
+      <li><b>Trip date</b>: Defaults to today</li>
+      <li><b>Missed charge flag</b>: Added to charge form (was only on trips)</li>
+      <li><b>Settings</b>: Merged Import+Export into single Backup card, removed CSV export</li>
+    </ul>
+    <div class="cl-ver">v2.1 <span class="cl-date">22 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Regen support</b>: Trips can now have end% ≥ start% for downhill regen driving</li>
+      <li><b>Timeline logic</b>: % increase + odo increase = regen (valid driving), % increase + same odo = charge (breaks chain)</li>
+      <li><b>Regen display</b>: Shows "⚡ X km · +Y% regen · Z kWh recovered" in list and preview</li>
+      <li><b>Stats</b>: Regen km counted in total distance, consumption neutral (0) for avg calculation</li>
+    </ul>
+    <div class="cl-ver">v2.0.1 <span class="cl-date">22 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Bug fix</b>: Tabs 3–5 (Carpool, Plan, Settings) were blank due to unclosed div in Charges section</li>
+      <li><b>Odo mandatory</b>: All entries require odometer reading (no more optional)</li>
+      <li><b>Same-odo sort fix</b>: Correct timeline ordering when trip ends and charge starts at same odometer</li>
+      <li><b>Efficiency warnings</b>: Adaptive flags at 1.5× avg (⚠️) and 2× avg (⚠️ missed charge?) — excluded from dashboard avg and chart</li>
+      <li><b>Cleanup</b>: Removed all dead time picker CSS remnants</li>
+    </ul>
+    <div class="cl-ver">v2.0 <span class="cl-date">22 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Trip Logger</b>: New entry mode — log trips with Start/End Odo + Start/End % for self-contained efficiency tracking</li>
+      <li><b>Unified Timeline</b>: Efficiency computed from all waypoints (charges + trips) sorted by odometer</li>
+      <li><b>Charged Since flag</b>: Mark trips where an unlogged charge happened — breaks the efficiency chain</li>
+      <li><b>Time inputs removed for Office/Home</b>: No taper detected (5.5 %/hr flat), timestamps unnecessary</li>
+      <li><b>Auto-duration</b>: Office/Home charges show estimated duration based on 5.5 %/hr constant rate</li>
+      <li><b>Native time picker</b>: Public charges use browser's native time input (removed custom popup picker)</li>
+      <li><b>Chart fix</b>: requestAnimationFrame for reliable rendering</li>
+      <li>Export/Import includes trips array (backward compatible with older backups)</li>
+      <li>Entry mode toggle: Charge ⚡ vs Trip 🚗 pill selector</li>
+    </ul>
+    <div class="cl-ver">v1.7.5 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Lite: fixed import crash (leftover carpool references caused "Import failed")</li>
+      <li>Full version backups now import correctly into Lite</li>
+    </ul>
+    <div class="cl-ver">v1.7.4 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Efficiency mode tabs: purple → accent color (consistent with all other active states)</li>
+    </ul>
+    <div class="cl-ver">v1.7.3 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>All selectors unified: inline dropdown (Type, Connector, Direction, Charger Type)</li>
+      <li>No more full-screen popup overlays for simple selections</li>
+      <li>Generic reusable dropdown system (toggleDropdown)</li>
+    </ul>
+    <div class="cl-ver">v1.7.2 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Type selector: custom inline dropdown (perfectly aligned, no native offset)</li>
+    </ul>
+    <div class="cl-ver">v1.7.1 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Type dropdown: options now readable in both dark and light modes</li>
+    </ul>
+    <div class="cl-ver">v1.7 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Summary stats: smaller font so values fit in one line</li>
+      <li>Type selector: inline dropdown (no more full-screen popup)</li>
+      <li>Time picker triggers: clock icon instead of dropdown arrow</li>
+      <li>Import/Export: relevant icons (📥/📤 instead of arrows)</li>
+    </ul>
+    <div class="cl-ver">v1.7.5 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Lite: fixed import crash (leftover carpool references caused "Import failed")</li>
+      <li>Full version backups now import correctly into Lite</li>
+    </ul>
+    <div class="cl-ver">v1.7.4 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Efficiency mode tabs: purple → accent color (consistent with all other active states)</li>
+    </ul>
+    <div class="cl-ver">v1.7.3 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>All selectors unified: inline dropdown (Type, Connector, Direction, Charger Type)</li>
+      <li>No more full-screen popup overlays for simple selections</li>
+      <li>Generic reusable dropdown system (toggleDropdown)</li>
+    </ul>
+    <div class="cl-ver">v1.7.2 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Type selector: custom inline dropdown (perfectly aligned, no native offset)</li>
+    </ul>
+    <div class="cl-ver">v1.7.1 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Type dropdown: options now readable in both dark and light modes</li>
+    </ul>
+    <div class="cl-ver">v1.7 <span class="cl-date">9 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li>Summary stats: smaller font so values fit in one line</li>
+      <li>Type selector: inline dropdown (no more full-screen popup)</li>
+      <li>Time picker triggers: clock icon instead of dropdown arrow</li>
+      <li>Import/Export: relevant icons instead of arrows</li>
+    </ul>
     <div class="cl-ver">v1.6.8 <span class="cl-date">9 Jun 2026</span></div>
     <ul class="cl-list">
       <li>Light mode fix: active type-pill (Theme/Type/Connector) text now white on blue</li>
@@ -1009,8 +1172,12 @@ var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},s
 let settings = JSON.parse(safeLS.get('cm-settings') ||
   '{"battery":40,"homeRate":7,"officeRate":0,"bufferPct":15,"petrolMileage":15,"petrolPrice":103}');
 let sessions  = JSON.parse(safeLS.get('cm-data')    || '[]');
-let editIndex=null, cpEditIndex=null;
-let planEffMode = 'avg'; // 'avg' | 'last' | 'live'
+let trips     = JSON.parse(safeLS.get('cm-trips')   || '[]');
+let tripEditIndex = null;
+let entryMode = 'charge'; // 'charge' or 'trip'
+let editIndex=null;
+let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
+
 // ── CHANGELOG ─────────────────────────────────────────────────────────────────
 function showChangelog(){document.getElementById('changelogModal').classList.add('open');document.body.style.overflow='hidden';}
 function closeChangelog(){document.getElementById('changelogModal').classList.remove('open');document.body.style.overflow='';}
@@ -1025,6 +1192,7 @@ function switchTab(tab) {
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(drawAllCharts,50);
   if (tab==='charges') renderCharges();
+  
   if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
@@ -1079,6 +1247,16 @@ function calcDuration(st,et){
 
 // ── EFFICIENCY HELPERS ─────────────────────────────────────────────────────
 function getAvgEff(){
+  // Use unified timeline if trips exist
+  var segments=computeUnifiedEfficiency();
+  if(segments.length>0){
+    var valid=segments.filter(function(s){return s.flag!=='error';});
+    // Regen: km adds to total, consumption is negative (subtracts from denominator = improves avg)
+    var totalKm=valid.reduce(function(a,s){return a+s.km;},0);  
+    var totalKwh=valid.reduce(function(a,s){return a+(s.regen?0:s.consumption);},0);
+    return totalKwh>0?totalKm/totalKwh:null;
+  }
+  // Fallback to charge-to-charge computation
   const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   let km=0,kwh=0;
   for(let i=1;i<sorted.length;i++){
@@ -1210,9 +1388,7 @@ function runPlan(){
   const resultEl=document.getElementById('planResult');
   const current =+document.getElementById('planCurrent').value;
   let   dist    =+document.getElementById('planDist').value;
-  const roundTrip=document.getElementById('planRoundTrip').checked;
-
-  if(roundTrip && dist>0) dist*=2;
+  // Round trip removed in v1.4
 
   updateEffModeDisplay();
 
@@ -1487,15 +1663,30 @@ function updatePreview(){
   document.getElementById('kwhPreview').textContent=(e>s&&s>=0)?'⚡ '+calcKwh(s,e).toFixed(2)+' kWh':'';
   updateDurationPreview();
   if(document.getElementById('type').value==='public') autoCalcPublic('pct');
+  updateAutoDuration();
 }
 
 function updateDurationPreview(){
-  const mins=calcDuration(document.getElementById('startTime').value,document.getElementById('endTime').value);
+  const st=document.getElementById('startTime').value;
+  const et=document.getElementById('endTime').value;
+  const mins=calcDuration(st,et);
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
   const kwh=(e>s)?calcKwh(s,e):0;
   if(mins&&kwh>0) document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)} · avg ${(kwh/(mins/60)).toFixed(1)} kW`;
   else if(mins)   document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)}`;
   else            document.getElementById('durationPreview').textContent='';
+}
+
+function updateAutoDuration(){
+  var el=document.getElementById('autoDuration');
+  var type=document.getElementById('type').value;
+  if(type==='public'){el.style.display='none';return;}
+  var s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  if(e>s&&s>=0){
+    var mins=Math.round((e-s)/5.5*60);
+    el.textContent='⏱ ~'+fmtDuration(mins)+' (at 5.5 %/hr)';
+    el.style.display='block';
+  } else { el.style.display='none'; }
 }
 
 
@@ -1548,133 +1739,62 @@ function showPopupSelect(title,options,currentVal,onSelect){
 }
 function closePopup(){if(_popupOverlay)_popupOverlay.classList.remove('open');document.body.style.overflow='';}
 
-// -- Popup Time Picker --
-function showTimePicker(title,currentVal,onDone){
-  if(!_popupOverlay){
-    _popupOverlay=document.createElement('div');
-    _popupOverlay.className='popup-overlay';
-    _popupOverlay.addEventListener('click',function(e){if(e.target===_popupOverlay)closePopup();});
-    document.body.appendChild(_popupOverlay);
-  }
-  var h24=0,mi=0,ampm='AM',h12=12;
-  if(currentVal&&currentVal.includes(':')){
-    var parts=currentVal.split(':').map(Number);
-    h24=parts[0];mi=parts[1];
-  } else {
-    var now=new Date();h24=now.getHours();mi=now.getMinutes();
-  }
-  ampm=h24>=12?'PM':'AM';h12=h24%12||12;
-  function pad(n){return n.toString().padStart(2,'0');}
-  function render(){
-    var hEl=_popupOverlay.querySelector('.tp-h-val');
-    var mEl=_popupOverlay.querySelector('.tp-m-val');
-    if(hEl)hEl.textContent=pad(h12);
-    if(mEl)mEl.textContent=pad(mi);
-    _popupOverlay.querySelectorAll('.tp-ampm-col div').forEach(function(b){
-      b.classList.toggle('active',b.dataset.v===ampm);
-    });
-  }
-  var html='<div class="popup-card"><div class="popup-title">'+title+'</div><div class="tp-modal">';
-  html+='<div class="tp-display">';
-  html+='<div class="tp-col-wrap"><div class="tp-arrow" data-act="h+">&#9650;</div><div class="tp-val tp-h-val">'+pad(h12)+'</div><div class="tp-arrow" data-act="h-">&#9660;</div></div>';
-  html+='<div class="tp-sep">:</div>';
-  html+='<div class="tp-col-wrap"><div class="tp-arrow" data-act="m+">&#9650;</div><div class="tp-val tp-m-val">'+pad(mi)+'</div><div class="tp-arrow" data-act="m-">&#9660;</div></div>';
-  html+='<div class="tp-ampm-col"><div data-v="AM" class="'+(ampm==='AM'?'active':'')+'">AM</div><div data-v="PM" class="'+(ampm==='PM'?'active':'')+'">PM</div></div>';
-  html+='</div>';
-  html+='<button class="tp-done">Done</button>';
-  html+='<button class="tp-clear">Clear</button>';
-  html+='</div></div>';
-  _popupOverlay.innerHTML=html;
-  _popupOverlay.classList.add('open');document.body.style.overflow='hidden';
-  // Arrow handlers
-  _popupOverlay.querySelectorAll('.tp-arrow').forEach(function(btn){
-    var interval=null;
-    function doAction(){
-      var act=btn.dataset.act;
-      if(act==='h+'){h12++;if(h12>12)h12=1;}
-      else if(act==='h-'){h12--;if(h12<1)h12=12;}
-      else if(act==='m+'){mi++;if(mi>59)mi=0;}
-      else if(act==='m-'){mi--;if(mi<0)mi=59;}
-      render();
-    }
-    btn.addEventListener('click',doAction);
-    // Long press for fast scroll
-    btn.addEventListener('touchstart',function(e){e.preventDefault();doAction();interval=setInterval(doAction,120);});
-    btn.addEventListener('touchend',function(){clearInterval(interval);});
-    btn.addEventListener('mousedown',function(){interval=setInterval(doAction,120);});
-    btn.addEventListener('mouseup',function(){clearInterval(interval);});
-    btn.addEventListener('mouseleave',function(){clearInterval(interval);});
-  });
-  // AM/PM toggle
-  _popupOverlay.querySelectorAll('.tp-ampm-col div').forEach(function(btn){
-    btn.addEventListener('click',function(){ampm=this.dataset.v;render();});
-  });
-  // Done
-  _popupOverlay.querySelector('.tp-done').addEventListener('click',function(){
-    var h24v=h12;
-    if(ampm==='PM'&&h12<12)h24v=h12+12;
-    if(ampm==='AM'&&h12===12)h24v=0;
-    onDone(pad(h24v)+':'+pad(mi));
-    closePopup();
-  });
-  // Clear
-  _popupOverlay.querySelector('.tp-clear').addEventListener('click',function(){
-    onDone('');
-    closePopup();
-  });
-}
 
-function openScTypeSelect(){
-  showPopupSelect('Charger Type',[
-    {value:'DC',label:'DC (Fast)'},
-    {value:'AC',label:'AC (Slow)'}
-  ],document.getElementById('scType').value,function(val){selectScType(val);});
-}
 function selectScType(val){
   document.getElementById('scType').value=val;
   document.getElementById('scTypeDisplay').textContent=val;
 }
-function openConnSelect(){
-  showPopupSelect('Connector',[
-    {value:'AC',label:'AC (Slow)'},
-    {value:'DC',label:'DC (Fast)'}
-  ],document.getElementById('pubConnector').value,function(val){selectConn(val);});
-}
+
 function selectConn(val){
   document.getElementById('pubConnector').value=val;
   document.getElementById('connDisplay').textContent=val;
 }
-function openStartTime(){
-  showTimePicker('Start Time',document.getElementById('startTime').value,function(val){
-    document.getElementById('startTime').value=val;
-    document.getElementById('startTimeDisplay').textContent=val?fmt12hr(val):'Set time';
-    updateDurationPreview();
-  });
-}
-function openEndTime(){
-  showTimePicker('End Time',document.getElementById('endTime').value,function(val){
-    document.getElementById('endTime').value=val;
-    document.getElementById('endTimeDisplay').textContent=val?fmt12hr(val):'Set time';
-    updateDurationPreview();
-  });
-}
-function openTypeSelect(){
-  showPopupSelect('Charge Type',[
-    {value:'office',label:'Office'},
-    {value:'home',label:'Home'},
-    {value:'public',label:'Public'}
-  ],document.getElementById('type').value,function(val){selectType(val);});
-}
+
+
+
 function selectType(val){
   document.getElementById('type').value=val;
-  var labels={office:'Office',home:'Home','public':'Public'};
-  document.getElementById('typeDisplay').textContent=labels[val]||val;
+  document.getElementById('typeDisplay').textContent={office:'Office',home:'Home','public':'Public'}[val]||val;
   onTypeChange();
 }
+function pickType(val){
+  document.getElementById('type').value=val;
+  document.getElementById('typeDisplay').textContent={office:'Office',home:'Home','public':'Public'}[val]||val;
+  document.getElementById('typeDropdown').style.display='none';
+  onTypeChange();
+}
+
+function toggleDropdown(id){
+  var dd=document.getElementById(id);
+  var wasOpen=dd.style.display!=='none';
+  // Close all open dropdowns first
+  document.querySelectorAll('.inline-dropdown').forEach(function(d){d.style.display='none';});
+  if(!wasOpen){
+    dd.style.display='block';
+    setTimeout(function(){document.addEventListener('click',function handler(e){
+      if(!dd.parentElement.contains(e.target)){dd.style.display='none';document.removeEventListener('click',handler);}
+    });},0);
+  }
+}
+function pickConn(val){
+  document.getElementById('pubConnector').value=val;
+  document.getElementById('connDisplay').textContent=val;
+  document.getElementById('connDropdown').style.display='none';
+}
+
+function pickScType(val){
+  document.getElementById('scType').value=val;
+  document.getElementById('scTypeDisplay').textContent=val;
+  document.getElementById('scTypeDropdown').style.display='none';
+}
+
 function onTypeChange(){
   var isPub=document.getElementById('type').value==='public';
   document.getElementById('publicBlock').style.display=isPub?'block':'none';
   document.getElementById('notesBlock').style.display=isPub?'block':'none';
+  document.getElementById('timeRow').style.display=isPub?'grid':'none';
+  // Show auto-duration for office/home
+  updateAutoDuration();
   // Auto-fill from last public charge if fields are empty
   if(isPub&&!document.getElementById('pubLocation').value){
     var lastPub=sessions.find(function(s){return s.t==='public'&&s.charger&&s.charger.location;});
@@ -1738,7 +1858,9 @@ function saveCharge(){
     if(pr!==''){settings.lastPublicRate=+pr;safeLS.set('cm-settings',JSON.stringify(settings));}
   }
 
-  const odo=document.getElementById('odo').value!==''?+document.getElementById('odo').value:null;
+  const odoVal=document.getElementById('odo').value;
+  if(!odoVal||isNaN(+odoVal)||+odoVal<=0){errEl.textContent='Odometer reading is required.';return;}
+  const odo=+odoVal;
   const startTime=document.getElementById('startTime').value||null;
   const endTime  =document.getElementById('endTime').value||null;
   const duration =calcDuration(startTime,endTime);
@@ -1752,8 +1874,9 @@ function saveCharge(){
   }:null;
 
   const notes=document.getElementById('chargeNotes').value.trim()||null;
+  const chargedSince=document.getElementById('chargeChargedSince').checked;
   const obj={id:editIndex!==null?sessions[editIndex].id:(Date.now()+Math.random()),date:document.getElementById('date').value,
-    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes};
+    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince};
 
   const wasEditing=editIndex!==null;
   if(wasEditing){sessions[editIndex]=obj;editIndex=null;
@@ -1775,7 +1898,7 @@ function cancelChargeEdit(){
 
 function clearChargeForm(){
   ['start','end','odo','pubRate','pubUnits','pubTotal','pubMapsLink','startTime','endTime','chargeNotes']
-    .forEach(id=>document.getElementById(id).value='');
+    .forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
   delete document.getElementById('pubUnits').dataset.manual;
   document.getElementById('date').value=new Date().toISOString().slice(0,10);
   document.getElementById('kwhPreview').textContent='';
@@ -1783,8 +1906,9 @@ function clearChargeForm(){
   document.getElementById('formError').textContent='';
   document.getElementById('odoWarn').textContent='';
   document.getElementById('odo').classList.remove('warn-input');
-  document.getElementById('startTimeDisplay').textContent='Set time';
-  document.getElementById('endTimeDisplay').textContent='Set time';
+  // Native time inputs clear themselves via value=''
+  document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
+  document.getElementById('autoDuration').style.display='none';
 }
 
 // ── RECOMPUTE KM ───────────────────────────────────────────────────────────
@@ -1796,16 +1920,185 @@ function recomputeAllKm(){
   for(let i=1;i<w.length;i++){const d=w[i].odo-w[i-1].odo;if(d>0)w[i].km=d;}
 }
 
+
+// ── ENTRY MODE ─────────────────────────────────────────────────────────────
+function setEntryMode(mode){
+  entryMode=mode;
+  document.getElementById('mode-charge').classList.toggle('active',mode==='charge');
+  document.getElementById('mode-trip').classList.toggle('active',mode==='trip');
+  document.getElementById('chargeFormWrap').style.display=mode==='charge'?'block':'none';
+  document.getElementById('tripForm').style.display=mode==='trip'?'block':'none';
+}
+
+// ── TRIP MANAGEMENT ────────────────────────────────────────────────────────
+function updateTripPreview(){
+  var so=+document.getElementById('tripStartOdo').value;
+  var eo=+document.getElementById('tripEndOdo').value;
+  var sp=+document.getElementById('tripStartPct').value;
+  var ep=+document.getElementById('tripEndPct').value;
+  var el=document.getElementById('tripPreview');
+  if(eo>so&&sp<=100&&ep>=0&&ep<=100){
+    var km=eo-so;
+    var drop=sp-ep;
+    if(drop>0){
+      var consumption=drop*settings.battery/100;
+      var eff=km/consumption;
+      el.textContent='\u{1F4CA} '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh';
+    } else {
+      var gained=Math.abs(drop);
+      el.textContent='\u26a1 '+km+' km \u00b7 +'+gained+'% regen \u00b7 '+(gained*settings.battery/100).toFixed(1)+' kWh recovered';
+    }
+  } else { el.textContent=''; }
+}
+
+function saveTrip(){
+  var date=document.getElementById('tripDate').value;
+  var so=+document.getElementById('tripStartOdo').value;
+  var eo=+document.getElementById('tripEndOdo').value;
+  var sp=+document.getElementById('tripStartPct').value;
+  var ep=+document.getElementById('tripEndPct').value;
+  var note=document.getElementById('tripNote').value.trim()||null;
+  var chargedSince=document.getElementById('tripChargedSince').checked;
+  var errEl=document.getElementById('tripError');
+  if(!date){errEl.textContent='Please set a date.';return;}
+  if(!so||!eo||eo<=so){errEl.textContent='End Odo must be greater than Start Odo.';return;}
+  if(isNaN(sp)||isNaN(ep)){errEl.textContent='Start and End % are required (0\u201399).';return;}
+  if(sp>100||ep<0){errEl.textContent='% values must be 0-100.';return;}
+  errEl.textContent='';
+  var km=eo-so;
+  var consumption=(sp-ep)*settings.battery/100;
+  var isRegen=sp<=ep;
+  var eff=isRegen?null:km/consumption;
+  var obj={id:tripEditIndex!==null?trips[tripEditIndex].id:(Date.now()+Math.random()),
+    date:date,startOdo:so,endOdo:eo,startPct:sp,endPct:ep,km:km,
+    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince};
+  var wasEditing=tripEditIndex!==null;
+  if(wasEditing){trips[tripEditIndex]=obj;tripEditIndex=null;
+    document.getElementById('tripFormTitle').textContent='New Trip';
+    document.getElementById('cancelTripEdit').style.display='none';
+  } else trips.unshift(obj);
+  safeLS.set('cm-trips',JSON.stringify(trips));
+  clearTripForm();render();
+  toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
+}
+
+function clearTripForm(){
+  ['tripStartOdo','tripEndOdo','tripStartPct','tripEndPct','tripNote'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('tripDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('tripChargedSince').checked=false;
+  document.getElementById('tripPreview').textContent='';
+  document.getElementById('tripError').textContent='';
+}
+
+function cancelTripEdit(){
+  tripEditIndex=null;
+  document.getElementById('tripFormTitle').textContent='New Trip';
+  document.getElementById('cancelTripEdit').style.display='none';
+  clearTripForm();
+}
+
+function editTrip(i){
+  var x=trips[i];tripEditIndex=i;
+  setEntryMode('trip');switchTab('charges');
+  document.getElementById('tripFormTitle').textContent='Edit Trip';
+  document.getElementById('cancelTripEdit').style.display='block';
+  document.getElementById('tripDate').value=x.date;
+  document.getElementById('tripStartOdo').value=x.startOdo;
+  document.getElementById('tripEndOdo').value=x.endOdo;
+  document.getElementById('tripStartPct').value=x.startPct;
+  document.getElementById('tripEndPct').value=x.endPct;
+  document.getElementById('tripNote').value=x.note||'';
+  document.getElementById('tripChargedSince').checked=x.chargedSince||false;
+  updateTripPreview();
+}
+
+function delTrip(i){
+  if(!confirm('Delete this trip?'))return;
+  trips.splice(i,1);safeLS.set('cm-trips',JSON.stringify(trips));render();
+  toast('Trip deleted');
+}
+
+// ── UNIFIED TIMELINE EFFICIENCY ────────────────────────────────────────────
+function computeUnifiedEfficiency(){
+  // Build waypoints — consolidate charges at same odo
+  var waypoints=[];
+  // Group charges by odo: at each odo, keep min(start%) as arrival, max(end%) as departure
+  var odoMap={};
+  sessions.forEach(function(s){
+    if(s.odo&&s.odo>0){
+      var key=s.odo;
+      if(!odoMap[key]) odoMap[key]={s:s.s,e:s.e,date:s.date,chargedSince:!!s.chargedSince};
+      else{
+        if(s.s<odoMap[key].s) odoMap[key].s=s.s;
+        if(s.e>odoMap[key].e) odoMap[key].e=s.e;
+        if(s.chargedSince) odoMap[key].chargedSince=true;
+      }
+    }
+  });
+  Object.keys(odoMap).forEach(function(k){
+    var o=+k,d=odoMap[k];
+    waypoints.push({odo:o, pct:d.s, type:'charge_start', date:d.date, chargedSince:d.chargedSince});
+    waypoints.push({odo:o, pct:d.e, type:'charge_end', date:d.date});
+  });
+  // From trips: each trip gives two waypoints
+  trips.forEach(function(t){
+    waypoints.push({odo:t.startOdo, pct:t.startPct, type:'trip_start', date:t.date, chargedSince:t.chargedSince});
+    waypoints.push({odo:t.endOdo, pct:t.endPct, type:'trip_end', date:t.date});
+  });
+  // Sort by odo, then type priority (trip_end < charge_start < trip_start < charge_end)
+  var typeOrd={'trip_end':0,'charge_start':1,'trip_start':2,'charge_end':3};
+  waypoints.sort(function(a,b){if(a.odo!==b.odo)return a.odo-b.odo;return(typeOrd[a.type]||2)-(typeOrd[b.type]||2);});
+  // Compute efficiency between consecutive waypoints
+  var segments=[];
+  for(var i=1;i<waypoints.length;i++){
+    var prev=waypoints[i-1], curr=waypoints[i];
+    if(curr.chargedSince) continue;
+    // % up + odo same = charge (break). % up + odo increased = regen (valid)
+    if(curr.pct>=prev.pct && curr.odo<=prev.odo) continue;
+    var km=curr.odo-prev.odo;
+    var drop=prev.pct-curr.pct;
+    if(km>0&&drop>0){  // normal driving
+      var consumption=drop*settings.battery/100;
+      var eff=km/consumption;
+      segments.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
+        fromOdo:prev.odo,toOdo:curr.odo,fromPct:prev.pct,toPct:curr.pct,
+        date:curr.date});
+    } else if(km>0&&drop<0){  // regen
+      var regenKwh=Math.abs(drop)*settings.battery/100;
+      segments.push({km:km,drop:drop,consumption:-regenKwh,efficiency:null,regen:true,regenKwh:regenKwh,
+        fromOdo:prev.odo,toOdo:curr.odo,fromPct:prev.pct,toPct:curr.pct,
+        date:curr.date});
+    }
+  }
+  // Flag unrealistic segments: adaptive thresholds
+  var normalSegs=segments.filter(function(s){return !s.regen&&s.efficiency;});
+  if(normalSegs.length<5){_effWarnThresh=12;_effErrorThresh=18;}
+  else{
+    var sumEff=normalSegs.reduce(function(a,s){return a+s.efficiency;},0);
+    var avgEff=normalSegs.length>0?sumEff/normalSegs.length:8;
+    var warnThresh=avgEff*1.5;
+    var flagThresh=avgEff*2;
+    _effWarnThresh=warnThresh;
+    _effErrorThresh=flagThresh;
+    segments.forEach(function(s){
+      if(s.efficiency>flagThresh) s.flag='error';
+      else if(s.efficiency>warnThresh) s.flag='warn';
+    });
+  }
+  return segments;
+}
+
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function persist(){
   safeLS.set('cm-data',JSON.stringify(sessions));
   
+  safeLS.set('cm-trips',JSON.stringify(trips));
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────────────
 function render(){renderDash();renderCharges();updateOdoPlaceholder();}
 
-function renderCharges(){renderChargeSummary();renderList();renderPubHistory();renderSavedChargers();}
+function renderCharges(){renderChargeSummary();renderList();renderTrips();renderPubHistory();renderSavedChargers();}
 
 function renderChargeSummary(){
   const n=sessions.length;
@@ -1866,7 +2159,8 @@ function renderList(){
             if(prevDiffOdo){
               const km=x.odo-prevDiffOdo.odo;
               const drop=prevDiffOdo.e-x.s;
-              if(km>0&&drop>0){effStr=(km/(settings.battery*drop/100)).toFixed(1)+' km/kWh';}
+            if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh';
+            if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
             }
           }
         }
@@ -1908,6 +2202,35 @@ function renderList(){
   });
   el.innerHTML=out;
 }
+function renderTrips(){
+  // Add trip entries to the log area (after charges)
+  var listEl=document.getElementById('list');
+  if(!trips.length) return;
+  var tripHtml='<div style="margin-top:14px;border-top:2px solid var(--border);padding-top:10px"><div class="month-header" style="cursor:default">\u{1F697} Trip Log \u00b7 '+trips.length+' entries</div>';
+  var sorted=[...trips].sort(function(a,b){return b.date.localeCompare(a.date);});
+  sorted.forEach(function(x,ri){
+    var i=trips.findIndex(function(t){return t.id===x.id;});
+    var effStr=x.efficiency?x.efficiency.toFixed(1)+' km/kWh':'';
+    if(x.regen) effStr='+'+Math.abs(x.startPct-x.endPct)+'% regen \u26a1';
+    if(x.efficiency>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(x.efficiency>_effWarnThresh) effStr+=' \u26a0\ufe0f';
+    var line1=x.startPct+'% \u2192 '+x.endPct+'% \u00b7 '+x.km+' km';
+    line1+=x.regen?' \u00b7 +'+Math.abs(x.consumption).toFixed(1)+' kWh recovered':' \u00b7 '+x.consumption.toFixed(1)+' kWh';
+    var line2='odo '+x.startOdo.toLocaleString()+' \u2192 '+x.endOdo.toLocaleString();
+    if(effStr) line2+=' \u00b7 '+effStr;
+    tripHtml+='<div class="session-row">';
+    tripHtml+='<div class="session-top"><div class="session-date-badge"><span class="session-date">'+x.date+'</span><span class="badge badge-trip">Trip</span></div>';
+    tripHtml+='<div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
+    tripHtml+='<button class="btn-sm btn-del" onclick="delTrip('+i+')">\u2715</button></div></div>';
+    tripHtml+='<div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>';
+    tripHtml+='<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>';
+    if(x.note) tripHtml+='<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">\u{1F4DD} '+escapeHtml(x.note)+'</div>';
+    if(x.chargedSince) tripHtml+='<div style="font-size:10px;color:var(--warn);margin-top:2px">\u26a1 Charged since last entry (chain break)</div>';
+    tripHtml+='</div>';
+  });
+  tripHtml+='</div>';
+  listEl.innerHTML+=tripHtml;
+}
+
 function renderPubHistory(){
   const pub=sessions.filter(x=>x.t==='public'&&x.charger?.location);
   const card=document.getElementById('pubHistoryCard');
@@ -1943,8 +2266,8 @@ function editCharge(i){
   document.getElementById('start').value=x.s;document.getElementById('end').value=x.e;
   document.getElementById('type').value=x.t;selectType(x.t);document.getElementById('odo').value=x.odo||'';
   document.getElementById('startTime').value=x.startTime||'';document.getElementById('endTime').value=x.endTime||'';
-  document.getElementById('startTimeDisplay').textContent=x.startTime?fmt12hr(x.startTime):'Set time';
-  document.getElementById('endTimeDisplay').textContent=x.endTime?fmt12hr(x.endTime):'Set time';
+  document.getElementById('timeRow').style.display=x.t==='public'?'grid':'none';
+  updateAutoDuration();
   document.getElementById('publicBlock').style.display=x.t==='public'?'block':'none';
   if(x.t==='public'&&x.charger){
     document.getElementById('pubLocation').value=x.charger.location||'';
@@ -1970,6 +2293,7 @@ function delCharge(i){
 function renderDash(){
   const sorted=[...sessions].sort((a,b)=>new Date(a.date)-new Date(b.date));
   let totalCost=0,hasCost=false,totalKwhCharged=0,totalKm=0;
+  const totalIncome=0;
   sessions.forEach(x=>{if(x.cost!=null){totalCost+=x.cost;hasCost=true;}totalKwhCharged+=x.kwh||0;totalKm+=x.km||0;});
 
   const avgEffVal=getAvgEff();
@@ -1985,7 +2309,8 @@ function renderDash(){
   }
   const recentEff=recentEffKwh>0?(recentEffKm/recentEffKwh).toFixed(1):null;
 
-      const petrolRatePerKm=settings.petrolPrice/settings.petrolMileage;
+  const netCost=totalCost-totalIncome;
+  const petrolRatePerKm=settings.petrolPrice/settings.petrolMileage;
   const evRatePerKm=totalKm>0&&hasCost?totalCost/totalKm:null;
   const petrolSaved=totalKm>0&&evRatePerKm!=null?((petrolRatePerKm-evRatePerKm)*totalKm):null;
 
@@ -1994,6 +2319,8 @@ function renderDash(){
   const monthKm=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.km!=null).reduce((a,x)=>a+x.km,0);
 document.getElementById('stats').innerHTML=
     statBox(hasCost?'₹'+totalCost.toFixed(0):'—','Total Spend')+
+    
+    
     statBox(totalKm>0?totalKm+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
     statBox(avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km`:'—','Avg Efficiency',avgEff?`${avgEff} km/kWh overall${recentEff?' · '+recentEff+' km/kWh recent'+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:' add odo readings')+
     statBox(avgEff?`${(+avgEff*settings.battery*0.8).toFixed(0)} km`:'—','Est. Range',avgEff?`at 80% charge (${settings.battery} kWh)`:null);
@@ -2029,6 +2356,7 @@ document.getElementById('stats').innerHTML=
     statBox(homeRpk?'\u20b9'+homeRpk:'—','Home \u20b9/km','home cost \u00f7 km')+
     statBox(pubRpk?'\u20b9'+pubRpk:'—','Public \u20b9/km','public cost \u00f7 km')+
     statBox(effRpk?'\u20b9'+effRpk:'—','Effective \u20b9/km','all cost \u00f7 total km')+
+    
     statBox(hasCost?'\u20b9'+monthSpend.toFixed(0):'—','This Month \u20b9')+
     statBox(sessions.length>0&&allCostTotal>0?'\u20b9'+(allCostTotal/totalKwhCharged).toFixed(1):'—','Avg \u20b9/kWh','cost per unit charged');
 
@@ -2037,6 +2365,8 @@ document.getElementById('stats').innerHTML=
   const uDays=new Set(sessions.map(x=>x.date)).size;
   const tds=sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
   const spw=tds?((sessions.length/Math.max(uDays,1))*(uDays/tds)*7).toFixed(1):'—';
+  
+
   document.getElementById('habitMetrics').innerHTML=
     statBox(spw,'Sessions / Week')+
     statBox(petrolSaved!=null?'₹'+petrolSaved.toFixed(0):'—','Petrol Saved',petrolSaved!=null?`vs ${settings.petrolMileage} km/l car`:null,petrolSaved>0?'good':null);
@@ -2072,6 +2402,20 @@ function makeSplitBar(label,data){
     </div></div>`;
 }
 
+// ── CARPOOL ────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+// ── CHARTS ─────────────────────────────────────────────────────────────────
 function drawChart(id,pts,dates,color){
   const canvas=document.getElementById(id);if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -2123,14 +2467,24 @@ function drawChart(id,pts,dates,color){
   });
 }
 
-function drawAllCharts(){
+function drawAllCharts(retryCount){
   if(!document.getElementById('dash')||!document.getElementById('dash').classList.contains('active'))return;
+  var canvas=document.getElementById('effChart');
+  if(canvas&&canvas.offsetWidth===0){
+    // Canvas not visible yet - retry with requestAnimationFrame
+    if((retryCount||0)<3){requestAnimationFrame(function(){drawAllCharts((retryCount||0)+1);});return;}
+  }
   const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
-  // Compute all efficiency points
+  // Compute efficiency from unified timeline if available
+  var segments=computeUnifiedEfficiency();
   const allEffPts=[];
-  for(let i=1;i<sorted.length;i++){
-    const p=sorted[i-1],c=sorted[i];
-    if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0)allEffPts.push({v:+(c.km/con).toFixed(2),d:c.date});}
+  if(segments.length>0){
+    segments.filter(function(s){return s.flag!=='error'&&!s.regen;}).forEach(function(seg){allEffPts.push({v:+seg.efficiency.toFixed(2),d:seg.date});});
+  } else {
+    for(let i=1;i<sorted.length;i++){
+      const p=sorted[i-1],c=sorted[i];
+      if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0)allEffPts.push({v:+(c.km/con).toFixed(2),d:c.date});}
+    }
   }
   // Last 10 individual, older grouped by week
   const recent=allEffPts.slice(-10);
@@ -2150,7 +2504,13 @@ function exportCSV(){safeLS.set('cm-lastExport',''+Date.now());
   sessions.forEach(s=>{rows.push([s.date,s.s,s.e,s.kwh!=null?s.kwh.toFixed(2):'',s.cost!=null?s.cost.toFixed(0):'',s.t,s.odo||'',s.km!=null?s.km:'',s.startTime||'',s.endTime||'',s.duration||'',s.charger?.location||'',s.charger?.connector||'',s.charger?.kw||''].join(','));});
   dl(new Blob([rows.join('\n')],{type:'text/csv'}),'chargemate.csv');toast('CSV exported ✓');
 }
-function exportJSON(){safeLS.set('cm-lastExport',''+Date.now());dl(new Blob([JSON.stringify({version:14,sessions,settings},null,2)],{type:'application/json'}),'chargemate-backup.json');}
+function exportJSON(){
+  var p={version:20,sessions:sessions,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
+  dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
+  safeLS.set('cm-lastExport',''+Date.now());
+}
+
 function importData(e){
   const file=e.target.files[0];if(!file)return;
   const r=new FileReader();
@@ -2158,11 +2518,12 @@ function importData(e){
     try{const p=JSON.parse(r.result),iS=p.sessions||p;
       const sI=new Set(sessions.map(s=>s.id));
       const sK=new Set(sessions.map(s=>s.date+'|'+s.t+'|'+(s.odo||'')));
-      const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
+            const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
       const fC=iC.filter(c=>!cI.has(c.id));
-      sessions=[...fS,...sessions];if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
+      sessions=[...fS,...sessions];
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       recomputeAllKm();persist();render();
-      toast(`Imported ${fS.length} charge(s)${p.settings?' + settings':''}`);
+      toast(`Imported ${fS.length} charge(s), ${fC.length} trip(s)${p.settings?' + settings':''}`);
     }catch{alert('Import failed.');}e.target.value='';
   };r.readAsText(file);
 }
@@ -2226,6 +2587,7 @@ function populateSettingsInputs(){
 }
 populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
+document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
 (function(){var lt=safeLS.get('cm-lastType');if(lt){selectType(lt);}})();
 try{render();}catch(e){console.error('Init error:',e);}
 
@@ -2269,8 +2631,24 @@ function updateThemePills(mode){
 // — Backup Reminder —
 (function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=30&&sessions.length>0)setTimeout(function(){toast('Export a backup - last was '+Math.floor(d)+' days ago');},3000);})();
 
+function importData(event){
+  var file=event.target.files[0];if(!file)return;
+  var r=new FileReader();r.onload=function(ev){
+    try{
+      var p=JSON.parse(ev.target.result);
+      if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
+            if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
+      else{trips=[];safeLS.set('cm-trips','[]');}
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
+      if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
+      recomputeAllKm();render();
+      toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
+    }catch(e){alert('Import failed: '+e.message);}e.target.value='';
+  };r.readAsText(file);
+}
 
 </script>
 
 
+    <!-- /chargeFormWrap -->
 </body></html>
