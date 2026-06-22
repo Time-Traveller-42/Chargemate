@@ -485,6 +485,7 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 
 .session-row{padding:6px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
+
 .session-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;flex-wrap:nowrap}
 .session-date-badge{display:flex;align-items:center;gap:6px;min-width:0;flex:1;overflow:hidden}
 .session-date{font-size:11px;color:var(--text);white-space:nowrap;font-weight:600;font-family:'Inter',sans-serif}
@@ -619,7 +620,7 @@ body.light .plan-status-box.safe{background:#dcfce7;border-color:#86efac}
 body.light .plan-status-box.reserve{background:#fef9c3;border-color:#fde047}
 body.light .plan-status-box.critical{background:#fee2e2;border-color:#fca5a5}
 body.light .plan-status-box.impossible{background:#fee2e2;border-color:#f87171}
-body.light .session-row{border-color:#e2e8f0}
+
 body.light .divider{border-color:#e2e8f0}
 body.light .ghost{border-color:#e2e8f0;color:#64748b}
 body.light .ghost:hover{border-color:var(--accent);color:var(--accent)}
@@ -633,6 +634,7 @@ body.light .stat-label{color:#374151}
 body.light .stat-sub{color:#4b5563}
 body.light .charger-meta{color:#4b5563}
 body.light .month-header{color:#1e40af}
+body.light .session-row{border-color:#e2e8f0}
 body.light .session-date{color:#000}
 
 /* Time Picker Light Mode */
@@ -800,6 +802,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <button class="ghost" onclick="clearChargeForm()" style="margin-top:8px">Reset</button>
     <button class="secondary" id="cancelChargeEdit" style="display:none" onclick="cancelChargeEdit()">Cancel Edit</button>
   </div>
+  </div>
   <div class="card"><h3>Log</h3><div id="list"></div></div>
   <div class="card">
     <h3>Saved Chargers</h3>
@@ -916,7 +919,6 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   </div>
 </div>
 
-</div>
 <div class="changelog-modal" id="changelogModal" onclick="if(event.target===this)closeChangelog()">
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
@@ -1590,7 +1592,7 @@ function renderSavedChargers(){
     <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
       <div style="flex:1;min-width:0">
         <a href="${c.mapsLink||'#'}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">${escapeHtml(c.name)} \u2197</a>
-        <div style="font-size:11px;color:var(--text)">${c.connector||''} ${c.kw?'\u00b7 '+c.kw+' kW':''}</div>
+        <div style="font-size:11px;color:var(--text)">${c.connector||''} ${c.kw?'\u00b7 '+c.kw+' kW rated':''}</div>
       </div>
       <button class="btn-sm btn-del" onclick="removeSavedCharger(${c.id})">\u2715</button>
     </div>
@@ -1634,7 +1636,7 @@ function openChargerPicker(){
   var html='<div class="popup-card"><div class="popup-title">Pick Charger</div><div class="popup-options">';
   allChargers.forEach(function(c,i){
     var badge=c.src==='saved'?'\u2605 ':'';
-    html+='<div class="popup-opt" data-ci="'+i+'">'+badge+escapeHtml(c.name)+'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(c.connector||'')+' '+(c.kw?c.kw+' kW':'')+'</div></div>';
+    html+='<div class="popup-opt" data-ci="'+i+'">'+badge+escapeHtml(c.name)+'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(c.connector||'')+' '+(c.kw?c.kw+' kW rated':'')+'</div></div>';
   });
   html+='</div></div>';
   _popupOverlay.innerHTML=html;_popupOverlay.classList.add('open');document.body.style.overflow='hidden';
@@ -2650,5 +2652,4 @@ function importData(event){
 </script>
 
 
-    <!-- /chargeFormWrap -->
 </body></html>
