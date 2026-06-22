@@ -828,7 +828,6 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <h3>Public Charger History</h3><div id="pubHistory"></div>
   </div>
 </div>
-</div>
 
 <!-- ═══════════════════ PLAN ═══════════════════ -->
 <div id="plan" class="view">
@@ -920,6 +919,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <h3>Advanced</h3>
     <span class="danger-link" onclick="clearAll()">⚠ Clear all data permanently</span>
   </div>
+</div>
 </div>
 
 <div class="changelog-modal" id="changelogModal" onclick="if(event.target===this)closeChangelog()">
@@ -2516,22 +2516,6 @@ function exportJSON(){
   safeLS.set('cm-lastExport',''+Date.now());
 }
 
-function importData(e){
-  const file=e.target.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{const p=JSON.parse(r.result),iS=p.sessions||p;
-      const sI=new Set(sessions.map(s=>s.id));
-      const sK=new Set(sessions.map(s=>s.date+'|'+s.t+'|'+(s.odo||'')));
-            const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
-      const fC=iC.filter(c=>!cI.has(c.id));
-      sessions=[...fS,...sessions];
-      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
-      recomputeAllKm();persist();render();
-      toast(`Imported ${fS.length} charge(s), ${fC.length} trip(s)${p.settings?' + settings':''}`);
-    }catch{alert('Import failed.');}e.target.value='';
-  };r.readAsText(file);
-}
 function dl(blob,name){
   blob.text().then(function(text){
     // Try Capacitor Filesystem (APK)
