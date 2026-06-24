@@ -485,6 +485,7 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 
 .session-row{padding:6px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
+
 .session-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;flex-wrap:nowrap}
 .session-date-badge{display:flex;align-items:center;gap:6px;min-width:0;flex:1;overflow:hidden}
 .session-date{font-size:11px;color:var(--text);white-space:nowrap;font-weight:600;font-family:'Inter',sans-serif}
@@ -600,7 +601,7 @@ body.light #toast{color:#fff}
 body.light .btn-edit{background:#e2e8f0}
 body.light .btn-del{background:#fee2e2}
 body.light .eff-tab{border-color:#e2e8f0;color:#64748b}
-body.light .eff-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+body.light .eff-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.light .type-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 body.light .eff-display{background:#f1f5f9;border-color:#e2e8f0}
 body.light .month-header{color:var(--accent)}
@@ -619,7 +620,7 @@ body.light .plan-status-box.safe{background:#dcfce7;border-color:#86efac}
 body.light .plan-status-box.reserve{background:#fef9c3;border-color:#fde047}
 body.light .plan-status-box.critical{background:#fee2e2;border-color:#fca5a5}
 body.light .plan-status-box.impossible{background:#fee2e2;border-color:#f87171}
-body.light .session-row{border-color:#e2e8f0}
+
 body.light .divider{border-color:#e2e8f0}
 body.light .ghost{border-color:#e2e8f0;color:#64748b}
 body.light .ghost:hover{border-color:var(--accent);color:var(--accent)}
@@ -628,11 +629,15 @@ body.light .tab.active{background:var(--accent);color:#fff}
 body.light .secondary{background:#e2e8f0;color:var(--accent)}
 body.light .tab{color:#64748b}
 body.light .rbar-track{background:#f1f5f9}
+body.light .charge-advice{background:#f8fafc;border-color:#e2e8f0}
+body.light .plan-row{border-color:#e2e8f0}
+body.light .rbar-trip-line{background:rgba(0,0,0,0.5)}
 
 body.light .stat-label{color:#374151}
 body.light .stat-sub{color:#4b5563}
 body.light .charger-meta{color:#4b5563}
 body.light .month-header{color:#1e40af}
+body.light .session-row{border-color:#e2e8f0}
 body.light .session-date{color:#000}
 
 /* Time Picker Light Mode */
@@ -681,21 +686,17 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 
 <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
 <div id="dash" class="view active">
-  <div class="card"><h3>Overview</h3><div class="stats-grid" id="stats"></div></div>
-  <div class="card"><h3>Cost Metrics</h3><div class="stats-grid" id="costMetrics"></div></div>
-  <div class="card">
-    <h3>Charging Habits</h3>
-    <div class="stats-grid" id="habitMetrics"></div>
-    <div id="splitBars" style="margin-top:16px"></div>
-  </div>
+  <div class="card"><h3>At a Glance</h3><div class="stats-grid" id="stats"></div></div>
+  <div class="card"><h3>Spending</h3><div class="stats-grid" id="paidStats"></div></div>
+  <div class="card"><h3>Carpool</h3><div class="stats-grid" id="carpoolDash"></div></div>
+  <div class="card"><h3>Charge Breakdown</h3><div id="splitBars"></div></div>
   <div class="card"><h3>Estimated Range</h3><div id="rangeCard"></div></div>
   <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
-
 </div>
 
 <!-- ═══════════════════ CHARGES ═══════════════════ -->
 <div id="charges" class="view">
-  <div class="card"><h3>Summary</h3><div class="stats-grid" id="chargeSummary"></div></div>
+  
   <div class="card">
     <div class="entry-mode-toggle">
       <div class="entry-mode-btn active" id="mode-charge" onclick="setEntryMode('charge')">⚡ Charge</div>
@@ -801,6 +802,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <button class="ghost" onclick="clearChargeForm()" style="margin-top:8px">Reset</button>
     <button class="secondary" id="cancelChargeEdit" style="display:none" onclick="cancelChargeEdit()">Cancel Edit</button>
   </div>
+  </div>
   <div class="card"><h3>Log</h3><div id="list"></div></div>
   <div class="card">
     <h3>Saved Chargers</h3>
@@ -822,7 +824,6 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="card" id="pubHistoryCard" style="display:none">
     <h3>Public Charger History</h3><div id="pubHistory"></div>
   </div>
-</div>
 </div>
 
 <!-- ═══════════════════ CARPOOL ═══════════════════ -->
@@ -847,7 +848,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <div class="form-row" style="margin-top:10px">
       <input type="hidden" id="cpKm" value="">
       <div><label>Passengers</label><input type="number" id="cpPax" placeholder="" min="1"></div>
-      <div><label>Amount (₹)</label><input type="number" id="cpAmount" placeholder=""></div>
+      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()"><div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
     </div>
     <label style="margin-top:10px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="cpNotes" placeholder="">
@@ -936,7 +937,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v2.1.2</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v2.2.1</div>
   </div>
   <div class="card">
     <h3>Backup</h3>
@@ -949,12 +950,18 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <span class="danger-link" onclick="clearAll()">⚠ Clear all data permanently</span>
   </div>
 </div>
-
 </div>
+
 <div class="changelog-modal" id="changelogModal" onclick="if(event.target===this)closeChangelog()">
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v2.2.1 <span class="cl-date">24 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Dashboard redesign</b>: "At a Glance" (distance, efficiency, total charged, cost/km), "Spending" (this month, total, avg ₹/kWh, avg/session), "Carpool" (income, this month, net cost, avg/trip), "Charge Breakdown" (split bars)</li>
+      <li><b>Removed</b>: Charging Summary from Charges tab, Petrol Saved, Sessions/Week, duplicate Est. Range stat, per-km cost variants, home/public session count in stat values</li>
+      <li><b>Carpool auto-sum</b>: Enter expressions like <code>100+110</code> in Amount field — shows live "= ₹210" preview, saves computed total, shows expression on edit</li>
+    </ul>
     <div class="cl-ver">v2.1.2 <span class="cl-date">22 Jun 2026</span></div>
     <ul class="cl-list">
       <li><b>Carpool distance fix</b>: km now derived from Settings at save time (not form state). Fixes "randomly missing distance" bug — first entry after page load was always empty.</li>
@@ -1625,7 +1632,7 @@ function renderSavedChargers(){
     <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
       <div style="flex:1;min-width:0">
         <a href="${c.mapsLink||'#'}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none">${escapeHtml(c.name)} \u2197</a>
-        <div style="font-size:11px;color:var(--text)">${c.connector||''} ${c.kw?'\u00b7 '+c.kw+' kW':''}</div>
+        <div style="font-size:11px;color:var(--text)">${c.connector||''} ${c.kw?'\u00b7 '+c.kw+' kW rated':''}</div>
       </div>
       <button class="btn-sm btn-del" onclick="removeSavedCharger(${c.id})">\u2715</button>
     </div>
@@ -1669,7 +1676,7 @@ function openChargerPicker(){
   var html='<div class="popup-card"><div class="popup-title">Pick Charger</div><div class="popup-options">';
   allChargers.forEach(function(c,i){
     var badge=c.src==='saved'?'\u2605 ':'';
-    html+='<div class="popup-opt" data-ci="'+i+'">'+badge+escapeHtml(c.name)+'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(c.connector||'')+' '+(c.kw?c.kw+' kW':'')+'</div></div>';
+    html+='<div class="popup-opt" data-ci="'+i+'">'+badge+escapeHtml(c.name)+'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(c.connector||'')+' '+(c.kw?c.kw+' kW rated':'')+'</div></div>';
   });
   html+='</div></div>';
   _popupOverlay.innerHTML=html;_popupOverlay.classList.add('open');document.body.style.overflow='hidden';
@@ -2141,24 +2148,8 @@ function persist(){
 // ── RENDER ─────────────────────────────────────────────────────────────────
 function render(){renderDash();renderCharges();updateOdoPlaceholder();}
 
-function renderCharges(){renderChargeSummary();renderList();renderTrips();renderPubHistory();renderSavedChargers();}
+function renderCharges(){renderList();renderTrips();renderPubHistory();renderSavedChargers();}
 
-function renderChargeSummary(){
-  const n=sessions.length;
-  if(!n){document.getElementById('chargeSummary').innerHTML='<div class="empty" style="padding:8px 0;grid-column:1/-1">No sessions yet</div>';return;}
-  const avgStart=(sessions.reduce((a,x)=>a+x.s,0)/n).toFixed(0);
-  const avgEnd  =(sessions.reduce((a,x)=>a+x.e,0)/n).toFixed(0);
-  const avgKwh  =(sessions.reduce((a,x)=>a+x.kwh,0)/n).toFixed(1);
-  const durSess =sessions.filter(x=>x.duration);
-  const avgDur  =durSess.length?fmtDuration(Math.round(durSess.reduce((a,x)=>a+x.duration,0)/durSess.length)):'—';
-  const sorted  =[...sessions].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const uDays   =new Set(sessions.map(x=>x.date)).size;
-  const span    =sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
-  const perWeek =span?((n/Math.max(uDays,1))*(uDays/span)*7).toFixed(1):'—';
-  document.getElementById('chargeSummary').innerHTML=
-    statBox(n+' total \u00b7 '+perWeek+'/wk','Sessions')+statBox(avgKwh+' kWh','Avg Per Session')+
-    statBox(avgStart+'% \u2192 '+avgEnd+'%','Avg Start \u2192 End')+statBox(avgDur,'Avg Duration');
-}
 
 function renderList(){
   const el=document.getElementById('list');
@@ -2335,91 +2326,64 @@ function delCharge(i){
 // ── DASHBOARD ──────────────────────────────────────────────────────────────
 function renderDash(){
   const sorted=[...sessions].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const n=sessions.length;
   let totalCost=0,hasCost=false,totalKwhCharged=0,totalKm=0;
   sessions.forEach(x=>{if(x.cost!=null){totalCost+=x.cost;hasCost=true;}totalKwhCharged+=x.kwh||0;totalKm+=x.km||0;});
 
   const avgEffVal=getAvgEff();
   const avgEff=avgEffVal?avgEffVal.toFixed(1):null;
 
-  // Efficiency stats for display
-  let effKm=0,effKwh=0,recentEffKm=0,recentEffKwh=0;
+  // Recent efficiency (last 10 segments)
+  let recentEff=null;
   {const es=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   const validPairs=[];
-  for(let i=1;i<es.length;i++){const p=es[i-1],cv=es[i];if(cv.km&&cv.km>0){const con=settings.battery*(p.e-cv.s)/100;if(con>0){effKm+=cv.km;effKwh+=con;validPairs.push({km:cv.km,con});}}}
+  for(let i=1;i<es.length;i++){const p=es[i-1],cv=es[i];if(cv.km&&cv.km>0){const con=settings.battery*(p.e-cv.s)/100;if(con>0)validPairs.push({km:cv.km,con});}}
   const recentN=validPairs.slice(-10);
-  recentN.forEach(p=>{recentEffKm+=p.km;recentEffKwh+=p.con;});
+  let rKm=0,rKwh=0;recentN.forEach(p=>{rKm+=p.km;rKwh+=p.con;});
+  recentEff=rKwh>0?(rKm/rKwh).toFixed(1):null;
   }
-  const recentEff=recentEffKwh>0?(recentEffKm/recentEffKwh).toFixed(1):null;
 
-  const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const netCost=totalCost-totalIncome;
-  const petrolRatePerKm=settings.petrolPrice/settings.petrolMileage;
-  const evRatePerKm=totalKm>0&&hasCost?totalCost/totalKm:null;
-  const petrolSaved=totalKm>0&&evRatePerKm!=null?((petrolRatePerKm-evRatePerKm)*totalKm):null;
-
-  
   const thisMonth=new Date().toISOString().slice(0,7);
   const monthKm=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.km!=null).reduce((a,x)=>a+x.km,0);
-document.getElementById('stats').innerHTML=
-    statBox(hasCost?'₹'+totalCost.toFixed(0):'—','Total Spend')+
-    statBox(totalIncome>0?'₹'+totalIncome.toFixed(0):'—','Carpool Income',null,totalIncome>0?'good':null)+
-    statBox(hasCost&&totalIncome>0?'₹'+netCost.toFixed(0):'—','Net Cost',hasCost&&totalIncome>0?'spend − income':null)+
-    statBox(totalKm>0?totalKm+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
-    statBox(avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km`:'—','Avg Efficiency',avgEff?`${avgEff} km/kWh overall${recentEff?' · '+recentEff+' km/kWh recent'+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:' add odo readings')+
-    statBox(avgEff?`${(+avgEff*settings.battery*0.8).toFixed(0)} km`:'—','Est. Range',avgEff?`at 80% charge (${settings.battery} kWh)`:null);
 
-  const allCostTotal=sessions.filter(x=>x.cost!=null).reduce((a,x)=>a+x.cost,0);
-  const kmForCost   =sessions.filter(x=>x.km!=null).reduce((a,x)=>a+x.km,0);
-  // Home ₹/km via proportional kWh method:
-  // home's share of km = (total home kWh / total kWh consumed) × total km
-  // This correctly handles partial charges regardless of charge level
-  const totalHomeKwh = sessions.filter(x=>x.t==='home').reduce((a,x)=>a+x.kwh,0);
-  const totalHomeCost2 = sessions.filter(x=>x.t==='home'&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
-  // total kWh consumed = sum of inter-session drops
-  const sfk=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
-  let totalKwhConsumedForHome=0;
-  for(let i=1;i<sfk.length;i++){const con=settings.battery*(sfk[i-1].e-sfk[i].s)/100;if(con>0)totalKwhConsumedForHome+=con;}
-  const homeShareKm = totalKwhConsumedForHome>0&&kmForCost>0 ? (totalHomeKwh/totalKwhConsumedForHome)*kmForCost : 0;
-  const homeRpk = homeShareKm>0&&totalHomeCost2>0 ? (totalHomeCost2/homeShareKm).toFixed(2) : null;
-  // Public ₹/km (same proportional method)
-  const totalPubKwh = sessions.filter(x=>x.t==='public').reduce((a,x)=>a+x.kwh,0);
-  const totalPubCost = sessions.filter(x=>x.t==='public'&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
-  const pubShareKm = totalKwhConsumedForHome>0&&kmForCost>0 ? (totalPubKwh/totalKwhConsumedForHome)*kmForCost : 0;
-  const pubRpk = pubShareKm>0&&totalPubCost>0 ? (totalPubCost/pubShareKm).toFixed(2) : null;
-  const effRpk =kmForCost>0&&allCostTotal>0?(allCostTotal/kmForCost).toFixed(2):null;
-  const netRpk =kmForCost>0&&hasCost&&totalIncome>0?((allCostTotal-totalIncome)/kmForCost).toFixed(2):null;
+  // === AT A GLANCE ===
+  document.getElementById('stats').innerHTML=
+    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
+    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
+    statBox(totalKwhCharged>0?totalKwhCharged.toFixed(1)+' kWh':'—','Total Charged',n>0?n+' session'+(n>1?'s':''):null)+
+    statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2)+'/km':'—','Cost / km');
+
+  // === SPENDING ===
   const monthSpend=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
-  let proj=null;
-  if(kmForCost>0&&allCostTotal>0&&sorted.length>=2){
-    const ds=Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000);
-    proj=((allCostTotal/kmForCost)*(kmForCost/ds)*30).toFixed(0);
-  }
-  const avgKwhSess=sessions.length?(sessions.reduce((a,x)=>a+x.kwh,0)/sessions.length).toFixed(1):null;
+  const paidSessions=sessions.filter(x=>x.cost!=null&&x.cost>0);
+  const avgPerSession=paidSessions.length>0?(totalCost/paidSessions.length).toFixed(0):null;
+  const avgRpKwh=totalKwhCharged>0&&hasCost?(totalCost/totalKwhCharged).toFixed(1):null;
 
-  document.getElementById('costMetrics').innerHTML=
-    statBox(homeRpk?'\u20b9'+homeRpk:'—','Home \u20b9/km','home cost \u00f7 km')+
-    statBox(pubRpk?'\u20b9'+pubRpk:'—','Public \u20b9/km','public cost \u00f7 km')+
-    statBox(effRpk?'\u20b9'+effRpk:'—','Effective \u20b9/km','all cost \u00f7 total km')+
-    statBox(netRpk?'\u20b9'+netRpk:'—','Net \u20b9/km','after carpool income',netRpk&&effRpk&&+netRpk<+effRpk?'good':null)+
-    statBox(hasCost?'\u20b9'+monthSpend.toFixed(0):'—','This Month \u20b9')+
-    statBox(sessions.length>0&&allCostTotal>0?'\u20b9'+(allCostTotal/totalKwhCharged).toFixed(1):'—','Avg \u20b9/kWh','cost per unit charged');
+  document.getElementById('paidStats').innerHTML=
+    statBox(hasCost?'₹'+Math.round(monthSpend).toLocaleString('en-IN'):'—','This Month')+
+    statBox(hasCost?'₹'+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
+    statBox(avgRpKwh?'₹'+avgRpKwh:'—','Avg ₹/kWh')+
+    statBox(avgPerSession?'₹'+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
 
+  // === CARPOOL DASH ===
+  const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
+  const netCost=hasCost?totalCost-totalIncome:null;
+  const avgPerTrip=carpools.length>0?(totalIncome/carpools.length).toFixed(0):null;
+  const cpThisMonth=carpools.filter(x=>x.date.startsWith(thisMonth));
+  const cpMonthAmt=cpThisMonth.reduce((a,x)=>a+(x.amount||0),0);
+  document.getElementById('carpoolDash').innerHTML=
+    statBox(totalIncome>0?'₹'+Math.round(totalIncome).toLocaleString('en-IN'):'—','Total Income',carpools.length>0?carpools.length+' trip'+(carpools.length>1?'s':''):null,'good')+
+    statBox(cpThisMonth.length>0?'₹'+Math.round(cpMonthAmt).toLocaleString('en-IN'):'—','This Month',cpThisMonth.length>0?cpThisMonth.length+' trip'+(cpThisMonth.length>1?'s':''):null)+
+    statBox(netCost!=null?(netCost>=0?'₹'+Math.round(netCost).toLocaleString('en-IN'):'₹'+Math.round(Math.abs(netCost)).toLocaleString('en-IN')+' surplus'):'—','Net Cost',netCost!=null&&netCost<0?'carpool > spend':'spend − carpool',netCost!=null&&netCost<=0?'good':null)+
+    statBox(avgPerTrip?'₹'+Math.round(avgPerTrip).toLocaleString('en-IN'):'—','Avg / Trip');
+
+  // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
-  const uDays=new Set(sessions.map(x=>x.date)).size;
-  const tds=sorted.length>=2?Math.max(1,(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/86400000):null;
-  const spw=tds?((sessions.length/Math.max(uDays,1))*(uDays/tds)*7).toFixed(1):'—';
-  const cps=[...carpools].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  let cpw='—';
-  if(cps.length>=2){const d=Math.max(1,(new Date(cps[cps.length-1].date)-new Date(cps[0].date))/86400000);cpw=((carpools.length-1)/d*7).toFixed(1);}
-
-  document.getElementById('habitMetrics').innerHTML=
-    statBox(spw,'Sessions / Week')+
-    statBox(petrolSaved!=null?'₹'+petrolSaved.toFixed(0):'—','Petrol Saved',petrolSaved!=null?`vs ${settings.petrolMileage} km/l car`:null,petrolSaved>0?'good':null);
-
   document.getElementById('splitBars').innerHTML=
     makeSplitBar('Charge Split (sessions)',byTypeCount)+(hasCost?makeSplitBar('Spend Split (₹)',byTypeCost):'');
 
+  // === RANGE CARD ===
   document.getElementById('rangeCard').innerHTML=avgEff
     ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on avg efficiency (${avgEff} km/kWh)</div>
       <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">${(+avgEff*settings.battery*0.8).toFixed(0)} km<span style="font-size:13px;color:var(--muted);font-family:'JetBrains Mono'"> at 80% charge</span></div>
@@ -2430,7 +2394,6 @@ document.getElementById('stats').innerHTML=
 
   requestAnimationFrame(drawAllCharts);
 }
-
 function makeSplitBar(label,data){
   const tot=((data.home||0)+(data.public||0)+(data.office||0))||1;
   const pH=((data.home||0)/tot*100).toFixed(0),pP=((data.public||0)/tot*100).toFixed(0),pO=((data.office||0)/tot*100).toFixed(0);
@@ -2449,17 +2412,31 @@ function makeSplitBar(label,data){
 }
 
 // ── CARPOOL ────────────────────────────────────────────────────────────────
+function evalExpr(str){
+  // Safe math eval: only digits, +, -, *, /, ., (, ), spaces
+  const s=(str||'').trim();
+  if(!s)return null;
+  if(!/^[\d+\-*/().\s]+$/.test(s))return null;
+  try{const r=Function('"use strict";return ('+s+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(e){return null;}
+}
+function previewCpAmount(){
+  const v=document.getElementById('cpAmount').value;
+  const el=document.getElementById('cpAmountPreview');
+  const r=evalExpr(v);
+  if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= ₹'+r.toLocaleString('en-IN');el.style.color='var(--good)';}
+  else{el.textContent='';el.style.color='';}
+}
 function saveCarpool(){
   const date=document.getElementById('cpDate').value,dir=document.getElementById('cpDir').value;
   const km=dir==='to_office'?(settings.officeDist||null):(settings.homeDist||settings.officeDist||null);
   const pax=document.getElementById('cpPax').value!==''?+document.getElementById('cpPax').value:null;
-  const amount=document.getElementById('cpAmount').value!==''?+document.getElementById('cpAmount').value:null;
+  const amtRaw=document.getElementById('cpAmount').value.trim();const amount=evalExpr(amtRaw);const amountExpr=amtRaw.match(/[+\-*/]/)?amtRaw:null;
   const notes=document.getElementById('cpNotes').value||null;
   const errEl=document.getElementById('cpError');
   if(!date){errEl.textContent='Please set a date.';return;}
-  if(!amount){errEl.textContent='Please enter amount collected.';return;}
+  if(!amount){const raw=document.getElementById('cpAmount').value.trim();errEl.textContent=raw?'Invalid expression — use numbers and +−×÷':'Please enter amount collected.';return;}
   errEl.textContent='';
-  const obj={id:editIndex!==null?sessions[editIndex].id:(Date.now()+Math.random()),date,dir,km,pax,amount,notes};
+  const obj={id:cpEditIndex!==null?carpools[cpEditIndex].id:(Date.now()+Math.random()),date,dir,km,pax,amount,amountExpr,notes};
   const wasEditing=cpEditIndex!==null;
   if(wasEditing){carpools[cpEditIndex]=obj;cpEditIndex=null;
     document.getElementById('cpFormTitle').textContent='Log Trip';
@@ -2473,7 +2450,7 @@ function saveCarpool(){
 function cancelCpEdit(){cpEditIndex=null;document.getElementById('cpFormTitle').textContent='Log Trip';document.getElementById('cancelCpEdit').style.display='none';clearCpForm();}
 
 function clearCpForm(){
-  ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');
+  ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cpAmountPreview').textContent='';
   document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
   if(settings.officeDist)document.getElementById('cpKm').value=settings.officeDist;
@@ -2484,7 +2461,7 @@ function editCarpool(i){
   document.getElementById('cpFormTitle').textContent='Edit Trip';document.getElementById('cancelCpEdit').style.display='block';
   document.getElementById('cpDate').value=x.date;document.getElementById('cpDir').value=x.dir||'to_office';
   document.getElementById('cpKm').value=x.km!=null?x.km:'';document.getElementById('cpPax').value=x.pax!=null?x.pax:'';
-  document.getElementById('cpAmount').value=x.amount!=null?x.amount:'';document.getElementById('cpNotes').value=x.notes||'';
+  document.getElementById('cpAmount').value=x.amountExpr||x.amount||'';previewCpAmount();document.getElementById('cpNotes').value=x.notes||'';
   document.getElementById('cpFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -2631,23 +2608,6 @@ function exportJSON(){
   safeLS.set('cm-lastExport',''+Date.now());
 }
 
-function importData(e){
-  const file=e.target.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=()=>{
-    try{const p=JSON.parse(r.result),iS=p.sessions||p,iC=p.carpools||[];
-      const sI=new Set(sessions.map(s=>s.id));
-      const sK=new Set(sessions.map(s=>s.date+'|'+s.t+'|'+(s.odo||'')));
-      const cI=new Set(carpools.map(c=>c.id));
-      const fS=iS.filter(s=>!sI.has(s.id)&&!sK.has(s.date+'|'+s.t+'|'+(s.odo||'')));
-      const fC=iC.filter(c=>!cI.has(c.id));
-      sessions=[...fS,...sessions];carpools=[...fC,...carpools];
-      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
-      recomputeAllKm();persist();render();renderCarpool();
-      toast(`Imported ${fS.length} charge(s), ${fC.length} trip(s)${p.settings?' + settings':''}`);
-    }catch{alert('Import failed.');}e.target.value='';
-  };r.readAsText(file);
-}
 function dl(blob,name){
   blob.text().then(function(text){
     // Try Capacitor Filesystem (APK)
@@ -2773,5 +2733,4 @@ function importData(event){
 </script>
 
 
-    <!-- /chargeFormWrap -->
 </body></html>
