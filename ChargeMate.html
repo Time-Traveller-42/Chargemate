@@ -677,7 +677,6 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <div class="tabs">
   <div class="tab active" onclick="switchTab('dash')" id="t-dash">Dashboard</div>
   <div class="tab" onclick="switchTab('charges')" id="t-charges">Charging</div>
-  <div class="tab" onclick="switchTab('carpool')" id="t-carpool">Carpool</div>
   <div class="tab" onclick="switchTab('plan')" id="t-plan">Plan</div>
   <div class="tab" onclick="switchTab('settings')" id="t-settings">Settings</div>
 </div>
@@ -688,7 +687,6 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <div id="dash" class="view active">
   <div class="card"><h3>At a Glance</h3><div class="stats-grid" id="stats"></div></div>
   <div class="card"><h3>Spending</h3><div class="stats-grid" id="paidStats"></div></div>
-  <div class="card"><h3>Carpool</h3><div class="stats-grid" id="carpoolDash"></div></div>
   <div class="card"><h3>Charge Breakdown</h3><div id="splitBars"></div></div>
   <div class="card"><h3>Estimated Range</h3><div id="rangeCard"></div></div>
   <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
@@ -826,39 +824,6 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   </div>
 </div>
 
-<!-- ═══════════════════ CARPOOL ═══════════════════ -->
-<div id="carpool" class="view">
-  <div class="card"><h3>Summary</h3><div class="stats-grid" id="carpoolStats"></div></div>
-  <div class="card">
-    <h3 id="cpFormTitle">Log Trip</h3>
-    <div class="form-row">
-      <div><label>Date</label><input type="date" id="cpDate"></div>
-      <div style="position:relative"><label>Direction</label>
-        <div class="popup-trigger" onclick="toggleDropdown('cpDirDropdown')">
-          <span id="cpDirDisplay">→ To Office</span>
-          <span class="arrow">▼</span>
-        </div>
-        <input type="hidden" id="cpDir" value="to_office">
-        <div id="cpDirDropdown" class="inline-dropdown" style="display:none">
-          <div onclick="pickCpDir('to_office')">→ To Office</div>
-          <div onclick="pickCpDir('to_home')">← To Home</div>
-        </div>
-      </div>
-    </div>
-    <div class="form-row" style="margin-top:10px">
-      <input type="hidden" id="cpKm" value="">
-      <div><label>Passengers</label><input type="number" id="cpPax" placeholder="" min="1"></div>
-      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()"><div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-    </div>
-    <label style="margin-top:10px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
-    <input type="text" id="cpNotes" placeholder="">
-    <div id="cpError" class="error-msg"></div>
-    <button class="primary" onclick="saveCarpool()">Save</button>
-    <button class="secondary" id="cancelCpEdit" style="display:none" onclick="cancelCpEdit()">Cancel Edit</button>
-  </div>
-  <div class="card"><h3>Trips</h3><div id="cpList"></div></div>
-</div>
-
 <!-- ═══════════════════ PLAN ═══════════════════ -->
 <div id="plan" class="view">
   <div class="card">
@@ -949,10 +914,19 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
     <div class="cl-ver">v2.3 <span class="cl-date">24 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>Dashboard redesign</b>: "At a Glance" (distance, efficiency, cost/km, last charged), "Spending" (this month, total, ₹/kWh, avg/session), "Carpool" (income, this month, net cost, avg/trip), "Charge Breakdown" (split bars), Range card, Efficiency chart</li>
-      <li><b>Carpool auto-sum</b>: Enter expressions like <code>100+110</code> in Amount — live "= ₹210" preview, saves computed total, shows expression on edit</li>
+      <li><b>At a Glance</b>: Replaced "Total Charged" with "Last Charged" (date + type). Added "Cost / km".</li>
+      <li><b>Spending</b>: Renamed from "Paid Charging". Generic layout — This Month, Total, ₹/kWh, Avg/Session.</li>
       <li><b>Settings</b>: Vehicle + Petrol merged into one card. Backup Export/Import on one line.</li>
-      <li><b>Removed</b>: Charging Summary from Charges tab, Petrol Saved, Sessions/Week, per-km cost variants, home/public session counts in stat values</li>
+      <li><b>Removed</b>: Sessions/Week, duplicate Est. Range from At a Glance</li>
+    </ul>
+    <div class="cl-ver">v2.2.1 <span class="cl-date">24 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Bug fixes</b>: ₹ values rounded (no decimals), session counts removed from stat values</li>
+    </ul>
+    <div class="cl-ver">v2.2 <span class="cl-date">24 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Dashboard redesign</b>: Replaced Overview + Cost Metrics + Habits with focused cards — At a Glance, Spending, Charge Breakdown, Range, Chart</li>
+      <li><b>Removed</b>: Charging Summary from Charges tab, Petrol Saved metric, 4× per-km cost variants</li>
     </ul>
     <div class="cl-ver">v2.1.2 <span class="cl-date">22 Jun 2026</span></div>
     <ul class="cl-list">
@@ -1205,11 +1179,10 @@ var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},s
 let settings = JSON.parse(safeLS.get('cm-settings') ||
   '{"battery":40,"homeRate":7,"officeRate":0,"bufferPct":15,"petrolMileage":15,"petrolPrice":103}');
 let sessions  = JSON.parse(safeLS.get('cm-data')    || '[]');
-let carpools  = JSON.parse(safeLS.get('cm-carpool') || '[]');
 let trips     = JSON.parse(safeLS.get('cm-trips')   || '[]');
 let tripEditIndex = null;
 let entryMode = 'charge'; // 'charge' or 'trip'
-let editIndex=null, cpEditIndex=null;
+let editIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
 
 // ── CHANGELOG ─────────────────────────────────────────────────────────────────
@@ -1226,8 +1199,7 @@ function switchTab(tab) {
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(drawAllCharts,50);
   if (tab==='charges') renderCharges();
-  if (tab==='carpool') renderCarpool();
-  if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
+    if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
 
@@ -1815,15 +1787,6 @@ function pickConn(val){
   document.getElementById('connDisplay').textContent=val;
   document.getElementById('connDropdown').style.display='none';
 }
-function pickCpDir(val){
-  document.getElementById('cpDir').value=val;
-  var labels={to_office:'→ To Office',to_home:'← To Home'};
-  document.getElementById('cpDirDisplay').textContent=labels[val]||val;
-  document.getElementById('cpDirDropdown').style.display='none';
-  // Auto-fill distance from settings
-  var dist=val==='to_office'?(settings.officeDist||''):(settings.homeDist||settings.officeDist||'');
-  document.getElementById('cpKm').value=dist;
-}
 function pickScType(val){
   document.getElementById('scType').value=val;
   document.getElementById('scTypeDisplay').textContent=val;
@@ -2133,8 +2096,7 @@ function computeUnifiedEfficiency(){
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function persist(){
   safeLS.set('cm-data',JSON.stringify(sessions));
-  safeLS.set('cm-carpool',JSON.stringify(carpools));
-  safeLS.set('cm-trips',JSON.stringify(trips));
+    safeLS.set('cm-trips',JSON.stringify(trips));
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────────────
@@ -2354,22 +2316,10 @@ function renderDash(){
   const avgRpKwh=totalKwhCharged>0&&hasCost?(totalCost/totalKwhCharged).toFixed(1):null;
 
   document.getElementById('paidStats').innerHTML=
-    statBox(hasCost?'₹'+Math.round(monthSpend).toLocaleString('en-IN'):'—','This Month')+
-    statBox(hasCost?'₹'+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
+    statBox(hasCost?'₹'+monthSpend.toLocaleString('en-IN'):'—','This Month')+
+    statBox(hasCost?'₹'+totalCost.toLocaleString('en-IN'):'—','Total Spend')+
     statBox(avgRpKwh?'₹'+avgRpKwh:'—','Avg ₹/kWh')+
     statBox(avgPerSession?'₹'+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
-
-  // === CARPOOL DASH ===
-  const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const netCost=hasCost?totalCost-totalIncome:null;
-  const avgPerTrip=carpools.length>0?(totalIncome/carpools.length).toFixed(0):null;
-  const cpThisMonth=carpools.filter(x=>x.date.startsWith(thisMonth));
-  const cpMonthAmt=cpThisMonth.reduce((a,x)=>a+(x.amount||0),0);
-  document.getElementById('carpoolDash').innerHTML=
-    statBox(totalIncome>0?'₹'+Math.round(totalIncome).toLocaleString('en-IN'):'—','Total Income',carpools.length>0?carpools.length+' trip'+(carpools.length>1?'s':''):null,'good')+
-    statBox(cpThisMonth.length>0?'₹'+Math.round(cpMonthAmt).toLocaleString('en-IN'):'—','This Month',cpThisMonth.length>0?cpThisMonth.length+' trip'+(cpThisMonth.length>1?'s':''):null)+
-    statBox(netCost!=null?(netCost>=0?'₹'+Math.round(netCost).toLocaleString('en-IN'):'₹'+Math.round(Math.abs(netCost)).toLocaleString('en-IN')+' surplus'):'—','Net Cost',netCost!=null&&netCost<0?'carpool > spend':'spend − carpool',netCost!=null&&netCost<=0?'good':null)+
-    statBox(avgPerTrip?'₹'+Math.round(avgPerTrip).toLocaleString('en-IN'):'—','Avg / Trip');
 
   // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
@@ -2405,108 +2355,6 @@ function makeSplitBar(label,data){
     </div></div>`;
 }
 
-// ── CARPOOL ────────────────────────────────────────────────────────────────
-function evalExpr(str){
-  // Safe math eval: only digits, +, -, *, /, ., (, ), spaces
-  const s=(str||'').trim();
-  if(!s)return null;
-  if(!/^[\d+\-*/().\s]+$/.test(s))return null;
-  try{const r=Function('"use strict";return ('+s+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(e){return null;}
-}
-function previewCpAmount(){
-  const v=document.getElementById('cpAmount').value;
-  const el=document.getElementById('cpAmountPreview');
-  const r=evalExpr(v);
-  if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= ₹'+r.toLocaleString('en-IN');el.style.color='var(--good)';}
-  else{el.textContent='';el.style.color='';}
-}
-function saveCarpool(){
-  const date=document.getElementById('cpDate').value,dir=document.getElementById('cpDir').value;
-  const km=dir==='to_office'?(settings.officeDist||null):(settings.homeDist||settings.officeDist||null);
-  const pax=document.getElementById('cpPax').value!==''?+document.getElementById('cpPax').value:null;
-  const amtRaw=document.getElementById('cpAmount').value.trim();const amount=evalExpr(amtRaw);const amountExpr=amtRaw.match(/[+\-*/]/)?amtRaw:null;
-  const notes=document.getElementById('cpNotes').value||null;
-  const errEl=document.getElementById('cpError');
-  if(!date){errEl.textContent='Please set a date.';return;}
-  if(!amount){const raw=document.getElementById('cpAmount').value.trim();errEl.textContent=raw?'Invalid expression — use numbers and +−×÷':'Please enter amount collected.';return;}
-  errEl.textContent='';
-  const obj={id:cpEditIndex!==null?carpools[cpEditIndex].id:(Date.now()+Math.random()),date,dir,km,pax,amount,amountExpr,notes};
-  const wasEditing=cpEditIndex!==null;
-  if(wasEditing){carpools[cpEditIndex]=obj;cpEditIndex=null;
-    document.getElementById('cpFormTitle').textContent='Log Trip';
-    document.getElementById('cancelCpEdit').style.display='none';
-  } else carpools.unshift(obj);
-  persist();renderCarpool();renderDash();clearCpForm();
-  document.getElementById('cpList').scrollIntoView({behavior:'smooth',block:'start'});
-  toast(wasEditing?'Trip updated ✓':'Carpool trip saved ✓');
-}
-
-function cancelCpEdit(){cpEditIndex=null;document.getElementById('cpFormTitle').textContent='Log Trip';document.getElementById('cancelCpEdit').style.display='none';clearCpForm();}
-
-function clearCpForm(){
-  ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cpAmountPreview').textContent='';
-  document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
-  document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
-  if(settings.officeDist)document.getElementById('cpKm').value=settings.officeDist;
-}
-
-function editCarpool(i){
-  const x=carpools[i];cpEditIndex=i;
-  document.getElementById('cpFormTitle').textContent='Edit Trip';document.getElementById('cancelCpEdit').style.display='block';
-  document.getElementById('cpDate').value=x.date;document.getElementById('cpDir').value=x.dir||'to_office';
-  document.getElementById('cpKm').value=x.km!=null?x.km:'';document.getElementById('cpPax').value=x.pax!=null?x.pax:'';
-  document.getElementById('cpAmount').value=x.amountExpr||x.amount||'';previewCpAmount();document.getElementById('cpNotes').value=x.notes||'';
-  document.getElementById('cpFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function delCarpool(i){if(!confirm('Delete this carpool trip?'))return;carpools.splice(i,1);persist();renderCarpool();renderDash();toast('Trip deleted');}
-
-function renderCarpool(){
-  const ti=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
-  const tp=carpools.reduce((a,x)=>a+(x.pax||0),0);
-  document.getElementById('carpoolStats').innerHTML=
-    statBox('₹'+ti.toFixed(0),'Total Income',null,'good')+statBox(carpools.length,'Total Trips')+
-    statBox(carpools.length>0?'₹'+(ti/carpools.length).toFixed(0):'—','Avg / Trip')+
-    statBox(tp>0?'₹'+(ti/tp).toFixed(0):'—','Avg / Passenger');
-  const listEl=document.getElementById('cpList');
-  if(!carpools.length){listEl.innerHTML='<div class="empty">No trips yet.</div>';return;}
-  const dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home',both:'\u2194 Both Ways'};
-  // Group by month + collapsible
-  const cpSorted=[...carpools].map((x,i)=>({...x,_idx:i})).sort((a,b)=>b.date.localeCompare(a.date));
-  const cpGroups={};
-  cpSorted.forEach(x=>{const m=x.date.slice(0,7);if(!cpGroups[m])cpGroups[m]=[];cpGroups[m].push(x);});
-  let cpOut='',cpMIdx=0;
-  Object.entries(cpGroups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
-    const[yr,mo]=month.split('-');
-    const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
-    const mAmt=rows.reduce((a,x)=>a+(x.amount||0),0);
-    const mId='cpgrp-'+month;
-    const collapsed=cpMIdx>0?' style="display:none"':'';
-    cpOut+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} trip${rows.length>1?'s':''} \u00b7 \u20b9${mAmt.toFixed(0)} <span style="float:right;font-size:10px">${cpMIdx>0?'\u25b6':'\u25bc'}</span></div>`;
-    cpOut+=`<div id="${mId}"${collapsed}>`;
-    rows.forEach(x=>{
-      const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
-      cpOut+=`<div class="session-row">
-        <div class="session-top">
-          <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.dir||'to_office')}</div>
-          <div class="session-actions">
-            <button class="btn-sm btn-edit" onclick="editCarpool(${x._idx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><line x1="5.12" y1="15.88" x2="8.62" y2="19.38" stroke="var(--card)" stroke-width="1"/></svg></button>
-            <button class="btn-sm btn-del" onclick="delCarpool(${x._idx})">\u2715</button>
-          </div>
-        </div>
-        <div class="session-detail">
-          <span class="session-main" style="font-size:12px">${parts.join(' \u00b7 ')||'\u2014'}</span>
-          <span class="session-cost" style="color:var(--good)">+\u20b9${x.amount.toFixed(0)}</span>
-        </div>
-      </div>`;
-    });
-    cpOut+='</div>';cpMIdx++;
-  });
-  listEl.innerHTML=cpOut;
-}
-
-// ── CHARTS ─────────────────────────────────────────────────────────────────
 function drawChart(id,pts,dates,color){
   const canvas=document.getElementById(id);if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -2596,10 +2444,26 @@ function exportCSV(){safeLS.set('cm-lastExport',''+Date.now());
   dl(new Blob([rows.join('\n')],{type:'text/csv'}),'chargemate.csv');toast('CSV exported ✓');
 }
 function exportJSON(){
-  var p={version:20,sessions:sessions,carpools:carpools,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:20,sessions:sessions,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
   dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
   safeLS.set('cm-lastExport',''+Date.now());
+}
+
+function importData(event){
+  var file=event.target.files[0];if(!file)return;
+  var r=new FileReader();r.onload=function(ev){
+    try{
+      var p=JSON.parse(ev.target.result);
+      if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
+      if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
+      else{trips=[];safeLS.set('cm-trips','[]');}
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
+      if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
+      recomputeAllKm();persist();render();
+      toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
+    }catch(e){alert('Import failed: '+e.message);}event.target.value='';
+  };r.readAsText(file);
 }
 
 function dl(blob,name){
@@ -2647,7 +2511,7 @@ function saveSettings(){
   Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
   safeLS.set('cm-settings',JSON.stringify(settings));render();toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];persist();render();renderCarpool();toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];persist();render();toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
@@ -2664,8 +2528,7 @@ populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
 (function(){var lt=safeLS.get('cm-lastType');if(lt){selectType(lt);}})();
-document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
-try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
+try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
 function setTheme(mode){
@@ -2699,7 +2562,7 @@ function updateThemePills(mode){
 })();
 
 // — Swipe Navigation —
-(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,tabs=['dash','charges','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — PWA Service Worker —
 (function(){try{if(navigator.serviceWorker){var sw='self.addEventListener("install",function(){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(clients.claim())});self.addEventListener("fetch",function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))})';if(navigator.serviceWorker&&navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
@@ -2707,22 +2570,7 @@ function updateThemePills(mode){
 // — Backup Reminder —
 (function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=30&&sessions.length>0)setTimeout(function(){toast('Export a backup - last was '+Math.floor(d)+' days ago');},3000);})();
 
-function importData(event){
-  var file=event.target.files[0];if(!file)return;
-  var r=new FileReader();r.onload=function(ev){
-    try{
-      var p=JSON.parse(ev.target.result);
-      if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
-      if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
-      if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
-      else{trips=[];safeLS.set('cm-trips','[]');}
-      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
-      if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      recomputeAllKm();render();renderCarpool();
-      toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
-    }catch(e){alert('Import failed: '+e.message);}e.target.value='';
-  };r.readAsText(file);
-}
+
 
 </script>
 

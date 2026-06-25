@@ -908,22 +908,11 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <!-- ═══════════════════ SETTINGS ═══════════════════ -->
 <div id="settings" class="view">
   <div class="card">
-    <h3>Vehicle</h3>
-    <label>Battery Capacity (kWh)</label><input type="number" id="battery" placeholder="e.g. 40">
-    <label>Home Charging Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="e.g. 7">
-    <label>Office Charging Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="e.g. 0 for free">
-    <label>Reserve Buffer % <span style="color:var(--muted);font-size:10px">(trip planner safety margin)</span></label>
-    <input type="number" id="bufferPct" placeholder="e.g. 15">
-    <label>Office Distance (km) <span style="color:var(--muted);font-size:10px">(one-way commute)</span></label>
-    <input type="number" id="officeDist" placeholder="e.g. 35">
-    <label>Home Distance (km) <span style="color:var(--muted);font-size:10px">(if different route back)</span></label>
-    <input type="number" id="homeDist" placeholder="e.g. 35">
-    <button class="primary" onclick="saveSettings()">Save Settings</button>
-  </div>
-  <div class="card">
-    <h3>Petrol Comparison</h3>
-    <label>Petrol Car Mileage (km/litre)</label><input type="number" id="petrolMileage" placeholder="e.g. 15">
-    <label>Petrol Price (₹/litre)</label><input type="number" id="petrolPrice" placeholder="e.g. 103">
+    <h3>Vehicle &amp; Rates</h3>
+    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40"></div><div><label>Reserve Buffer %</label><input type="number" id="bufferPct" placeholder="15"></div></div>
+    <div class="form-row"><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7"></div><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div></div>
+    <div class="form-row"><div><label>Office Dist (km)</label><input type="number" id="officeDist" placeholder="35"></div><div><label>Home Dist (km)</label><input type="number" id="homeDist" placeholder="35"></div></div>
+    <div class="form-row"><div><label>Petrol Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div><div><label>Petrol Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div></div>
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
   <div class="card"><h3>Appearance</h3>
@@ -937,13 +926,15 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v2.2.1</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v2.3</div>
   </div>
   <div class="card">
     <h3>Backup</h3>
-    <button class="ghost" onclick="exportJSON()" style="margin-bottom:8px">📤 Export Backup</button>
-    <label class="file-label" for="importInput" style="margin-top:0">📥 Import Backup</label>
-    <input type="file" id="importInput" accept=".json" onchange="importData(event)">
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="ghost" onclick="exportJSON()" style="flex:1">📤 Export</button>
+      <label class="file-label" for="importInput" style="flex:1;text-align:center;margin:0;cursor:pointer">📥 Import</label>
+      <input type="file" id="importInput" accept=".json" onchange="importData(event)">
+    </div>
   </div>
   <div class="card">
     <h3>Advanced</h3>
@@ -956,11 +947,23 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v2.3 <span class="cl-date">24 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>At a Glance</b>: Replaced "Total Charged" with "Last Charged" (date + type) — session counts misleading with partial logging. Added "Cost / km".</li>
+      <li><b>Spending</b>: Renamed from "Paid Charging". Generic layout — This Month, Total, ₹/kWh, Avg/Session. No home/public split assumption.</li>
+      <li><b>Settings</b>: Vehicle + Petrol merged into one card (2-column rows). Backup Export/Import on one line.</li>
+      <li><b>Removed</b>: Sessions/Week, duplicate Est. Range from At a Glance</li>
+    </ul>
     <div class="cl-ver">v2.2.1 <span class="cl-date">24 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>Dashboard redesign</b>: "At a Glance" (distance, efficiency, total charged, cost/km), "Spending" (this month, total, avg ₹/kWh, avg/session), "Carpool" (income, this month, net cost, avg/trip), "Charge Breakdown" (split bars)</li>
-      <li><b>Removed</b>: Charging Summary from Charges tab, Petrol Saved, Sessions/Week, duplicate Est. Range stat, per-km cost variants, home/public session count in stat values</li>
-      <li><b>Carpool auto-sum</b>: Enter expressions like <code>100+110</code> in Amount field — shows live "= ₹210" preview, saves computed total, shows expression on edit</li>
+      <li><b>Carpool card</b>: 4 stats (Total Income, This Month, Net Cost, Avg/Trip). "Charge Breakdown" split bars moved to own card.</li>
+      <li><b>Bug fixes</b>: ₹ values rounded (no decimals), negative Net Cost shows "surplus" in green, session counts removed from stat values</li>
+    </ul>
+    <div class="cl-ver">v2.2 <span class="cl-date">24 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Dashboard redesign</b>: Replaced Overview + Cost Metrics + Habits with focused cards — At a Glance, Spending, Carpool, Charge Breakdown, Range, Chart</li>
+      <li><b>Carpool auto-sum</b>: Enter expressions like <code>100+110</code> in Amount — live "= ₹210" preview, saves computed total, shows expression on edit</li>
+      <li><b>Removed</b>: Charging Summary from Charges tab, Petrol Saved metric, 4× per-km cost variants</li>
     </ul>
     <div class="cl-ver">v2.1.2 <span class="cl-date">22 Jun 2026</span></div>
     <ul class="cl-list">
@@ -2347,11 +2350,13 @@ function renderDash(){
   const monthKm=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.km!=null).reduce((a,x)=>a+x.km,0);
 
   // === AT A GLANCE ===
+  const lastSess=sorted.length>0?sorted[sorted.length-1]:null;
+  const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
   document.getElementById('stats').innerHTML=
     statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
     statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
-    statBox(totalKwhCharged>0?totalKwhCharged.toFixed(1)+' kWh':'—','Total Charged',n>0?n+' session'+(n>1?'s':''):null)+
-    statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2)+'/km':'—','Cost / km');
+    statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'per km driven':null)+
+    statBox(lastDateStr,'Last Charged',lastSess?lastSess.t:'');
 
   // === SPENDING ===
   const monthSpend=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
