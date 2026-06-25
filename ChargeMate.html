@@ -2316,8 +2316,8 @@ function renderDash(){
   const avgRpKwh=totalKwhCharged>0&&hasCost?(totalCost/totalKwhCharged).toFixed(1):null;
 
   document.getElementById('paidStats').innerHTML=
-    statBox(hasCost?'₹'+monthSpend.toLocaleString('en-IN'):'—','This Month')+
-    statBox(hasCost?'₹'+totalCost.toLocaleString('en-IN'):'—','Total Spend')+
+    statBox(hasCost?'₹'+Math.round(monthSpend).toLocaleString('en-IN'):'—','This Month')+
+    statBox(hasCost?'₹'+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
     statBox(avgRpKwh?'₹'+avgRpKwh:'—','Avg ₹/kWh')+
     statBox(avgPerSession?'₹'+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
 
