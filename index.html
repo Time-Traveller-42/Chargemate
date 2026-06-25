@@ -587,7 +587,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v2.5</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v3.0</div>
   </div>
   <div class="card">
     <h3>Backup</h3>
@@ -596,6 +596,23 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
       <label class="file-label" for="importInput" style="flex:1;text-align:center;margin:0;cursor:pointer">📥 Import</label>
       <input type="file" id="importInput" accept=".json" onchange="importData(event)">
     </div>
+  </div>
+  <div class="card">
+    <h3>☁️ Cloud Sync</h3>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Sync data via GitHub Gist. Create a <a href="https://github.com/settings/tokens/new?scopes=gist&description=ChargeMate" target="_blank" style="color:var(--accent)">Personal Access Token</a> (gist scope only).</div>
+    <label>GitHub Token</label>
+    <input type="password" id="syncToken" placeholder="ghp_..." oninput="saveSyncSettings()">
+    <label>Gist ID <span style="color:var(--muted);font-size:10px">(leave empty to create new)</span></label>
+    <input type="text" id="syncGistId" placeholder="auto-created on first sync" oninput="saveSyncSettings()">
+    <div class="toggle-row" style="margin-top:10px">
+      <span class="toggle-label">Auto-sync on save</span>
+      <label class="toggle"><input type="checkbox" id="syncAutoEnabled" onchange="saveSyncSettings()"><span class="toggle-slider"></span></label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="ghost" onclick="cloudPush()" style="flex:1;font-size:11px">⬆ Push</button>
+      <button class="ghost" onclick="cloudPull()" style="flex:1;font-size:11px">⬇ Pull</button>
+    </div>
+    <div id="syncStatus" style="font-size:10px;color:var(--muted);margin-top:6px;min-height:14px"></div>
   </div>
   <div class="card">
     <h3>Advanced</h3>
@@ -609,6 +626,10 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v3.0 <span class="cl-date">25 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>☁️ Cloud Sync</b>: Sync data to a private GitHub Gist. Auto-push on save or manual push/pull. Settings → Cloud Sync to configure.</li>
+    </ul>
     <div class="cl-ver">v2.5 <span class="cl-date">25 Jun 2026</span></div>
     <ul class="cl-list">
       <li><b>Debounced persist</b>: localStorage writes throttled (500ms) — smoother on low-end devices</li>
@@ -2297,7 +2318,7 @@ function copyMonthlySummary(){
 }
 
 function exportJSON(){
-  var p={version:25,sessions:sessions,carpools:carpools,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:30,sessions:sessions,carpools:carpools,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
   dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
   safeLS.set('cm-lastExport',''+Date.now());
@@ -2406,7 +2427,7 @@ function updateThemePills(mode){
 (function(){var sx=0,sy=0,tabs=['dash','charges','carpool','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — PWA Service Worker (cache-first with versioning) —
-(function(){try{if(navigator.serviceWorker){var CACHE='cm-v2.5';var sw='var CACHE="'+CACHE+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}))}).then(function(){return clients.claim()}))});self.addEventListener("fetch",function(e){e.respondWith(caches.open(CACHE).then(function(c){return c.match(e.request).then(function(r){var f=fetch(e.request).then(function(res){if(res&&res.status===200)c.put(e.request,res.clone());return res}).catch(function(){return r});return r||f})}))})';if(navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
+(function(){try{if(navigator.serviceWorker){var CACHE='cm-v3.0';var sw='var CACHE="'+CACHE+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}))}).then(function(){return clients.claim()}))});self.addEventListener("fetch",function(e){e.respondWith(caches.open(CACHE).then(function(c){return c.match(e.request).then(function(r){var f=fetch(e.request).then(function(res){if(res&&res.status===200)c.put(e.request,res.clone());return res}).catch(function(){return r});return r||f})}))})';if(navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
 
 // — Android Back Button (navigate tabs instead of exit) —
 (function(){var tabs=['dash','charges','carpool','plan','settings'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
@@ -2442,6 +2463,62 @@ function undoLast(){
 
 // — Offline Detection —
 (function(){var badge=document.getElementById('offlineBadge');function upd(){badge.style.display=navigator.onLine?'none':'block';}window.addEventListener('online',upd);window.addEventListener('offline',upd);upd();})();
+
+// ── CLOUD SYNC (GitHub Gist) ──────────────────────────────────────────────
+var _syncSettings=JSON.parse(safeLS.get('cm-sync')||'{"token":"","gistId":"","auto":false}');
+function saveSyncSettings(){
+  _syncSettings.token=document.getElementById('syncToken').value.trim();
+  _syncSettings.gistId=document.getElementById('syncGistId').value.trim();
+  _syncSettings.auto=document.getElementById('syncAutoEnabled').checked;
+  safeLS.set('cm-sync',JSON.stringify(_syncSettings));
+}
+function loadSyncUI(){
+  document.getElementById('syncToken').value=_syncSettings.token||'';
+  document.getElementById('syncGistId').value=_syncSettings.gistId||'';
+  document.getElementById('syncAutoEnabled').checked=!!_syncSettings.auto;
+}
+function syncStatus(msg,err){var el=document.getElementById('syncStatus');el.textContent=msg;el.style.color=err?'var(--danger)':'var(--good)';}
+
+function cloudPush(){
+  if(!_syncSettings.token){syncStatus('Set a GitHub token first','err');return;}
+  var payload={sessions:sessions,carpools:carpools,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
+  var body={files:{'chargemate-data.json':{content:JSON.stringify(payload)}}};
+  if(!_syncSettings.gistId){body.description='ChargeMate Backup';body.public=false;}
+  var url=_syncSettings.gistId?'https://api.github.com/gists/'+_syncSettings.gistId:'https://api.github.com/gists';
+  var method=_syncSettings.gistId?'PATCH':'POST';
+  syncStatus('Pushing...');
+  fetch(url,{method:method,headers:{'Authorization':'token '+_syncSettings.token,'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw new Error(r.status+' '+r.statusText);return r.json();})
+    .then(function(d){
+      if(!_syncSettings.gistId){_syncSettings.gistId=d.id;document.getElementById('syncGistId').value=d.id;safeLS.set('cm-sync',JSON.stringify(_syncSettings));}
+      syncStatus('Pushed ✓ — '+new Date().toLocaleTimeString());
+    }).catch(function(e){syncStatus('Push failed: '+e.message,'err');});
+}
+
+function cloudPull(){
+  if(!_syncSettings.token||!_syncSettings.gistId){syncStatus('Need token + Gist ID to pull','err');return;}
+  syncStatus('Pulling...');
+  fetch('https://api.github.com/gists/'+_syncSettings.gistId,{headers:{'Authorization':'token '+_syncSettings.token}})
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(d){
+      var f=d.files['chargemate-data.json'];if(!f||!f.content)throw new Error('No data file in gist');
+      var p=JSON.parse(f.content);
+      if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
+      if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
+      if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
+      if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
+      if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
+      recomputeAllKm();render();renderCarpool();
+      syncStatus('Pulled ✓ — '+sessions.length+' charges, '+trips.length+' trips');
+      toast('Cloud data loaded ✓');
+    }).catch(function(e){syncStatus('Pull failed: '+e.message,'err');});
+}
+
+function autoSync(){if(_syncSettings.auto&&_syncSettings.token)cloudPush();}
+// Hook auto-sync into persist
+var _origPersist=persist;
+persist=function(){_origPersist();setTimeout(autoSync,1000);};
+setTimeout(loadSyncUI,100);
 
 function importData(event){
   var file=event.target.files[0];if(!file)return;
