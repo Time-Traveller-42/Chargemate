@@ -333,6 +333,7 @@ body.light .inline-dropdown{background:#fff;border-color:#e2e8f0;box-shadow:0 4p
 body.light .inline-dropdown div:hover{background:rgba(0,119,204,0.08)}
 body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 </style>
+</style>
 </head>
 <body>
 <div class="tabs">
@@ -856,11 +857,11 @@ var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},s
 let settings = JSON.parse(safeLS.get('cm-settings') ||
   '{"battery":40,"homeRate":7,"officeRate":0,"bufferPct":15,"petrolMileage":15,"petrolPrice":103}');
 let sessions  = JSON.parse(safeLS.get('cm-data')    || '[]');
-var carpools=[];
+let carpools  = JSON.parse(safeLS.get('cm-carpool') || '[]');
 let trips     = JSON.parse(safeLS.get('cm-trips')   || '[]');
 let tripEditIndex = null;
 let entryMode = 'charge'; // 'charge' or 'trip'
-let editIndex=null;
+let editIndex=null, cpEditIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
 
 // ── CHANGELOG ─────────────────────────────────────────────────────────────────
@@ -884,7 +885,7 @@ function switchTab(tab) {
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(drawAllCharts,50);
   if (tab==='charges') { renderCharges(); restoreDraft(); }
-  
+  if (tab==='carpool') 
   if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
@@ -1781,7 +1782,7 @@ function computeUnifiedEfficiency(){
 function persist(){
   var _persistTimer=null;
   safeLS.set('cm-data',JSON.stringify(sessions));
-  
+  safeLS.set('cm-carpool',JSON.stringify(carpools));
   safeLS.set('cm-trips',JSON.stringify(trips));
   safeLS.set('cm-lastSaved',''+Date.now());
 }
@@ -2009,6 +2010,8 @@ function renderDash(){
     statBox(hasCost?'₹'+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
     statBox(avgRpKwh?'₹'+avgRpKwh:'—','Avg ₹/kWh')+
     statBox(avgPerSession?'₹'+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
+
+
   // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
@@ -2148,8 +2151,12 @@ function copyMonthlySummary(){
   var now=new Date();var mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   var moSessions=sessions.filter(function(s){return s.date.startsWith(mo);});
   var moTrips=trips.filter(function(t){return t.date&&t.date.startsWith(mo);});
+  var moCarpools=carpools.filter(function(c){return c.date&&c.date.startsWith(mo);});
   var totalKwh=moSessions.reduce(function(a,s){return a+s.kwh;},0);
   var totalCost=moSessions.filter(function(s){return s.cost!=null;}).reduce(function(a,s){return a+s.cost;},0);
+  var totalKm=moSessions.reduce(function(a,s){return a+(s.km||0);},0)+moTrips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
+  var cpIncome=moCarpools.reduce(function(a,c){return a+(c.amount||0);},0);
+  var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]+' '+now.getFullYear();
   var txt=label+' - ChargeMate Summary\n';
   txt+='─────────────────────────\n';
   txt+='Charges: '+moSessions.length+' sessions\n';
@@ -2157,6 +2164,8 @@ function copyMonthlySummary(){
   txt+='Cost: ₹'+totalCost.toFixed(0)+'\n';
   txt+='Distance: '+totalKm+' km\n';
   if(totalKm>0&&totalCost>0)txt+='Cost/km: ₹'+(totalCost/totalKm).toFixed(1)+'\n';
+  if(moCarpools.length)txt+='Carpool: '+moCarpools.length+' trips · ₹'+cpIncome.toFixed(0)+' earned\n';
+  if(totalCost>0&&cpIncome>0)txt+='Net cost: ₹'+(totalCost-cpIncome).toFixed(0)+'\n';
   navigator.clipboard.writeText(txt).then(function(){toast('Summary copied ✓');}).catch(function(){toast('Copy failed');});
 }
 
@@ -2212,7 +2221,7 @@ function saveSettings(){
   Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
   safeLS.set('cm-settings',JSON.stringify(settings));render();toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];persist();render();toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];persist();render();toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
@@ -2232,7 +2241,6 @@ populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
 (function(){var lt=safeLS.get('cm-lastType');if(lt){selectType(lt);}})();
-document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
 try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
@@ -2281,7 +2289,7 @@ function undoableDelete(type,index,label){
   var item;
   if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
   else if(type==='trip'){item=trips.splice(index,1)[0];safeLS.set('cm-trips',JSON.stringify(trips));render();}
-  else if(type==='carpool'){item=carpools.splice(index,1)[0];}
+  else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));}
   if(!item)return;
   _undoData={type:type,index:index,item:item};
   if(_undoTimer)clearTimeout(_undoTimer);
@@ -2296,7 +2304,7 @@ function undoLast(){
   if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
   if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
   else if(d.type==='trip'){trips.splice(d.index,0,d.item);safeLS.set('cm-trips',JSON.stringify(trips));render();}
-  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);}
+  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));}
   document.getElementById('toast').classList.remove('show');
   toast('Restored ✓');
 }
@@ -2347,7 +2355,7 @@ function cloudPull(){
       var f=d.files['chargemate-data.json'];if(!f||!f.content)throw new Error('No data file in gist');
       var p=JSON.parse(f.content);
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
-      if(p.carpools){carpools=p.carpools;}
+      if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
@@ -2369,7 +2377,7 @@ function importData(event){
     try{
       var p=JSON.parse(ev.target.result);
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
-      if(p.carpools){carpools=p.carpools;}
+      if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       else{trips=[];safeLS.set('cm-trips','[]');}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
