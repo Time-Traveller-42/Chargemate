@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root{
   --bg:#0b1220;--card:#121a2b;--accent:#00e5ff;--accent2:#7c3aed;
@@ -21,23 +21,24 @@
 body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh}
 .container{max-width:500px;margin:auto;padding:16px 18px 80px}
 
-.tabs{display:flex;gap:3px;padding:12px 10px 12px;position:sticky;top:0;z-index:10;
-  background:rgba(11,18,32,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.tab{flex:1;text-align:center;padding:7px 2px;border-radius:8px;
-  font-family:'Inter',sans-serif;font-size:10px;font-weight:600;
-  cursor:pointer;color:var(--muted);transition:all .2s;letter-spacing:.03em;text-transform:uppercase;
-  -webkit-tap-highlight-color:transparent;outline:none;overflow:hidden}
+.tabs{display:flex;gap:0;padding:10px 8px;position:sticky;top:0;z-index:10;
+  background:rgba(11,18,32,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);align-items:center}
+.tab{transition:background .15s ease,color .15s ease;flex:1;text-align:center;padding:9px 6px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;
+  cursor:pointer;color:var(--muted);letter-spacing:.03em;
+  -webkit-tap-highlight-color:transparent;outline:none;white-space:nowrap}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--accent);color:#000}
 
 .card{background:var(--card);padding:18px;border-radius:14px;margin-bottom:14px;border:1px solid var(--border)}
-.card h3{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
+.card h3{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;
   color:var(--accent);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
 
 label{font-size:11px;color:var(--muted);display:block;margin-top:10px;margin-bottom:3px;letter-spacing:.05em}
 input[type='time']{color-scheme:dark}
+body.light input[type='time']{color-scheme:light}
 input,select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
-  background:#0d1525;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
+  background:#0d1525;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;
   outline:none;transition:border-color .2s}
 input:focus,select:focus{border-color:var(--accent)}
 
@@ -49,11 +50,11 @@ button.primary{width:100%;padding:11px;margin-top:10px;border-radius:10px;border
 button.primary:hover{opacity:.9}
 button.primary:active{transform:scale(.98)}
 button.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);
-  width:100%;padding:9px;border-radius:8px;font-family:'JetBrains Mono',monospace;
+  width:100%;padding:9px;border-radius:8px;font-family:'Inter',sans-serif;
   font-size:12px;cursor:pointer;transition:border-color .2s,color .2s}
 button.ghost:hover{border-color:var(--accent);color:var(--accent)}
 button.secondary{background:#1e2d45;color:var(--accent);border:none;
-  width:100%;padding:9px;border-radius:8px;font-family:'JetBrains Mono',monospace;
+  width:100%;padding:9px;border-radius:8px;font-family:'Inter',sans-serif;
   font-size:12px;cursor:pointer;margin-top:8px}
 .danger-link{display:block;text-align:center;font-size:11px;color:var(--danger);
   opacity:.6;cursor:pointer;padding:8px;margin-top:4px;letter-spacing:.04em}
@@ -73,26 +74,15 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 
 /* Efficiency mode selector */
 .eff-tabs{display:flex;gap:4px;margin-top:10px}
-.eff-tab{flex:1;text-align:center;padding:7px 4px;border-radius:8px;border:1px solid var(--border);
-  font-size:10px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;
+.eff-tab{font-size:11px;flex:1;text-align:center;padding:7px 4px;border-radius:8px;border:1px solid var(--border);
+  font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;
   color:var(--muted);transition:background-color .15s,color .15s,border-color .15s;text-transform:uppercase;letter-spacing:.03em}
 .eff-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
 .eff-tab:hover:not(.active){border-color:var(--muted);color:var(--text)}
 
 
 /* -- Popup Selector -- */
-.popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;
-  align-items:flex-end;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
-.popup-overlay.open{display:flex}
-.popup-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:20px;width:100%;max-width:360px;animation:popUp .2s ease-out}
-@keyframes popUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-.popup-title{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--accent);
-  text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;text-align:center}
-.popup-options{display:flex;flex-direction:column;gap:8px}
-.popup-opt{padding:14px 16px;border-radius:10px;border:1px solid var(--border);
-  font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text);
-  cursor:pointer;transition:background-color .15s,border-color .15s;text-align:center}
+
 .popup-opt:active,.popup-opt.selected{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
 .popup-opt:hover{border-color:var(--accent)}
 .popup-trigger{padding:9px 12px;border-radius:8px;border:1px solid var(--border);
@@ -108,7 +98,7 @@ body.light .popup-trigger{background:#f0f4f8;border-color:#dfe1e6;color:#172b4d}
 /* Native time inputs (Public charges only) */
 .time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .time-row input[type="time"]{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--border);
-  background:#0d1525;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
+  background:#0d1525;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;
   color-scheme:dark}
 body.light .time-row input[type="time"]{background:#f8fafc;color:#1e293b;border-color:#e2e8f0;color-scheme:light}
 .auto-duration{font-size:11px;color:var(--accent);margin-top:6px;font-style:italic}
@@ -135,14 +125,15 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
   color:var(--muted);transition:background-color .15s,color .15s,border-color .15s;text-transform:uppercase;letter-spacing:.03em}
 .type-pill.active{background:var(--accent);color:#000;border-color:var(--accent)}
 .type-pill:hover:not(.active){border-color:var(--muted);color:var(--text)}
-.view{display:none}.view.active{display:block}
+.view{display:none}.view.active{display:block;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0.5}to{opacity:1}}
 
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
 .stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border)}
-.stat-val{font-family:'Inter',sans-serif;font-size:17px;font-weight:700;color:var(--accent);line-height:1.2}
+.stat-val{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--accent);line-height:1.2;font-variant-numeric:tabular-nums}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
-.stat-label{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.stat-label{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
 
 .session-row{padding:6px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
@@ -150,11 +141,11 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 .session-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;flex-wrap:nowrap}
 .session-date-badge{display:flex;align-items:center;gap:6px;min-width:0;flex:1;overflow:hidden}
 .session-date{font-size:11px;color:var(--text);white-space:nowrap;font-weight:600;font-family:'Inter',sans-serif}
-.session-actions{display:flex;gap:6px;flex-shrink:0}
+.session-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
 .session-detail{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
 .session-main{font-size:11.5px;color:var(--text);flex:1;min-width:0;font-family:'Inter',sans-serif;line-height:1.4}
-.session-cost{font-family:'Inter',sans-serif;font-weight:600;color:var(--good);white-space:nowrap;font-size:11px;flex-shrink:0}
-.btn-sm{padding:5px 8px;border-radius:6px;border:none;font-size:13px;
+.session-cost{font-family:'Inter',sans-serif;font-weight:700;color:var(--good);white-space:nowrap;font-size:12px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.btn-sm{padding:8px 12px;border-radius:8px;border:none;font-size:13px;min-width:36px;min-height:36px;
   cursor:pointer;font-weight:500;white-space:nowrap;line-height:1}
 .btn-edit{background:#1e2d45;color:var(--accent)}
 .btn-del{background:#2d1a22;color:var(--danger)}
@@ -179,18 +170,20 @@ canvas{width:100%;display:block;border-radius:8px}
 .badge-trip{background:#1a2040;color:#f59e0b}
 body.light .badge-trip{background:#fef3c7;color:#92400e}
 
+body.light .badge-tooffice{background:#e0e7ff;color:#3730a3}
+body.light .badge-tohome{background:#dcfce7;color:#166534}
+
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
   background:var(--accent);color:#000;padding:9px 18px;border-radius:20px;
   font-family:'Inter',sans-serif;font-size:12px;font-weight:700;
   transition:transform .3s;z-index:100;pointer-events:none;white-space:nowrap}
-#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.show{transform:translateX(-50%) translateY(0);pointer-events:auto}
 
-.file-label{display:block;padding:9px;border:1px dashed var(--border);border-radius:8px;
-  text-align:center;font-size:11px;color:var(--muted);cursor:pointer;transition:border-color .2s;margin-top:8px}
+.file-label{display:block;padding:9px;border:1px solid var(--border);border-radius:8px;
+  text-align:center;font-size:12px;color:var(--muted);cursor:pointer;transition:border-color .2s,color .2s;font-family:'Inter',sans-serif}
 .file-label:hover{border-color:var(--accent);color:var(--accent)}
 #importInput{display:none}
 
-.empty{text-align:center;padding:30px 0;color:var(--muted);font-size:12px}
 
 .split-label{font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
 .split-track{display:flex;border-radius:6px;overflow:hidden;height:10px;gap:2px}
@@ -220,7 +213,7 @@ body.light .badge-trip{background:#fef3c7;color:#92400e}
   padding:7px 0;border-bottom:1px solid var(--border)}
 .plan-row:last-child{border-bottom:none}
 .plan-row-label{font-size:11px;color:var(--muted)}
-.plan-row-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+.plan-row-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .plan-row-val.good{color:var(--good)}
 .plan-row-val.warn{color:var(--warn)}
 .plan-row-val.danger{color:var(--danger)}
@@ -245,7 +238,7 @@ body.light .badge-trip{background:#fef3c7;color:#92400e}
 .eff-display{background:#0d1525;border:1px solid var(--border);border-radius:8px;
   padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
 .eff-display-label{font-size:11px;color:var(--muted)}
-.eff-display-val{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:var(--accent)}
+.eff-display-val{font-family:'Inter',sans-serif;font-weight:700;font-size:18px;color:var(--accent);font-variant-numeric:tabular-nums}
 
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .form-row>div label{margin-top:0}
@@ -254,7 +247,7 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 .charger-row:last-child{border-bottom:none}
 .charger-name{font-size:12px}.charger-meta{font-size:11px;color:var(--muted)}
 
-body.light{--bg:#f0f4f8;--card:#fff;--accent:#0077cc;--accent2:#6d28d9;--text:#1e293b;--muted:#64748b;--danger:#dc2626;--border:#e2e8f0;--good:#059669;--warn:#d97706;}
+body.light{--bg:#f0f4f8;--card:#fff;--accent:#0066b8;--accent2:#6d28d9;--text:#1e293b;--muted:#475569;--danger:#dc2626;--border:#e2e8f0;--good:#059669;--warn:#d97706;}
 body.light .tabs{background:rgba(240,244,248,0.95)}
 body.light input,body.light select{background:#f8fafc;color:#1e293b;border-color:#e2e8f0}
 body.light .stat-box,body.light .toggle-row{background:#f8fafc;border-color:#e2e8f0}
@@ -294,12 +287,12 @@ body.light .charge-advice{background:#f8fafc;border-color:#e2e8f0}
 body.light .plan-row{border-color:#e2e8f0}
 body.light .rbar-trip-line{background:rgba(0,0,0,0.5)}
 
-body.light .stat-label{color:#374151}
-body.light .stat-sub{color:#4b5563}
-body.light .charger-meta{color:#4b5563}
+body.light .stat-label{color:var(--muted)}
+body.light .stat-sub{color:var(--muted)}
+body.light .charger-meta{color:var(--muted)}
 body.light .month-header{color:#1e40af}
 body.light .session-row{border-color:#e2e8f0}
-body.light .session-date{color:#000}
+body.light .session-date{color:var(--text)}
 
 /* Time Picker Light Mode */
 
@@ -332,17 +325,48 @@ body.light .changelog-content{background:#fff;border-color:#e2e8f0}
 body.light .inline-dropdown{background:#fff;border-color:#e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
 body.light .inline-dropdown div:hover{background:rgba(0,119,204,0.08)}
 body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
+
+/* Drawer */
+.drawer-item{padding:14px 16px;border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px}
+.drawer-item:active{background:rgba(0,229,255,0.1)}
+body.light .drawer-item:active{background:#e2e8f0}
+
+/* Tap feedback */
+.tab:active{opacity:0.7;transform:scale(0.96)}
+.btn-sm:active{opacity:0.7;transform:scale(0.92)}
+.ghost:active{transform:scale(0.97);opacity:0.8}
+.secondary:active{transform:scale(0.97);opacity:0.8}
+.drawer-item:hover{background:rgba(255,255,255,0.04)}
+body.light .drawer-item:hover{background:rgba(0,0,0,0.04)}
+
+/* v4.7 additions */
+.empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px;font-style:italic}
+.drawer-item{transition:background .12s ease}
+@media(max-width:380px){.stats-grid{grid-template-columns:1fr!important}.form-row{grid-template-columns:1fr!important}}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 </style>
 
 </head>
 <body>
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('dash')" id="t-dash">Dashboard</div>
+  <div class="tab" onclick="openDrawer()" id="t-menu" aria-label="Menu" role="button" style="flex:0 0 40px;padding:9px 0;font-size:16px;line-height:1">☰</div>
+  <div class="tab active" onclick="switchTab('dash')" id="t-dash">Home</div>
   <div class="tab" onclick="switchTab('charges')" id="t-charges">Charging</div>
   <div class="tab" onclick="switchTab('carpool')" id="t-carpool">Carpool</div>
   <div class="tab" onclick="switchTab('expenses')" id="t-expenses">Expenses</div>
-  <div class="tab" onclick="switchTab('plan')" id="t-plan">Plan</div>
-  <div class="tab" onclick="switchTab('settings')" id="t-settings">Settings</div>
+</div>
+
+
+<!-- HAMBURGER DRAWER -->
+<div id="drawerOverlay" onclick="closeDrawer()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:900;opacity:0;transition:opacity .2s ease"></div>
+<div id="drawer" style="position:fixed;top:0;left:-280px;width:280px;max-width:85vw;height:100%;background:var(--card);z-index:901;transition:left .25s ease;overflow-y:auto;padding:20px;box-shadow:2px 0 12px rgba(0,0,0,0.3)">
+  <div style="margin-bottom:24px;font-size:15px;font-weight:600;color:var(--text)">ChargeMate</div>
+  <div class="drawer-item" onclick="openDrawerView('settings')">⚙️ Settings</div>
+  <div class="drawer-item" onclick="openDrawerView('planner');closeDrawer()">🗺️ Trip Planner</div>
+  <div class="drawer-item" onclick="openDrawerView('backup')">📤 Backup & Sync</div>
+  <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+    <div class="drawer-item" onclick="showChangelog();closeDrawer()">📋 What's New</div>
+  </div>
 </div>
 
 <div class="container">
@@ -350,15 +374,21 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
 <div id="dash" class="view active">
   <div class="card"><h3>At a Glance</h3><div class="stats-grid" id="stats"></div></div>
+  <div class="card" id="breakevenHome" onclick="switchTab('expenses');setTimeout(function(){document.getElementById('breakevenResult').scrollIntoView({behavior:'smooth'})},100)" style="cursor:pointer">
+    <h3>EV vs ICE <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px">tap for details →</span></h3>
+    <div id="breakevenSummary" style="font-size:13px;color:var(--muted)">Configure EV Premium in Settings to track breakeven.</div>
+  </div>
+  <div class="card"><h3>Estimated Range</h3><div id="rangeCard"></div>
+    <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">🗺️ Plan a trip →</a></div></div>
   <div class="card"><h3>Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
-  <div class="card"><h3>Carpool</h3><div class="stats-grid" id="carpoolDash"></div></div>
-  <div class="card"><h3>Charge Breakdown</h3><div id="splitBars"></div></div>
-  <div class="card"><h3>Estimated Range</h3><div id="rangeCard"></div></div>
   <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
-</div>
+  </div>
+
 
 <!-- ═══════════════════ CHARGES ═══════════════════ -->
 <div id="charges" class="view">
+
+<!-- ═══════════════════ CHARGES ═══════════════════ -->
   
   <div class="card">
     <div class="entry-mode-toggle">
@@ -523,12 +553,11 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="card"><h3>Trips</h3><div id="cpList"></div></div>
 </div>
 
-
 <!-- ═══════════════════ EXPENSES ═══════════════════ -->
 <div id="expenses" class="view">
   <div class="card"><h3>Total Cost of Ownership</h3><div class="stats-grid" id="expenseStats"></div></div>
   <div class="card">
-    <h3>Breakeven vs Petrol</h3>
+    <h3>Breakeven vs ICE</h3>
     <div id="breakevenResult"></div>
   </div>
   <div class="card">
@@ -550,10 +579,10 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     </div>
     <div class="form-row" style="margin-top:10px">
       <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount()"><div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="Petrol car cost"><div style="font-size:9px;color:var(--muted);margin-top:2px">Optional — what a petrol car would pay</div></div>
+      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="ICE car cost"><div style="font-size:9px;color:var(--muted);margin-top:2px">Optional — what an ICE car would pay</div></div>
     </div>
-    <div class="form-row" style="margin-top:10px">
-      <div><label>Description</label><input type="text" id="expDesc" placeholder="e.g. Annual insurance"></div>
+    <div style="margin-top:10px">
+      <label>Description</label><input type="text" id="expDesc" placeholder="e.g. Annual insurance" style="width:100%;box-sizing:border-box">
     </div>
     <div id="expError" class="error-msg"></div>
     <button class="primary" onclick="saveExpense()">Save</button>
@@ -562,78 +591,14 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="card"><h3>History</h3><div id="expList"></div></div>
 </div>
 
-<!-- ═══════════════════ PLAN ═══════════════════ -->
-<div id="plan" class="view">
+
+
+
+<!-- ═══════════════════ BACKUP ═══════════════════ -->
+<div id="backup" class="view">
   <div class="card">
-    <h3>Trip Details</h3>
-
-    <div class="form-row">
-      <div><label>Current Battery %</label><input type="number" id="planCurrent" min="0" max="100" placeholder="e.g. 80" oninput="runPlan()"></div>
-      <div><label>Distance (km)</label><input type="number" id="planDist" min="0" placeholder="e.g. 45" oninput="runPlan()"></div>
-    </div>
-
-
-        <div style="font-size:10px;color:var(--muted);margin-top:6px">15% reserve buffer applied to all calculations</div>
-
-<hr class="divider">
-    <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
-
-    <div class="eff-tabs">
-      <div class="eff-tab active" id="eff-tab-avg" onclick="setEffMode('avg')">Avg</div>
-      <div class="eff-tab" id="eff-tab-last" onclick="setEffMode('last')">Last Trip</div>
-      <div class="eff-tab" id="eff-tab-live" onclick="setEffMode('live')">Custom</div>
-    </div>
-
-    <div id="effModeDisplay" class="eff-display" style="display:none">
-      <span class="eff-display-label" id="effModeLabel">—</span>
-      <span class="eff-display-val" id="effModeVal">—</span>
-    </div>
-
-    <div id="liveEffBlock" style="display:none;margin-top:8px">
-      <label>Your Efficiency (Wh/km)</label>
-      <input type="number" id="planLiveEff" placeholder="e.g. 160" step="1" oninput="runPlan()">
-      <div style="font-size:10px;color:var(--muted);margin-top:4px">
-        As shown on your car's display. Lower = more efficient. Typical: 120–200 Wh/km
-      </div>
-    </div>
-  </div>
-
-  
-  <div class="card" id="planStopsCard">
-    <h3>Charging Stops <span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span></h3>
-    <div id="planStopsList"></div>
-    <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
-  </div>
-
-  
-
-  <div id="planResult"></div>
-</div>
-
-<!-- ═══════════════════ SETTINGS ═══════════════════ -->
-<div id="settings" class="view">
-  <div class="card">
-    <h3>Vehicle &amp; Rates</h3>
-    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7"></div></div>
-    <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>Petrol Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
-    <div class="form-row"><div><label>Petrol Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="number" id="evPremium" placeholder="e.g. 500000"></div></div>
-    <button class="primary" onclick="saveSettings()">Save Settings</button>
-  </div>
-  <div class="card"><h3>Appearance</h3>
-    <label>Theme</label>
-    <div class="type-pills" id="themePills">
-      <div class="type-pill" data-theme="dark" onclick="setTheme('dark')">Dark</div>
-      <div class="type-pill" data-theme="light" onclick="setTheme('light')">Light</div>
-      <div class="type-pill" data-theme="system" onclick="setTheme('system')">System</div>
-    </div>
-  </div>
-    <div class="card">
-    <h3>What's New</h3>
-    <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v4.2</div>
-  </div>
-  <div class="card">
-    <h3>Backup</h3>
+    <h3>Backup & Restore</h3>
+    <p style="color:var(--muted);font-size:12px;margin:0 0 14px">Export your data as JSON or import a previous backup.</p>
     <div style="display:flex;gap:10px;align-items:center">
       <button class="ghost" onclick="exportJSON()" style="flex:1">📤 Export</button>
       <label class="file-label" for="importInput" style="flex:1;text-align:center;margin:0;cursor:pointer">📥 Import</label>
@@ -657,298 +622,125 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     </div>
     <div id="syncStatus" style="font-size:10px;color:var(--muted);margin-top:6px;min-height:14px"></div>
   </div>
+</div>
+
+<!-- ═══════════════════ SETTINGS ═══════════════════ -->
+<div id="settings" class="view">
+  <div class="card">
+    <h3>Vehicle &amp; Rates</h3>
+    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40" min="1" max="200" step="0.1"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7" min="0" step="0.1"></div></div>
+    <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>ICE Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
+    <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="number" id="evPremium" placeholder="e.g. 500000"></div></div>
+    <button class="primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div class="card"><h3>Appearance</h3>
+    <label>Theme</label>
+    <div class="type-pills" id="themePills">
+      <div class="type-pill" data-theme="dark" onclick="setTheme('dark')">Dark</div>
+      <div class="type-pill" data-theme="light" onclick="setTheme('light')">Light</div>
+      <div class="type-pill" data-theme="system" onclick="setTheme('system')">System</div>
+    </div>
+  </div>
+    
+  
   <div class="card">
     <h3>Advanced</h3>
     <div id="lastSavedInfo" style="font-size:10px;color:var(--muted);margin-bottom:8px"></div>
     <span class="danger-link" onclick="clearAll()">⚠ Clear all data permanently</span>
   </div>
 </div>
+
+<!-- ═══════════════════ PLANNER ═══════════════════ -->
+<div id="planner" class="view">
+  <div class="card">
+    <h3>Trip Details</h3>
+    <div class="form-row">
+      <div><label>Current Battery %</label><input type="number" id="planCurrent" min="0" max="100" placeholder="e.g. 80" oninput="_debouncedRunPlan()"></div>
+      <div><label>Distance (km)</label><input type="number" id="planDist" min="0" placeholder="e.g. 45" oninput="_debouncedRunPlan()"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">15% reserve buffer applied to all calculations</div>
+    <hr class="divider">
+    <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
+    <div class="eff-tabs">
+      <div class="eff-tab active" id="eff-tab-avg" onclick="setEffMode('avg')">Avg</div>
+      <div class="eff-tab" id="eff-tab-last" onclick="setEffMode('last')">Last Trip</div>
+      <div class="eff-tab" id="eff-tab-live" onclick="setEffMode('live')">Custom</div>
+    </div>
+    <div id="effModeDisplay" class="eff-display" style="display:none">
+      <span class="eff-display-label" id="effModeLabel">—</span>
+      <span class="eff-display-val" id="effModeVal">—</span>
+    </div>
+    <div id="liveEffBlock" style="display:none;margin-top:8px">
+      <label>Your Efficiency (Wh/km)</label>
+      <input type="number" id="planLiveEff" placeholder="e.g. 160" step="1" oninput="_debouncedRunPlan()">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">As shown on your car's display. Lower = more efficient. Typical: 120–200 Wh/km</div>
+    </div>
+  </div>
+  <div class="card" id="planStopsCard">
+    <h3>Charging Stops <span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span></h3>
+    <div id="planStopsList"></div>
+    <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
+  </div>
+  <div id="planResult"></div>
+</div>
+
 </div>
 
 <div class="changelog-modal" id="changelogModal" onclick="if(event.target===this)closeChangelog()">
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v4.8.1 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Trip Planner</b>: Now opens as a full view (like Settings/Backup) instead of a popup overlay.</li>
+      <li><b>Import button</b>: Matched styling with Export — solid border, same font size, aligned.</li>
+    </ul>
+    <div class="cl-ver">v4.8 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Font</b>: JetBrains Mono body, Inter 14px headings, 15px stat values, uppercase tabs.</li>
+      <li><b>Date format</b>: DD Mon YYYY across all views.</li>
+      <li><b>Cloud Sync</b>: Moved to Backup view.</li>
+      <li><b>Fixed</b>: Escaped apostrophes in drawer/changelog.</li>
+      <li><b>Cleanup</b>: Removed dead shortDate function, added fmtDateShort for compact displays.</li>
+      <li><b>Quality</b>: Improved import error handling, sync dedup, accessibility.</li>
+    </ul>
+    <div class="cl-ver">v4.7 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Bug fixes</b>: Fixed NaN display in efficiency, cost/km, and duration calculations.</li>
+      <li><b>Performance</b>: Debounced inputs, cached DOM refs, only render active tab on save.</li>
+      <li><b>Storage safety</b>: Warns when localStorage quota nears full, graceful fallback.</li>
+      <li><b>UX polish</b>: Larger tap targets, smoother tab transitions, better empty states.</li>
+      <li><b>Accessibility</b>: Added form labels, improved color contrast, focus management on modals.</li>
+      <li><b>Trip Planner</b>: Form now resets on close, debounced recalculation.</li>
+      <li><b>Data integrity</b>: Validates import schema, battery size range check in settings.</li>
+    </ul>
+    <div class="cl-ver">v4.6 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Hamburger menu</b>: ☰ on the left opens drawer with Costs, Plan Trip, Settings, What's New.</li>
+      <li><b>Hamburger + 4 tabs</b>: ☰ | Home | Charging | Carpool | Expenses.</li>
+      <li><b>Drawer (☰)</b>: Settings, Trip Planner, Backup/Import, Cloud Sync, What's New.</li>
+      <li><b>Home redesign</b>: At a Glance → EV vs ICE (breakeven progress) → Range + Plan → Spending → Efficiency chart.</li>
+      <li><b>ICE terminology</b>: "Petrol" labels → "ICE" (covers petrol + diesel).</li>
+    </ul>
+    <div class="cl-ver">v4.4 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>4 tabs</b>: Home | Log | Costs | ⚙️ — cleaner, no cramping.</li>
+      <li><b>Log tab</b>: Charges+Trips and Carpool under pill toggles (⚡ Charging | 🚐 Carpool).</li>
+      <li><b>Trip Planner overlay</b>: Tap “🗺️ Plan a Trip” on Home — opens as full-screen overlay.</li>
+    </ul>
+    <div class="cl-ver">v4.3 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Tab bar</b>: Shortened labels (Home, Charges, Costs, Plan, ⚙️) to fix cramping on mobile.</li>
+      <li><b>Description field</b>: Now full-width in expense form.</li>
+    </ul>
     <div class="cl-ver">v4.2 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>ICE equivalent per expense</b>: Optional field — enter what a petrol car would pay. Breakeven now compares full EV cost vs full ICE cost (fuel + maintenance).</li>
+      <li><b>ICE equivalent per expense</b>: Optional field — enter what an ICE car would pay. Breakeven now compares full EV cost vs full ICE cost (fuel + maintenance).</li>
       <li><b>Petrol price log</b>: Price changes are auto-tracked with date. Breakeven uses time-weighted average — accurate over months/years of ownership.</li>
       <li><b>Amount preview</b>: Shows ₹-formatted number with commas while typing (for amounts ≥1,000).</li>
     </ul>
-    <div class="cl-ver">v4.1.1 <span class="cl-date">26 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Breakeven fix</b>: Car Purchase expenses excluded from running cost calculations — was incorrectly inflating EV cost/km and showing "running cost higher than petrol".</li>
-    </ul>
-    <div class="cl-ver">v4.1 <span class="cl-date">26 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Breakeven with carpool</b>: Shows progress with and without carpool income. Date projection based on km/day since purchase.</li>
-      <li><b>Car Purchase category</b>: Log your car purchase as an expense — its date is used as ownership start for projections.</li>
-      <li><b>EV Premium in Settings</b>: Single field (extra paid over petrol equivalent). Removed from Expenses tab.</li>
-      <li><b>+Tolls category</b>, better icons: ������ Accessories, ������ Tyres, ������ Other.</li>
-    </ul>
-    <div class="cl-ver">v4.0 <span class="cl-date">26 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>km/%</b>: Efficiency now shown as both km/kWh and km/% for instant mental math (dashboard, session list, trip preview)</li>
-      <li><b>Expenses tab</b>: Track all EV ownership costs — service, insurance, accessories, tolls. Monthly grouped list, auto-sum expressions, Total Ownership stat.</li>
-      <li><b>Breakeven calculator</b>: In Expenses tab — enter EV premium + purchase date. Shows ₹/km savings, progress to breakeven, projected date, total saved. Handles edge cases (EV cheaper, running cost higher).</li>
-      <li><b>Settings cleanup</b>: Removed distances, buffer, car prices from Settings. 15% reserve is fixed in Plan. EV Premium moved to Expenses tab.</li>
-    </ul>
-    <div class="cl-ver">v3.1 <span class="cl-date">26 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Smart Carpool Quick-Add</b>: Detects repeated (direction + passengers + amount) patterns (3+ times). Shows top 4 in a 2×2 grid for one-tap entry.</li>
-      <li><b>Trip form</b>: Start odo placeholder shows last known odometer reading.</li>
-      <li><b>Bug fixes</b>: safeLS shim falsy values; Unicode escapes; JSON.parse try-catch on init; clearChargeForm resets; planEffMode declared.</li>
-    </ul>
-    <div class="cl-ver">v3.0 <span class="cl-date">25 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>☁️ Cloud Sync</b>: Sync data to a private GitHub Gist. Auto-push on save or manual push/pull. Settings → Cloud Sync to configure.</li>
-    </ul>
-    <div class="cl-ver">v2.5 <span class="cl-date">25 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Debounced persist</b>: localStorage writes throttled (500ms) — smoother on low-end devices</li>
-      <li><b>Lazy chart render</b>: Efficiency chart only redraws when data changes — faster tab switching</li>
-      <li><b>Form draft preservation</b>: Switching tabs mid-entry saves form state, restores on return</li>
-      <li><b>Copy monthly summary</b>: New button in Spending card — copies a text summary to clipboard</li>
-      <li><b>Odo gap detection</b>: Auto-detects when arrival SOC > previous departure SOC (missed charge)</li>
-      <li><b>Rate trend indicator</b>: Public charger history shows ↑/↓ price change since first visit</li>
-      <li><b>Offline badge</b>: Shows "OFFLINE" indicator when network is unavailable</li>
-      <li><b>Last saved timestamp</b>: Settings → Advanced shows when data was last written + counts</li>
-      <li><b>Dark mode meta tag</b>: <code>&lt;meta name="color-scheme"&gt;</code> for native browser chrome matching</li>
-      <li><b>Duplicate changelog cleanup</b>: Removed repeated v1.7.x entries</li>
-    </ul>
-    <div class="cl-ver">v2.4 <span class="cl-date">25 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Dead CSS purge</b>: Removed ~10 KB of unused theme variables (qw-theme, graph, QuickSight) — faster load on WebView APK</li>
-      <li><b>Undo delete</b>: Deleting charges, trips, or carpool entries now shows a 5-second "Undo" toast instead of confirm() dialog</li>
-      <li><b>Android back button</b>: Navigates between tabs instead of exiting the app in WebView</li>
-      <li><b>Service worker v2</b>: Cache-first with versioned cache — old caches auto-purged on update, true offline support</li>
-      <li><b>Backup reminder</b>: Now triggers at 7 days (was 30), only if >5 sessions logged</li>
-    </ul>
-    <div class="cl-ver">v2.3 <span class="cl-date">24 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>At a Glance</b>: Replaced "Total Charged" with "Last Charged" (date + type) — session counts misleading with partial logging. Added "Cost / km".</li>
-      <li><b>Spending</b>: Renamed from "Paid Charging". Generic layout — This Month, Total, ₹/kWh, Avg/Session. No home/public split assumption.</li>
-      <li><b>Settings</b>: Vehicle + Petrol merged into one card (2-column rows). Backup Export/Import on one line.</li>
-      <li><b>Removed</b>: Sessions/Week, duplicate Est. Range from At a Glance</li>
-    </ul>
-    <div class="cl-ver">v2.2.1 <span class="cl-date">24 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Carpool card</b>: 4 stats (Total Income, This Month, Net Cost, Avg/Trip). "Charge Breakdown" split bars moved to own card.</li>
-      <li><b>Bug fixes</b>: ₹ values rounded (no decimals), negative Net Cost shows "surplus" in green, session counts removed from stat values</li>
-    </ul>
-    <div class="cl-ver">v2.2 <span class="cl-date">24 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Dashboard redesign</b>: Replaced Overview + Cost Metrics + Habits with focused cards — At a Glance, Spending, Carpool, Charge Breakdown, Range, Chart</li>
-      <li><b>Carpool auto-sum</b>: Enter expressions like <code>100+110</code> in Amount — live "= ₹210" preview, saves computed total, shows expression on edit</li>
-      <li><b>Removed</b>: Charging Summary from Charges tab, Petrol Saved metric, 4× per-km cost variants</li>
-    </ul>
-    <div class="cl-ver">v2.1.2 <span class="cl-date">22 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Carpool distance fix</b>: km now derived from Settings at save time (not form state). Fixes "randomly missing distance" bug — first entry after page load was always empty.</li>
-      <li><b>Carpool field</b>: Distance hidden again (pulled from Settings silently)</li>
-    </ul>
-    <div class="cl-ver">v2.1.1 <span class="cl-date">22 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Critical fix</b>: Efficiency calculation completely rewritten — charges now produce arrival (start%) + departure (end%) waypoints. Consolidates multiple charges at same odo.</li>
-      <li><b>Trip date</b>: Defaults to today</li>
-      <li><b>Missed charge flag</b>: Added to charge form (was only on trips)</li>
-      <li><b>Settings</b>: Merged Import+Export into single Backup card, removed CSV export</li>
-    </ul>
-    <div class="cl-ver">v2.1 <span class="cl-date">22 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Regen support</b>: Trips can now have end% ≥ start% for downhill regen driving</li>
-      <li><b>Timeline logic</b>: % increase + odo increase = regen (valid driving), % increase + same odo = charge (breaks chain)</li>
-      <li><b>Regen display</b>: Shows "⚡ X km · +Y% regen · Z kWh recovered" in list and preview</li>
-      <li><b>Stats</b>: Regen km counted in total distance, consumption neutral (0) for avg calculation</li>
-    </ul>
-    <div class="cl-ver">v2.0.1 <span class="cl-date">22 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Bug fix</b>: Tabs 3–5 (Carpool, Plan, Settings) were blank due to unclosed div in Charges section</li>
-      <li><b>Odo mandatory</b>: All entries require odometer reading (no more optional)</li>
-      <li><b>Same-odo sort fix</b>: Correct timeline ordering when trip ends and charge starts at same odometer</li>
-      <li><b>Efficiency warnings</b>: Adaptive flags at 1.5× avg (⚠️) and 2× avg (⚠️ missed charge?) — excluded from dashboard avg and chart</li>
-      <li><b>Cleanup</b>: Removed all dead time picker CSS remnants</li>
-    </ul>
-    <div class="cl-ver">v2.0 <span class="cl-date">22 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li><b>Trip Logger</b>: New entry mode — log trips with Start/End Odo + Start/End % for self-contained efficiency tracking</li>
-      <li><b>Unified Timeline</b>: Efficiency computed from all waypoints (charges + trips) sorted by odometer</li>
-      <li><b>Charged Since flag</b>: Mark trips where an unlogged charge happened — breaks the efficiency chain</li>
-      <li><b>Time inputs removed for Office/Home</b>: No taper detected (5.5 %/hr flat), timestamps unnecessary</li>
-      <li><b>Auto-duration</b>: Office/Home charges show estimated duration based on 5.5 %/hr constant rate</li>
-      <li><b>Native time picker</b>: Public charges use browser's native time input (removed custom popup picker)</li>
-      <li><b>Chart fix</b>: requestAnimationFrame for reliable rendering</li>
-      <li>Export/Import includes trips array (backward compatible with older backups)</li>
-      <li>Entry mode toggle: Charge ⚡ vs Trip 🚗 pill selector</li>
-    </ul>
-    <div class="cl-ver">v1.7.5 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Lite: fixed import crash (leftover carpool references caused "Import failed")</li>
-      <li>Full version backups now import correctly into Lite</li>
-    </ul>
-    <div class="cl-ver">v1.7.4 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Efficiency mode tabs: purple → accent color (consistent with all other active states)</li>
-    </ul>
-    <div class="cl-ver">v1.7.3 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>All selectors unified: inline dropdown (Type, Connector, Direction, Charger Type)</li>
-      <li>No more full-screen popup overlays for simple selections</li>
-      <li>Generic reusable dropdown system (toggleDropdown)</li>
-    </ul>
-    <div class="cl-ver">v1.7.2 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Type selector: custom inline dropdown (perfectly aligned, no native offset)</li>
-    </ul>
-    <div class="cl-ver">v1.7.1 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Type dropdown: options now readable in both dark and light modes</li>
-    </ul>
-    <div class="cl-ver">v1.7 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Summary stats: smaller font so values fit in one line</li>
-      <li>Type selector: inline dropdown (no more full-screen popup)</li>
-      <li>Time picker triggers: clock icon instead of dropdown arrow</li>
-      <li>Import/Export: relevant icons (📥/📤 instead of arrows)</li>
-    </ul>
-    <div class="cl-ver">v1.6.8 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Light mode fix: active type-pill (Theme/Type/Connector) text now white on blue</li>
-    </ul>
-    <div class="cl-ver">v1.6.7 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Appearance card: removed extra wrapper div, consistent with other cards</li>
-      <li>Theme pills: removed redundant inline margin</li>
-    </ul>
-    <div class="cl-ver">v1.6.6 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Form spacing fix: labels in Start%/End%/Odo row now have margin-top:0 (matching other rows)</li>
-      <li>Removed popup-trigger margin-top:4px (consistent input heights across all rows)</li>
-    </ul>
-    <div class="cl-ver">v1.6.5 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Form: moved kWh preview, duration preview &amp; odo warning above Save button</li>
-      <li>Eliminated all phantom gaps between input rows</li>
-    </ul>
-    <div class="cl-ver">v1.6.4 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Form row spacing: equal 10px gaps, removed phantom margins from empty preview/warning divs</li>
-    </ul>
-    <div class="cl-ver">v1.6.3 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Form row spacing made consistent (8px between all rows)</li>
-      <li>Settings: Import moved before Export</li>
-      <li>Plan: Round Trip toggle removed</li>
-    </ul>
-    <div class="cl-ver">v1.6.2 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Removed dead space below time row (min-height on empty preview/error divs)</li>
-    </ul>
-    <div class="cl-ver">v1.6.1 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Form layout: Date+Type row, Start%+End%+Odo row, Times row (less cramped)</li>
-    </ul>
-    <div class="cl-ver">v1.6 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Charge form condensed to 3 rows (Date+Type+Odo, Start%+End%, Times)</li>
-      <li>Summary: 6 stats → 4 (sessions+frequency clubbed, start/end clubbed)</li>
-    </ul>
-    <div class="cl-ver">v1.5.4 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Export: uses Capacitor Filesystem plugin to save directly to Documents/ChargeMate/</li>
-      <li>Falls back to Share API if permission denied</li>
-      <li>Browser export still uses anchor download</li>
-    </ul>
-    <div class="cl-ver">v1.5.3 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Export: Share API → clipboard copy → textarea fallback</li>
-      <li>Removed window.open fallback (was opening JSON instead of saving)</li>
-    </ul>
-    <div class="cl-ver">v1.5.2 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Export: 3-method fallback (Share API → anchor download → window.open)</li>
-      <li>Export: removed false "Backup exported" toast (share sheet is confirmation)</li>
-    </ul>
-    <div class="cl-ver">v1.5.1 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Export fix: uses Share API in APK (opens share sheet to save/send file)</li>
-      <li>APK versionCode auto-increments (fixes "App not installed" error)</li>
-      <li>APK file named chargemate-v1.5.apk (not app-release.apk)</li>
-    </ul>
-    <div class="cl-ver">v1.5 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Carpool form condensed: Date+Direction row, Passengers+Amount row</li>
-      <li>Charging form: Type + Odometer on same row</li>
-    </ul>
-    <div class="cl-ver">v1.4 <span class="cl-date">9 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Export download fix (now works in APK/WebView)</li>
-      <li>Carpool: distance field removed, auto-fills from Settings</li>
-      <li>Public charges auto-fill location, connector, kW &amp; rate from last session</li>
-      <li>Charge type remembers last used (persists across sessions)</li>
-      <li>Splash screen removed (was pixelated in APK)</li>
-      <li>Theme: Dark / Light / System pill selector (replaces toggle)</li>
-      <li>Plan tab: status box removed, only Charge Advice shown</li>
-      <li>Plan stops: delete button aligned inline with inputs</li>
-      <li>Start % &gt; 100 shows error immediately on input</li>
-      <li>Carpool list sorted by date (newest first)</li>
-      <li>Session date: full white (dark) / black (light) for readability</li>
-      <li>Time picker: Done/Clear buttons same size</li>
-      <li>Notes field only visible for Public charges</li>
-      <li>Tab tap highlight: rounded (not rectangular flash)</li>
-      <li>Toggle row padding fixed for visual centering</li>
-      <li>Session row: edit/delete no longer wrap to next line</li>
-    </ul>
-    <div class="cl-ver">v1.3 <span class="cl-date">6 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Charger picker: shows saved + public history chargers</li>
-      <li>Charger picker auto-fills last used ₹/unit rate</li>
-      <li>Commute distance added to Settings (office/home km)</li>
-      <li>Pencil icon: filled Material Design style with visible nib</li>
-      <li>Time picker: light mode fix (AM/PM, arrows, buttons themed)</li>
-      <li>APK workflow: auto-reads version from package.json</li>
-      <li>APK icon: removes adaptive XML (forces PNG usage)</li>
-    </ul>
-    <div class="cl-ver">v1.2 <span class="cl-date">5 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Session notes (optional, public charges only)</li>
-      <li>Charger picker from saved chargers</li>
-      <li>Session date text made bolder</li>
-      <li>In-app changelog (What's New in Settings)</li>
-    </ul>
-    <div class="cl-ver">v1.1 <span class="cl-date">5 Jun 2026</span></div>
-    <ul class="cl-list">
-      <li>Popup selectors for charge type, connector &amp; direction</li>
-      <li>Popup time picker with long-press fast scroll</li>
-      <li>Multi-stop trip planner with actionable advice</li>
-      <li>Collapsible charge history by month</li>
-      <li>Dual efficiency tracking (overall + recent 10)</li>
-      <li>Chart: last 10 individual + weekly averages</li>
-      <li>Public charger history with avg speed &amp; cost</li>
-      <li>Saved chargers with Maps links</li>
-      <li>Light/dark theme</li>
-      <li>PWA support (install as app)</li>
-      <li>Smart import with dedup</li>
-    </ul>
-    <div class="cl-ver">β (Beta) <span class="cl-date">18 May 2026</span></div>
-    <ul class="cl-list">
-      <li>Custom pill selectors (type, connector)</li>
-      <li>Session display redesign (structured lines)</li>
-      <li>Odo-based efficiency calculation</li>
-      <li>Chart consolidation (individual + weekly)</li>
-      <li>Font switch to JetBrains Mono + Inter</li>
-      <li>Sort order fix (date → time → odo)</li>
-      <li>Edit bug fix (no more duplicate IDs)</li>
-    </ul>
-    <div class="cl-ver">α (Alpha) <span class="cl-date">22 Apr 2026</span></div>
-    <ul class="cl-list">
-      <li>Initial session logging (start/end %, times, odo, cost)</li>
-      <li>Dashboard with basic stats</li>
-      <li>Carpool income tracking</li>
-      <li>Trip planner (single destination)</li>
-      <li>Export/Import JSON &amp; CSV</li>
-      <li>Canvas efficiency chart</li>
-    </ul>
+    
+    <div style="color:var(--muted);font-size:11px;margin-top:12px;padding:10px;border-top:1px solid var(--border)">Older versions (v1.0–v4.1.1): See GitHub commit history</div>
   </div>
 </div>
 <div id="toast"></div>
@@ -958,7 +750,20 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 // localStorage shim for sandboxed environments
 var _ls;
 try{_ls=window.localStorage;_ls.getItem('_test');}catch(e){_ls={_d:{},getItem:function(k){return k in this._d?this._d[k]:null;},setItem:function(k,v){this._d[k]=''+v;},removeItem:function(k){delete this._d[k];}};}
-var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);}catch(e){}}};
+var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);return true;}catch(e){if(e.name==='QuotaExceededError'||e.code===22)setTimeout(function(){toast('⚠️ Storage full — export backup soon!');},100);return false;}}};
+
+// ── PERFORMANCE: Debounce utility ─────────────────────────────────────────
+function debounce(fn,ms){var t;return function(){var a=arguments,c=this;clearTimeout(t);t=setTimeout(function(){fn.apply(c,a);},ms);};}
+
+// ── SAFE NUMBER: Prevent NaN propagation ──────────────────────────────────
+function safeNum(v,fallback){var n=Number(v);return isFinite(n)?n:(fallback||0);}
+function fmtVal(v,suffix,fallback){return isFinite(v)&&v>0?v.toFixed(1)+(suffix||''):(fallback||'—');}
+
+// Date formatting: YYYY-MM-DD → DD Mon YYYY
+function fmtDate(d){if(!d)return'—';var p=d.split('-');if(p.length!==3)return d;var m=parseInt(p[1])-1;var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];if(m<0||m>11)return d;return parseInt(p[2])+' '+months[m]+' '+p[0];}
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+function fmtCurrency(n){return '\u20b9 '+Math.round(n).toLocaleString('en-IN');}
 
 // ── STATE ──────────────────────────────────────────────────────────────────
 let settings,sessions,carpools,trips;
@@ -976,8 +781,9 @@ let editIndex=null, cpEditIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
 
 // ── CHANGELOG ─────────────────────────────────────────────────────────────────
-function showChangelog(){document.getElementById('changelogModal').classList.add('open');document.body.style.overflow='hidden';}
-function closeChangelog(){document.getElementById('changelogModal').classList.remove('open');document.body.style.overflow='';}
+function showChangelog(){var m=document.getElementById('changelogModal');m.classList.add('open');document.body.style.overflow='hidden';m.querySelector('.cl-close span').focus();m.addEventListener('keydown',_trapFocus);}
+function closeChangelog(){var m=document.getElementById('changelogModal');m.classList.remove('open');document.body.style.overflow='';m.removeEventListener('keydown',_trapFocus);}
+function _trapFocus(e){if(e.key==='Escape'){closeChangelog();return;}if(e.key!=='Tab')return;var m=document.getElementById('changelogModal');var focusable=m.querySelectorAll('button,[tabindex],a,span[onclick]');if(!focusable.length)return;var first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
 
 
 // ── FORM DRAFT (preserve mid-entry state on tab switch) ────────────────────
@@ -991,14 +797,15 @@ function switchTab(tab) {
   if(document.getElementById('charges').classList.contains('active')&&tab!=='charges')saveDraft();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
-  document.getElementById('t-'+tab).classList.add('active');
+  var el=document.getElementById(tab);
+  if(el){el.classList.add('active');}
+  var tEl=document.getElementById('t-'+tab);if(tEl)tEl.classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
-  if (tab==='dash')    setTimeout(drawAllCharts,50);
+  if (tab==='dash')    setTimeout(function(){renderDash();drawAllCharts();},30);
   if (tab==='charges') { renderCharges(); restoreDraft(); }
   if (tab==='carpool') renderCarpool();
   if (tab==='expenses') renderExpenses();
-  if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
+  if (tab==='planner') runPlan();
 }
 
 
@@ -1011,7 +818,7 @@ function fmt12hr(t){
   return hr+':'+String(m).padStart(2,'0')+ampm;
 }
 // ── HELPERS ────────────────────────────────────────────────────────────────
-const calcKwh=(s,e)=>settings.battery*(e-s)/100;
+const calcKwh=(s,e)=>{var v=settings.battery*(e-s)/100;return isFinite(v)?v:0;};
 function escapeHtml(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
 function toast(msg){
@@ -1033,7 +840,7 @@ function statBox(val,label,sub,colorClass){
   </div>`;
 }
 
-function shortDate(iso){
+function fmtDateShort(iso){
   const d=new Date(iso+'T00:00:00');
   return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
 }
@@ -1055,18 +862,17 @@ function getAvgEff(){
   // Use unified timeline if trips exist
   var segments=computeUnifiedEfficiency();
   if(segments.length>0){
-    var valid=segments.filter(function(s){return s.flag!=='error';});
-    // Regen: km adds to total, consumption is negative (subtracts from denominator = improves avg)
-    var totalKm=valid.reduce(function(a,s){return a+s.km;},0);  
-    var totalKwh=valid.reduce(function(a,s){return a+(s.regen?0:s.consumption);},0);
-    return totalKwh>0?totalKm/totalKwh:null;
+    var valid=segments.filter(function(s){return s.flag!=='error'&&!s.regen&&isFinite(s.efficiency);});
+    var totalKm=valid.reduce(function(a,s){return a+safeNum(s.km);},0);  
+    var totalKwh=valid.reduce(function(a,s){return a+safeNum(s.consumption);},0);
+    return totalKwh>0&&totalKm>0?totalKm/totalKwh:null;
   }
   // Fallback to charge-to-charge computation
   const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   let km=0,kwh=0;
   for(let i=1;i<sorted.length;i++){
     const p=sorted[i-1],c=sorted[i];
-    if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0){km+=c.km;kwh+=con;}}
+    if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0&&isFinite(con)){km+=c.km;kwh+=con;}}
   }
   return kwh>0?km/kwh:null;
 }
@@ -1118,7 +924,7 @@ function updateEffModeDisplay(){
     else { display.style.display='none'; }
   } else if(planEffMode==='last'){
     const l=getLastEff();
-    if(l){ labelEl.textContent='Last trip ('+shortDate(l.date)+')'; valEl.textContent=(1000/l.eff).toFixed(0)+' Wh/km  ·  '+l.eff.toFixed(2)+' km/kWh'; display.style.display='flex'; }
+    if(l){ labelEl.textContent='Last trip ('+fmtDateShort(l.date)+')'; valEl.textContent=(1000/l.eff).toFixed(0)+' Wh/km  ·  '+l.eff.toFixed(2)+' km/kWh'; display.style.display='flex'; }
     else { display.style.display='none'; }
   }
 }
@@ -1142,7 +948,7 @@ function removePlanStop(i){
 
 function updatePlanStop(i, field, val){
   planStops[i][field] = +val;
-  runPlan();
+  _debouncedRunPlan();
 }
 
 function renderPlanStops(){
@@ -1188,6 +994,8 @@ function calcWithStops(current, totalDist, kmPerPct, stops){
   const allReachable = legs.every(l=>l.reachable);
   return {legs, finalArrive, allReachable, coveredKm};
 }
+
+var _debouncedRunPlan=debounce(function(){runPlan();},250);
 
 function runPlan(){
   const resultEl=document.getElementById('planResult');
@@ -1309,7 +1117,7 @@ function runPlan(){
 
   resultEl.innerHTML=`
     <div class="card">
-      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">${roundTrip?'(round trip · '+dist+' km total)':'(one way · '+dist+' km)'} · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
+      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(one way · ${dist} km) · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
 
       
 
@@ -1476,8 +1284,8 @@ function updateDurationPreview(){
   const et=document.getElementById('endTime').value;
   const mins=calcDuration(st,et);
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
-  const kwh=(e>s)?calcKwh(s,e):0;
-  if(mins&&kwh>0) document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)} · avg ${(kwh/(mins/60)).toFixed(1)} kW`;
+  const kwh=(isFinite(s)&&isFinite(e)&&e>s)?calcKwh(s,e):0;
+  if(mins&&kwh>0&&isFinite(kwh/(mins/60))) document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)} · avg ${(kwh/(mins/60)).toFixed(1)} kW`;
   else if(mins)   document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)}`;
   else            document.getElementById('durationPreview').textContent='';
 }
@@ -1487,10 +1295,10 @@ function updateAutoDuration(){
   var type=document.getElementById('type').value;
   if(type==='public'){el.style.display='none';return;}
   var s=+document.getElementById('start').value,e=+document.getElementById('end').value;
-  if(e>s&&s>=0){
+  if(isFinite(s)&&isFinite(e)&&e>s&&s>=0){
     var mins=Math.round((e-s)/5.5*60);
-    el.textContent='⏱ ~'+fmtDuration(mins)+' (at 5.5 %/hr)';
-    el.style.display='block';
+    if(isFinite(mins)&&mins>0){el.textContent='⏱ ~'+fmtDuration(mins)+' (at 5.5 %/hr)';el.style.display='block';}
+    else{el.style.display='none';}
   } else { el.style.display='none'; }
 }
 
@@ -1520,48 +1328,12 @@ function autoCalcPublic(changed){
 
 // -- Popup Selector --
 var _popupOverlay=null;
-function showPopupSelect(title,options,currentVal,onSelect){
-  if(!_popupOverlay){
-    _popupOverlay=document.createElement('div');
-    _popupOverlay.className='popup-overlay';
-    _popupOverlay.addEventListener('click',function(e){if(e.target===_popupOverlay)closePopup();});
-    document.body.appendChild(_popupOverlay);
-  }
-  var html='<div class="popup-card"><div class="popup-title">'+title+'</div><div class="popup-options">';
-  options.forEach(function(opt){
-    var sel=opt.value===currentVal?' selected':'';
-    html+='<div class="popup-opt'+sel+'" data-val="'+opt.value+'">'+opt.label+'</div>';
-  });
-  html+='</div></div>';
-  _popupOverlay.innerHTML=html;
-  _popupOverlay.classList.add('open');document.body.style.overflow='hidden';
-  _popupOverlay.querySelectorAll('.popup-opt').forEach(function(el){
-    el.addEventListener('click',function(){
-      onSelect(this.dataset.val);
-      closePopup();
-    });
-  });
-}
-function closePopup(){if(_popupOverlay)_popupOverlay.classList.remove('open');document.body.style.overflow='';}
-
-
-function selectScType(val){
-  document.getElementById('scType').value=val;
-  document.getElementById('scTypeDisplay').textContent=val;
-}
-
-function selectConn(val){
-  document.getElementById('pubConnector').value=val;
-  document.getElementById('connDisplay').textContent=val;
-}
 
 
 
-function selectType(val){
-  document.getElementById('type').value=val;
-  document.getElementById('typeDisplay').textContent={office:'Office',home:'Home','public':'Public'}[val]||val;
-  onTypeChange();
-}
+
+
+
 function pickType(val){
   document.getElementById('type').value=val;
   document.getElementById('typeDisplay').textContent={office:'Office',home:'Home','public':'Public'}[val]||val;
@@ -1900,18 +1672,29 @@ function computeUnifiedEfficiency(){
 
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function persist(){
-  safeLS.set('cm-data',JSON.stringify(sessions));
-  safeLS.set('cm-carpool',JSON.stringify(carpools));
-  safeLS.set('cm-trips',JSON.stringify(trips));
-  safeLS.set('cm-expenses',JSON.stringify(expenses));
+  var ok=true;
+  ok=safeLS.set('cm-data',JSON.stringify(sessions))&&ok;
+  ok=safeLS.set('cm-carpool',JSON.stringify(carpools))&&ok;
+  ok=safeLS.set('cm-trips',JSON.stringify(trips))&&ok;
+  ok=safeLS.set('cm-expenses',JSON.stringify(expenses))&&ok;
   safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));
   safeLS.set('cm-lastSaved',''+Date.now());
 }
-function persistDebounced(){if(_persistTimer)clearTimeout(_persistTimer);_persistTimer=setTimeout(persist,500);}
 var _chartDataHash='';
 
 // ── RENDER ─────────────────────────────────────────────────────────────────
-function render(){renderDash();renderCharges();renderExpenses();updateOdoPlaceholder();}
+function render(){
+  // Only render visible tab + dashboard summary
+  var activeTab='dash';
+  ['dash','charges','carpool','expenses'].forEach(function(t){
+    if(document.getElementById(t)&&document.getElementById(t).classList.contains('active'))activeTab=t;
+  });
+  if(activeTab==='dash'){renderDash();drawAllCharts();renderBreakevenSummary();}
+  else if(activeTab==='charges')renderCharges();
+  else if(activeTab==='carpool')renderCarpool();
+  else if(activeTab==='expenses')renderExpenses();
+  updateOdoPlaceholder();
+}
 
 function renderCharges(){renderList();renderTrips();renderPubHistory();renderSavedChargers();}
 
@@ -1985,7 +1768,7 @@ function renderList(){
       }
       out+=`<div class="session-row">
           <div class="session-top">
-            <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}${costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':''}</div>
+            <div class="session-date-badge"><span class="session-date">${fmtDate(x.date)}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}${costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':''}</div>
             <div class="session-actions">
               <button class="btn-sm btn-edit" onclick="editCharge(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><line x1="5.12" y1="15.88" x2="8.62" y2="19.38" stroke="var(--card)" stroke-width="1"/></svg></button>
               <button class="btn-sm btn-del" onclick="delCharge(${i})">\u2715</button>
@@ -1994,7 +1777,7 @@ function renderList(){
           <div style="font-size:12px;margin-top:4px;color:var(--text)">${line1}</div>
           ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
           ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
-          ${x.notes?'<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
+          ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
         </div>`;
     });
     out+='</div>';
@@ -2018,12 +1801,12 @@ function renderTrips(){
     var line2='odo '+x.startOdo.toLocaleString()+' \u2192 '+x.endOdo.toLocaleString();
     if(effStr) line2+=' \u00b7 '+effStr;
     tripHtml+='<div class="session-row">';
-    tripHtml+='<div class="session-top"><div class="session-date-badge"><span class="session-date">'+x.date+'</span><span class="badge badge-trip">Trip</span></div>';
+    tripHtml+='<div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div>';
     tripHtml+='<div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';
     tripHtml+='<button class="btn-sm btn-del" onclick="delTrip('+i+')">\u2715</button></div></div>';
     tripHtml+='<div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>';
     tripHtml+='<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>';
-    if(x.note) tripHtml+='<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.note)+'</div>';
+    if(x.note) tripHtml+='<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.note)+'</div>';
     if(x.chargedSince) tripHtml+='<div style="font-size:10px;color:var(--warn);margin-top:2px">\u26a1 Charged since last entry (chain break)</div>';
     tripHtml+='</div>';
   });
@@ -2127,10 +1910,10 @@ function renderDash(){
   const avgRpKwh=totalKwhCharged>0&&hasCost?(totalCost/totalKwhCharged).toFixed(1):null;
 
   document.getElementById('paidStats').innerHTML=
-    statBox(hasCost?'₹'+Math.round(monthSpend).toLocaleString('en-IN'):'—','This Month')+
-    statBox(hasCost?'₹'+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
-    statBox(avgRpKwh?'₹'+avgRpKwh:'—','Avg ₹/kWh')+
-    statBox(avgPerSession?'₹'+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
+    statBox(hasCost?'₹ '+Math.round(monthSpend).toLocaleString('en-IN'):'—','This Month')+
+    statBox(hasCost?'₹ '+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
+    statBox(avgRpKwh?'₹ '+avgRpKwh:'—','Avg ₹/kWh')+
+    statBox(avgPerSession?'₹ '+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
 
   
 
@@ -2141,16 +1924,16 @@ function renderDash(){
   const avgPerTrip=carpools.length>0?(totalIncome/carpools.length).toFixed(0):null;
   const cpThisMonth=carpools.filter(x=>x.date.startsWith(thisMonth));
   const cpMonthAmt=cpThisMonth.reduce((a,x)=>a+(x.amount||0),0);
-  document.getElementById('carpoolDash').innerHTML=
-    statBox(totalIncome>0?'₹'+Math.round(totalIncome).toLocaleString('en-IN'):'—','Total Income',carpools.length>0?carpools.length+' trip'+(carpools.length>1?'s':''):null,'good')+
-    statBox(cpThisMonth.length>0?'₹'+Math.round(cpMonthAmt).toLocaleString('en-IN'):'—','This Month',cpThisMonth.length>0?cpThisMonth.length+' trip'+(cpThisMonth.length>1?'s':''):null)+
-    statBox(netCost!=null?(netCost>=0?'₹'+Math.round(netCost).toLocaleString('en-IN'):'₹'+Math.round(Math.abs(netCost)).toLocaleString('en-IN')+' surplus'):'—','Net Cost',netCost!=null&&netCost<0?'carpool > spend':'spend − carpool',netCost!=null&&netCost<=0?'good':null)+
+  var cdEl=document.getElementById('carpoolDash');if(cdEl)cdEl.innerHTML=
+    statBox(totalIncome>0?'₹ '+Math.round(totalIncome).toLocaleString('en-IN'):'—','Total Income',carpools.length>0?carpools.length+' trip'+(carpools.length>1?'s':''):null,'good')+
+    statBox(cpThisMonth.length>0?'₹ '+Math.round(cpMonthAmt).toLocaleString('en-IN'):'—','This Month',cpThisMonth.length>0?cpThisMonth.length+' trip'+(cpThisMonth.length>1?'s':''):null)+
+    statBox(netCost!=null?(netCost>=0?'₹ '+Math.round(netCost).toLocaleString('en-IN'):'₹ '+Math.round(Math.abs(netCost)).toLocaleString('en-IN')+' surplus'):'—','Net Cost',netCost!=null&&netCost<0?'carpool > spend':'spend − carpool',netCost!=null&&netCost<=0?'good':null)+
     statBox(avgPerTrip?'₹'+Math.round(avgPerTrip).toLocaleString('en-IN'):'—','Avg / Trip');
 
   // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
-  document.getElementById('splitBars').innerHTML=
+  var sbEl=document.getElementById('splitBars');if(sbEl)sbEl.innerHTML=
     makeSplitBar('Charge Split (sessions)',byTypeCount)+(hasCost?makeSplitBar('Spend Split (₹)',byTypeCost):'');
 
   // === RANGE CARD ===
@@ -2269,9 +2052,9 @@ function renderCarpool(){
   const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
   const tp=carpools.reduce((a,x)=>a+(x.pax||0),0);
   document.getElementById('carpoolStats').innerHTML=
-    statBox('₹'+ti.toFixed(0),'Total Income',null,'good')+statBox(carpools.length,'Total Trips')+
-    statBox(carpools.length>0?'₹'+(ti/carpools.length).toFixed(0):'—','Avg / Trip')+
-    statBox(tp>0?'₹'+(ti/tp).toFixed(0):'—','Avg / Passenger');
+    statBox(ti>0?'₹ '+Math.round(ti).toLocaleString('en-IN'):'—','Total Income',null,'good')+statBox(carpools.length||'—','Total Trips')+
+    statBox(carpools.length>0?'₹ '+(ti/carpools.length).toFixed(0):'—','Avg / Trip')+
+    statBox(tp>0?'₹ '+(ti/tp).toFixed(0):'—','Avg / Passenger');
   const listEl=document.getElementById('cpList');
   if(!carpools.length){listEl.innerHTML='<div class="empty">No trips yet.</div>';return;}
   const dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home',both:'\u2194 Both Ways'};
@@ -2292,7 +2075,7 @@ function renderCarpool(){
       const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
       cpOut+=`<div class="session-row">
         <div class="session-top">
-          <div class="session-date-badge"><span class="session-date">${x.date}</span>${badgeHtml(x.dir||'to_office')}</div>
+          <div class="session-date-badge"><span class="session-date">${fmtDate(x.date)}</span>${badgeHtml(x.dir||'to_office')}</div>
           <div class="session-actions">
             <button class="btn-sm btn-edit" onclick="editCarpool(${x._idx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><line x1="5.12" y1="15.88" x2="8.62" y2="19.38" stroke="var(--card)" stroke-width="1"/></svg></button>
             <button class="btn-sm btn-del" onclick="delCarpool(${x._idx})">\u2715</button>
@@ -2418,14 +2201,14 @@ function renderExpenses(){
   var expenseCost=expenses.filter(function(e){return e.category!=='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
   var purchaseCost=expenses.filter(function(e){return e.category==='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
   var totalRunning=chargeCost+expenseCost;
-  var totalKm=sessions.reduce(function(a,s){return a+(s.km||0);},0)+trips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
-  var costPerKm=totalKm>0?(totalRunning/totalKm):0;
+  var totalKm=sessions.reduce(function(a,s){return a+safeNum(s.km);},0)+trips.reduce(function(a,t){return a+(safeNum(t.endOdo)-safeNum(t.startOdo));},0);
+  var costPerKm=totalKm>0&&totalRunning>0?(totalRunning/totalKm):0;
 
   document.getElementById('expenseStats').innerHTML=
-    statBox(chargeCost>0?'\u20b9'+Math.round(chargeCost).toLocaleString('en-IN'):'\u2014','Charging Cost',sessions.length+' sessions')+
-    statBox(expenseCost>0?'\u20b9'+Math.round(expenseCost).toLocaleString('en-IN'):'\u2014','Other Expenses',expenses.filter(function(e){return e.category!=='purchase';}).length+' entries')+
-    statBox(totalRunning>0?'\u20b9'+Math.round(totalRunning).toLocaleString('en-IN'):'\u2014','Running Cost',totalKm>0?totalKm.toLocaleString('en-IN')+' km':'no data')+
-    statBox(costPerKm>0?'\u20b9'+costPerKm.toFixed(1):'\u2014','Cost / km','excl. purchase');
+    statBox(chargeCost>0?'\u20b9 '+Math.round(chargeCost).toLocaleString('en-IN'):'\u2014','Charging Cost',sessions.length+' sessions')+
+    statBox(expenseCost>0?'\u20b9 '+Math.round(expenseCost).toLocaleString('en-IN'):'\u2014','Other Expenses',expenses.filter(function(e){return e.category!=='purchase';}).length+' entries')+
+    statBox(totalRunning>0?'\u20b9 '+Math.round(totalRunning).toLocaleString('en-IN'):'\u2014','Running Cost',totalKm>0?totalKm.toLocaleString('en-IN')+' km':'no data')+
+    statBox(costPerKm>0?'\u20b9 '+costPerKm.toFixed(1):'\u2014','Cost / km','excl. purchase');
 
   // === BREAKEVEN CALCULATOR ===
   var premium=settings.evPremium||0;
@@ -2488,7 +2271,7 @@ function renderExpenses(){
       bEl.innerHTML='<div style="font-size:12px;color:var(--warn)">EV running cost is currently higher than ICE equivalent \u2014 charge at home/office more to improve this.</div>';
     }
   } else if(premium<=0&&settings.evPremium!==undefined&&+settings.evPremium<0){
-    bEl.innerHTML='<div style="font-size:12px;color:var(--good)">Your EV was cheaper than the petrol equivalent \u2014 already ahead from day one! \ud83c\udf89</div>';
+    bEl.innerHTML='<div style="font-size:12px;color:var(--good)">Your EV was cheaper than the ICE equivalent \u2014 already ahead from day one! \ud83c\udf89</div>';
   } else {
     bEl.innerHTML='<div style="font-size:11px;color:var(--muted)">'+(premium<=0?'Set EV Premium in Settings':'Log some charges')+' to see breakeven projection.'+(purchDate?'':'<br>Add a \u201cCar Purchase\u201d expense to set ownership start date.')+'</div>';
   }
@@ -2510,11 +2293,85 @@ function renderExpenses(){
     html+='<div id="'+mid+'"'+collapsed+'>';
     rows.forEach(function(x){
       var idx=expenses.indexOf(x);
-      html+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+x.date+'</span><span class="badge">'+(catLabels[x.category]||x.category)+'</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editExpense('+idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="deleteExpense('+idx+')">\u00d7</button></div></div><div style="font-size:11.5px;margin-top:3px">'+(x.description?'<span style="color:var(--muted)">'+escapeHtml(x.description)+'</span> \u00b7 ':'')+'<span style="color:var(--text);font-weight:600">\u20b9'+(x.amount||0).toLocaleString('en-IN')+'</span>'+(x.iceAmount?' <span style="color:var(--muted);font-size:10px">(ICE: \u20b9'+x.iceAmount.toLocaleString('en-IN')+')</span>':'')+'</div></div>';
+      html+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge">'+(catLabels[x.category]||x.category)+'</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editExpense('+idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="deleteExpense('+idx+')">\u00d7</button></div></div><div style="font-size:11.5px;margin-top:3px">'+(x.description?'<span style="color:var(--muted)">'+escapeHtml(x.description)+'</span> \u00b7 ':'')+'<span style="color:var(--text);font-weight:600">\u20b9'+(x.amount||0).toLocaleString('en-IN')+'</span>'+(x.iceAmount?' <span style="color:var(--muted);font-size:10px">(ICE: \u20b9'+x.iceAmount.toLocaleString('en-IN')+')</span>':'')+'</div></div>';
     });
     html+='</div>';mIdx++;
   });
   el.innerHTML=html;
+}
+
+
+
+// ── HAMBURGER DRAWER ────────────────────────────────────────────────────────
+function renderBreakevenSummary(){
+  var el=document.getElementById('breakevenSummary');
+  if(!el)return;
+  var premium=settings.evPremium||0;
+  // Total km from odo range
+  var allOdo=sessions.map(function(s){return s.odo||0;}).concat(trips.map(function(t){return Math.max(t.startOdo||0,t.endOdo||0);})).filter(function(x){return x>0;});
+  var totalKm=allOdo.length>1?Math.max.apply(null,allOdo)-Math.min.apply(null,allOdo):0;
+  if(premium<=0||totalKm<=0){
+    el.innerHTML='<span style="color:var(--muted)">Set EV Premium in Settings to track savings.</span>';
+    return;
+  }
+  var chargeCost=sessions.reduce(function(a,s){return a+(s.cost||0);},0);
+  var runningExp=expenses.filter(function(e){return e.category!=='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
+  var carpoolInc=carpools.reduce(function(a,x){return a+(x.amount||0);},0);
+  var evRunning=chargeCost+runningExp;
+  var petrolFuelCost=getPetrolEquivalentCost(totalKm);
+  var totalSaved=petrolFuelCost-evRunning+carpoolInc;
+  var pct=Math.min(100,Math.max(0,(totalSaved/premium*100))).toFixed(0);
+  var savPerKm=totalKm>0?(petrolFuelCost-evRunning+carpoolInc)/totalKm:0;
+
+  // Date projection
+  var purchEntries=expenses.filter(function(x){return x.category==='purchase';});
+  var purchDate=purchEntries.length>0?purchEntries.reduce(function(a,b){return a.date<b.date?a:b;}).date:'';
+  var daysOwned=1;
+  if(purchDate){var d0=new Date(purchDate),d1=new Date();daysOwned=Math.max(1,Math.round((d1-d0)/86400000));}
+  var kmPerDay=totalKm/daysOwned;
+  var kmLeft=savPerKm>0?Math.max(0,(premium-totalSaved)/savPerKm):Infinity;
+  var daysLeft=kmPerDay>0&&kmLeft<Infinity?Math.ceil(kmLeft/kmPerDay):0;
+  var beDate=new Date();beDate.setDate(beDate.getDate()+daysLeft);
+  var beMon=beDate.toLocaleString('en',{month:'short',year:'numeric'});
+
+  var barColor=totalSaved>=premium?'#22c55e':'var(--accent)';
+  var html='<div style="margin-bottom:8px"><div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+barColor+';border-radius:6px;transition:width .3s"></div></div></div>';
+  if(totalSaved>=premium){
+    html+='<span style="color:#22c55e;font-weight:600">\u2713 Breakeven reached!</span> \u00b7 \u20b9'+Math.round(totalSaved).toLocaleString('en-IN')+' saved';
+  } else if(totalSaved>0){
+    html+='<span style="font-weight:600;color:var(--text)">'+pct+'%</span> \u00b7 \u20b9'+Math.round(totalSaved).toLocaleString('en-IN')+' saved \u00b7 est. '+beMon;
+  } else {
+    html+='<span style="color:var(--muted)">EV running cost currently higher \u2014 keep driving!</span>';
+  }
+  el.innerHTML=html;
+}
+
+
+function openDrawer(){
+  var ov=document.getElementById('drawerOverlay');
+  ov.style.display='';
+  setTimeout(function(){ov.style.opacity='1';},10);
+  document.getElementById('drawer').style.left='0';
+  document.body.style.overflow='hidden';
+}
+function closeDrawer(){
+  var ov=document.getElementById('drawerOverlay');
+  ov.style.opacity='0';
+  document.getElementById('drawer').style.left='-280px';
+  setTimeout(function(){ov.style.display='none';},200);
+  document.body.style.overflow='';
+}
+function openDrawerView(view){
+  closeDrawer();
+  switchTab(view);
+}
+
+function openPlanOverlay(){
+  switchTab('planner');
+  runPlan();
+}
+function closePlanOverlay(){
+  switchTab('dash');
 }
 
 // ── CHARTS ─────────────────────────────────────────────────────────────────
@@ -2565,7 +2422,7 @@ function drawChart(id,pts,dates,color){
     // Always show first+last. Skip second-to-last if too close to last.
     const tooCloseToLast=isSpaced&&!isLast&&(valid.length-1-i)<step*0.6;
     const show=isFirst||isLast||(isSpaced&&!tooCloseToLast);
-    if(show){const lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));ctx.fillText(shortDate(d),lx,H-4);}
+    if(show){const lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));ctx.fillText(fmtDateShort(d),lx,H-4);}
   });
 }
 
@@ -2585,7 +2442,7 @@ function drawAllCharts(retryCount){
   var segments=computeUnifiedEfficiency();
   const allEffPts=[];
   if(segments.length>0){
-    segments.filter(function(s){return s.flag!=='error'&&!s.regen;}).forEach(function(seg){allEffPts.push({v:+seg.efficiency.toFixed(2),d:seg.date});});
+    segments.filter(function(s){return s.flag!=='error'&&!s.regen&&isFinite(s.efficiency);}).forEach(function(seg){allEffPts.push({v:+seg.efficiency.toFixed(2),d:seg.date});});
   } else {
     for(let i=1;i<sorted.length;i++){
       const p=sorted[i-1],c=sorted[i];
@@ -2604,12 +2461,6 @@ function drawAllCharts(retryCount){
   drawChart('effChart',effPts,effDates,'#00e5ff');
 }
 
-// ── EXPORT / IMPORT ────────────────────────────────────────────────────────
-function exportCSV(){safeLS.set('cm-lastExport',''+Date.now());
-  const rows=['Date,Start%,End%,kWh,Cost,Type,Odo,km,StartTime,EndTime,Duration,Location,Connector,ChargerKW'];
-  sessions.forEach(s=>{rows.push([s.date,s.s,s.e,s.kwh!=null?s.kwh.toFixed(2):'',s.cost!=null?s.cost.toFixed(0):'',s.t,s.odo||'',s.km!=null?s.km:'',s.startTime||'',s.endTime||'',s.duration||'',s.charger?.location||'',s.charger?.connector||'',s.charger?.kw||''].join(','));});
-  dl(new Blob([rows.join('\n')],{type:'text/csv'}),'chargemate.csv');toast('CSV exported ✓');
-}
 // ── COPY MONTHLY SUMMARY ──────────────────────────────────────────────────
 function copyMonthlySummary(){
   var now=new Date();var mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
@@ -2634,7 +2485,7 @@ function copyMonthlySummary(){
 }
 
 function exportJSON(){
-  var p={version:30,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:31,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
   dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
   safeLS.set('cm-lastExport',''+Date.now());
@@ -2683,6 +2534,8 @@ function dlShare(blob,name,text){
 function saveSettings(){
   const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium'};
   Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
+  // Validate battery range
+  if(settings.battery<1||settings.battery>200){toast('Battery must be 1–200 kWh');settings.battery=Math.max(1,Math.min(200,settings.battery));}
   safeLS.set('cm-settings',JSON.stringify(settings));render();// Auto-log petrol price change
   var newPrice=+settings.petrolPrice;
   var lastLog=petrolLog.length>0?petrolLog[petrolLog.length-1]:null;
@@ -2692,8 +2545,7 @@ function saveSettings(){
   }
   toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();renderCarpool();toast('All data cleared');}
-    safeLS.set('cm-chargers','[]');
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();renderCarpool();safeLS.set('cm-chargers','[]');toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
@@ -2747,13 +2599,13 @@ function updateThemePills(mode){
 })();
 
 // — Swipe Navigation —
-(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','expenses','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — PWA Service Worker (cache-first with versioning) —
-(function(){try{if(navigator.serviceWorker){var CACHE='cm-v3.0';var sw='var CACHE="'+CACHE+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}))}).then(function(){return clients.claim()}))});self.addEventListener("fetch",function(e){e.respondWith(caches.open(CACHE).then(function(c){return c.match(e.request).then(function(r){var f=fetch(e.request).then(function(res){if(res&&res.status===200)c.put(e.request,res.clone());return res}).catch(function(){return r});return r||f})}))})';if(navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
+(function(){try{if(navigator.serviceWorker){var CACHE='cm-v4.8.1';var sw='var CACHE="'+CACHE+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}))}).then(function(){return clients.claim()}))});self.addEventListener("fetch",function(e){e.respondWith(caches.open(CACHE).then(function(c){return c.match(e.request).then(function(r){var f=fetch(e.request).then(function(res){if(res&&res.status===200)c.put(e.request,res.clone());return res}).catch(function(){return r});return r||f})}))})';if(navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
 
 // — Android Back Button (navigate tabs instead of exit) —
-(function(){var tabs=['dash','charges','carpool','expenses','plan','settings'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
+(function(){var tabs=['dash','charges','carpool','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
 
 // — Undo Delete —
 var _undoTimer=null,_undoData=null;
@@ -2843,8 +2695,8 @@ function cloudPull(){
 
 function autoSync(){if(_syncSettings.auto&&_syncSettings.token)cloudPush();}
 // Hook auto-sync into persist
-var _origPersist=persist;
-persist=function(){_origPersist();setTimeout(autoSync,1000);};
+var _origPersist=persist;var _syncScheduled=false;
+persist=function(){_origPersist();if(!_syncScheduled){_syncScheduled=true;setTimeout(function(){autoSync();_syncScheduled=false;},2000);}};
 setTimeout(loadSyncUI,100);
 
 function importData(event){
@@ -2852,6 +2704,14 @@ function importData(event){
   var r=new FileReader();r.onload=function(ev){
     try{
       var p=JSON.parse(ev.target.result);
+      // Schema validation
+      if(!p||typeof p!=='object'){throw new Error('Invalid file format');}
+      if(!p.sessions&&!p.carpools&&!p.trips&&!p.expenses&&!p.settings){throw new Error('No recognizable ChargeMate data found in file');}
+      if(p.sessions&&!Array.isArray(p.sessions)){throw new Error('Invalid sessions data');}
+      if(p.trips&&!Array.isArray(p.trips)){throw new Error('Invalid trips data');}
+      // Confirm before overwriting
+      var count=(p.sessions?p.sessions.length:0)+(p.trips?p.trips.length:0);
+      if(sessions.length>0&&!confirm('This will replace your current '+sessions.length+' charges with '+count+' entries from backup. Continue?'))return;
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
       if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
@@ -2861,7 +2721,7 @@ function importData(event){
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
       recomputeAllKm();render();renderCarpool();
       toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
-    }catch(e){alert('Import failed: '+e.message);}e.target.value='';
+    }catch(e){toast('⚠️ Import failed: '+e.message);}finally{event.target.value='';}
   };r.readAsText(file);
 }
 
