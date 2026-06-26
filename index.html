@@ -333,13 +333,14 @@ body.light .inline-dropdown{background:#fff;border-color:#e2e8f0;box-shadow:0 4p
 body.light .inline-dropdown div:hover{background:rgba(0,119,204,0.08)}
 body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 </style>
-</style>
+
 </head>
 <body>
 <div class="tabs">
   <div class="tab active" onclick="switchTab('dash')" id="t-dash">Dashboard</div>
   <div class="tab" onclick="switchTab('charges')" id="t-charges">Charging</div>
   <div class="tab" onclick="switchTab('carpool')" id="t-carpool">Carpool</div>
+  <div class="tab" onclick="switchTab('expenses')" id="t-expenses">Expenses</div>
   <div class="tab" onclick="switchTab('plan')" id="t-plan">Plan</div>
   <div class="tab" onclick="switchTab('settings')" id="t-settings">Settings</div>
 </div>
@@ -492,6 +493,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <div id="carpool" class="view">
   <div class="card"><h3>Summary</h3><div class="stats-grid" id="carpoolStats"></div></div>
   <div class="card">
+    <div id="cpQuickAdd" style="margin-bottom:12px"></div>
     <h3 id="cpFormTitle">Log Trip</h3>
     <div class="form-row">
       <div><label>Date</label><input type="date" id="cpDate"></div>
@@ -521,6 +523,45 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="card"><h3>Trips</h3><div id="cpList"></div></div>
 </div>
 
+
+<!-- ═══════════════════ EXPENSES ═══════════════════ -->
+<div id="expenses" class="view">
+  <div class="card"><h3>Total Cost of Ownership</h3><div class="stats-grid" id="expenseStats"></div></div>
+  <div class="card">
+    <h3>Breakeven vs Petrol</h3>
+    <div id="breakevenResult"></div>
+  </div>
+  <div class="card">
+    <h3 id="expFormTitle">Add Expense</h3>
+    <div class="form-row">
+      <div><label>Date</label><input type="date" id="expDate"></div>
+      <div><label>Category</label>
+        <select id="expCategory" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+          <option value="service">🔧 Service</option>
+          <option value="insurance">🛡️ Insurance</option>
+          <option value="accessories">🔌 Accessories</option>
+          <option value="tyres">🔄 Tyres</option>
+          <option value="repair">⚙️ Repair</option>
+          <option value="tolls">🛣️ Tolls</option>
+          <option value="purchase">🚗 Car Purchase</option>
+          <option value="other">📝 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:10px">
+      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount()"><div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
+      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="Petrol car cost"><div style="font-size:9px;color:var(--muted);margin-top:2px">Optional — what a petrol car would pay</div></div>
+    </div>
+    <div class="form-row" style="margin-top:10px">
+      <div><label>Description</label><input type="text" id="expDesc" placeholder="e.g. Annual insurance"></div>
+    </div>
+    <div id="expError" class="error-msg"></div>
+    <button class="primary" onclick="saveExpense()">Save</button>
+    <button class="secondary" id="cancelExpEdit" style="display:none" onclick="cancelExpEdit()">Cancel</button>
+  </div>
+  <div class="card"><h3>History</h3><div id="expList"></div></div>
+</div>
+
 <!-- ═══════════════════ PLAN ═══════════════════ -->
 <div id="plan" class="view">
   <div class="card">
@@ -532,7 +573,9 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     </div>
 
 
-    <hr class="divider">
+        <div style="font-size:10px;color:var(--muted);margin-top:6px">15% reserve buffer applied to all calculations</div>
+
+<hr class="divider">
     <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
 
     <div class="eff-tabs">
@@ -571,10 +614,9 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <div id="settings" class="view">
   <div class="card">
     <h3>Vehicle &amp; Rates</h3>
-    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40"></div><div><label>Reserve Buffer %</label><input type="number" id="bufferPct" placeholder="15"></div></div>
-    <div class="form-row"><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7"></div><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div></div>
-    <div class="form-row"><div><label>Office Dist (km)</label><input type="number" id="officeDist" placeholder="35"></div><div><label>Home Dist (km)</label><input type="number" id="homeDist" placeholder="35"></div></div>
-    <div class="form-row"><div><label>Petrol Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div><div><label>Petrol Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div></div>
+    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7"></div></div>
+    <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>Petrol Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
+    <div class="form-row"><div><label>Petrol Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="number" id="evPremium" placeholder="e.g. 500000"></div></div>
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
   <div class="card"><h3>Appearance</h3>
@@ -588,7 +630,7 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
     <div class="card">
     <h3>What's New</h3>
     <button class="ghost" onclick="showChangelog()">📋 View Changelog</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v3.0</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px">Current: v4.2</div>
   </div>
   <div class="card">
     <h3>Backup</h3>
@@ -627,6 +669,36 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v4.2 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>ICE equivalent per expense</b>: Optional field — enter what a petrol car would pay. Breakeven now compares full EV cost vs full ICE cost (fuel + maintenance).</li>
+      <li><b>Petrol price log</b>: Price changes are auto-tracked with date. Breakeven uses time-weighted average — accurate over months/years of ownership.</li>
+      <li><b>Amount preview</b>: Shows ₹-formatted number with commas while typing (for amounts ≥1,000).</li>
+    </ul>
+    <div class="cl-ver">v4.1.1 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Breakeven fix</b>: Car Purchase expenses excluded from running cost calculations — was incorrectly inflating EV cost/km and showing "running cost higher than petrol".</li>
+    </ul>
+    <div class="cl-ver">v4.1 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Breakeven with carpool</b>: Shows progress with and without carpool income. Date projection based on km/day since purchase.</li>
+      <li><b>Car Purchase category</b>: Log your car purchase as an expense — its date is used as ownership start for projections.</li>
+      <li><b>EV Premium in Settings</b>: Single field (extra paid over petrol equivalent). Removed from Expenses tab.</li>
+      <li><b>+Tolls category</b>, better icons: ������ Accessories, ������ Tyres, ������ Other.</li>
+    </ul>
+    <div class="cl-ver">v4.0 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>km/%</b>: Efficiency now shown as both km/kWh and km/% for instant mental math (dashboard, session list, trip preview)</li>
+      <li><b>Expenses tab</b>: Track all EV ownership costs — service, insurance, accessories, tolls. Monthly grouped list, auto-sum expressions, Total Ownership stat.</li>
+      <li><b>Breakeven calculator</b>: In Expenses tab — enter EV premium + purchase date. Shows ₹/km savings, progress to breakeven, projected date, total saved. Handles edge cases (EV cheaper, running cost higher).</li>
+      <li><b>Settings cleanup</b>: Removed distances, buffer, car prices from Settings. 15% reserve is fixed in Plan. EV Premium moved to Expenses tab.</li>
+    </ul>
+    <div class="cl-ver">v3.1 <span class="cl-date">26 Jun 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Smart Carpool Quick-Add</b>: Detects repeated (direction + passengers + amount) patterns (3+ times). Shows top 4 in a 2×2 grid for one-tap entry.</li>
+      <li><b>Trip form</b>: Start odo placeholder shows last known odometer reading.</li>
+      <li><b>Bug fixes</b>: safeLS shim falsy values; Unicode escapes; JSON.parse try-catch on init; clearChargeForm resets; planEffMode declared.</li>
+    </ul>
     <div class="cl-ver">v3.0 <span class="cl-date">25 Jun 2026</span></div>
     <ul class="cl-list">
       <li><b>☁️ Cloud Sync</b>: Sync data to a private GitHub Gist. Auto-push on save or manual push/pull. Settings → Cloud Sync to configure.</li>
@@ -885,16 +957,20 @@ body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 <script>
 // localStorage shim for sandboxed environments
 var _ls;
-try{_ls=window.localStorage;_ls.getItem('_test');}catch(e){_ls={_d:{},getItem:function(k){return this._d[k]||null;},setItem:function(k,v){this._d[k]=''+v;},removeItem:function(k){delete this._d[k];}};}
+try{_ls=window.localStorage;_ls.getItem('_test');}catch(e){_ls={_d:{},getItem:function(k){return k in this._d?this._d[k]:null;},setItem:function(k,v){this._d[k]=''+v;},removeItem:function(k){delete this._d[k];}};}
 var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);}catch(e){}}};
 
 // ── STATE ──────────────────────────────────────────────────────────────────
-let settings = JSON.parse(safeLS.get('cm-settings') ||
-  '{"battery":40,"homeRate":7,"officeRate":0,"bufferPct":15,"petrolMileage":15,"petrolPrice":103}');
-let sessions  = JSON.parse(safeLS.get('cm-data')    || '[]');
-let carpools  = JSON.parse(safeLS.get('cm-carpool') || '[]');
-let trips     = JSON.parse(safeLS.get('cm-trips')   || '[]');
+let settings,sessions,carpools,trips;
+try{settings=JSON.parse(safeLS.get('cm-settings')||'{}');}catch(e){settings={};}
+settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103},settings);
+try{sessions=JSON.parse(safeLS.get('cm-data')||'[]');}catch(e){sessions=[];}
+try{carpools=JSON.parse(safeLS.get('cm-carpool')||'[]');}catch(e){carpools=[];}
+try{trips=JSON.parse(safeLS.get('cm-trips')||'[]');}catch(e){trips=[];}
+let expenses=[];try{expenses=JSON.parse(safeLS.get('cm-expenses')||'[]');}catch(e){expenses=[];}
+let petrolLog=[];try{petrolLog=JSON.parse(safeLS.get('cm-petrol-log')||'[]');}catch(e){petrolLog=[];}
 let tripEditIndex = null;
+let planEffMode = 'avg';
 let entryMode = 'charge'; // 'charge' or 'trip'
 let editIndex=null, cpEditIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
@@ -921,6 +997,7 @@ function switchTab(tab) {
   if (tab==='dash')    setTimeout(drawAllCharts,50);
   if (tab==='charges') { renderCharges(); restoreDraft(); }
   if (tab==='carpool') renderCarpool();
+  if (tab==='expenses') renderExpenses();
   if (tab==='plan')    { updateEffModeDisplay(); renderPlanStops(); runPlan(); }
 }
 
@@ -1131,7 +1208,7 @@ function runPlan(){
     return;
   }
 
-  const buffer    = settings.bufferPct||15;
+  const buffer    = 15; // 15% reserve
   const kmPerPct  = (settings.battery*eff)/100;  // km per 1% SOC
 
   // Current range capacities
@@ -1514,9 +1591,7 @@ function pickCpDir(val){
   var labels={to_office:'→ To Office',to_home:'← To Home'};
   document.getElementById('cpDirDisplay').textContent=labels[val]||val;
   document.getElementById('cpDirDropdown').style.display='none';
-  // Auto-fill distance from settings
-  var dist=val==='to_office'?(settings.officeDist||''):(settings.homeDist||settings.officeDist||'');
-  document.getElementById('cpKm').value=dist;
+  document.getElementById('cpKm').value='';
 }
 function pickScType(val){
   document.getElementById('scType').value=val;
@@ -1633,8 +1708,9 @@ function cancelChargeEdit(){
 }
 
 function clearChargeForm(){
-  ['start','end','odo','pubRate','pubUnits','pubTotal','pubMapsLink','startTime','endTime','chargeNotes']
+  ['start','end','odo','pubRate','pubUnits','pubTotal','pubLocation','pubMapsLink','startTime','endTime','chargeNotes']
     .forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  var ccsCb=document.getElementById('chargeChargedSince');if(ccsCb)ccsCb.checked=false;
   delete document.getElementById('pubUnits').dataset.manual;
   document.getElementById('date').value=new Date().toISOString().slice(0,10);
   document.getElementById('kwhPreview').textContent='';
@@ -1679,7 +1755,7 @@ function updateTripPreview(){
     if(drop>0){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
-      el.textContent='\u{1F4CA} '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh';
+      el.textContent='📊 '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
     } else {
       var gained=Math.abs(drop);
       el.textContent='\u26a1 '+km+' km \u00b7 +'+gained+'% regen \u00b7 '+(gained*settings.battery/100).toFixed(1)+' kWh recovered';
@@ -1824,17 +1900,18 @@ function computeUnifiedEfficiency(){
 
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function persist(){
-  var _persistTimer=null;
   safeLS.set('cm-data',JSON.stringify(sessions));
   safeLS.set('cm-carpool',JSON.stringify(carpools));
   safeLS.set('cm-trips',JSON.stringify(trips));
+  safeLS.set('cm-expenses',JSON.stringify(expenses));
+  safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));
   safeLS.set('cm-lastSaved',''+Date.now());
 }
 function persistDebounced(){if(_persistTimer)clearTimeout(_persistTimer);_persistTimer=setTimeout(persist,500);}
 var _chartDataHash='';
 
 // ── RENDER ─────────────────────────────────────────────────────────────────
-function render(){renderDash();renderCharges();updateOdoPlaceholder();}
+function render(){renderDash();renderCharges();renderExpenses();updateOdoPlaceholder();}
 
 function renderCharges(){renderList();renderTrips();renderPubHistory();renderSavedChargers();}
 
@@ -1882,7 +1959,7 @@ function renderList(){
               const km=x.odo-prevDiffOdo.odo;
               const drop=prevDiffOdo.e-x.s;
             if(km>0&&drop<0&&!x.chargedSince){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+x.s+'% but left prev at '+prevDiffOdo.e+'%</span>';}
-            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh';
+            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
             if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
             }
           }
@@ -1917,7 +1994,7 @@ function renderList(){
           <div style="font-size:12px;margin-top:4px;color:var(--text)">${line1}</div>
           ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
           ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
-          ${x.notes?'<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">\u{1F4DD} '+escapeHtml(x.notes)+'</div>':''}
+          ${x.notes?'<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
         </div>`;
     });
     out+='</div>';
@@ -1929,7 +2006,7 @@ function renderTrips(){
   // Add trip entries to the log area (after charges)
   var listEl=document.getElementById('list');
   if(!trips.length) return;
-  var tripHtml='<div style="margin-top:14px;border-top:2px solid var(--border);padding-top:10px"><div class="month-header" style="cursor:default">\u{1F697} Trip Log \u00b7 '+trips.length+' entries</div>';
+  var tripHtml='<div style="margin-top:14px;border-top:2px solid var(--border);padding-top:10px"><div class="month-header" style="cursor:default">🚗 Trip Log \u00b7 '+trips.length+' entries</div>';
   var sorted=[...trips].sort(function(a,b){return b.date.localeCompare(a.date);});
   sorted.forEach(function(x,ri){
     var i=trips.findIndex(function(t){return t.id===x.id;});
@@ -1946,7 +2023,7 @@ function renderTrips(){
     tripHtml+='<button class="btn-sm btn-del" onclick="delTrip('+i+')">\u2715</button></div></div>';
     tripHtml+='<div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>';
     tripHtml+='<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>';
-    if(x.note) tripHtml+='<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">\u{1F4DD} '+escapeHtml(x.note)+'</div>';
+    if(x.note) tripHtml+='<div style="font-size:10.5px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.note)+'</div>';
     if(x.chargedSince) tripHtml+='<div style="font-size:10px;color:var(--warn);margin-top:2px">\u26a1 Charged since last entry (chain break)</div>';
     tripHtml+='</div>';
   });
@@ -2039,7 +2116,7 @@ function renderDash(){
   const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
   document.getElementById('stats').innerHTML=
     statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
-    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
+    statBox(avgEff?`${avgEff} km/kWh · ${(+avgEff*settings.battery/100).toFixed(1)} km/%`:'—','Efficiency',avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
     statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'per km driven':null)+
     statBox(lastDateStr,'Last Charged',lastSess?lastSess.t:'');
 
@@ -2054,6 +2131,9 @@ function renderDash(){
     statBox(hasCost?'₹'+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
     statBox(avgRpKwh?'₹'+avgRpKwh:'—','Avg ₹/kWh')+
     statBox(avgPerSession?'₹'+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
+
+  
+
 
   // === CARPOOL DASH ===
   const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
@@ -2118,7 +2198,7 @@ function previewCpAmount(){
 }
 function saveCarpool(){
   const date=document.getElementById('cpDate').value,dir=document.getElementById('cpDir').value;
-  const km=dir==='to_office'?(settings.officeDist||null):(settings.homeDist||settings.officeDist||null);
+  const km=null;
   const pax=document.getElementById('cpPax').value!==''?+document.getElementById('cpPax').value:null;
   const amtRaw=document.getElementById('cpAmount').value.trim();const amount=evalExpr(amtRaw);const amountExpr=amtRaw.match(/[+\-*/]/)?amtRaw:null;
   const notes=document.getElementById('cpNotes').value||null;
@@ -2143,7 +2223,7 @@ function clearCpForm(){
   ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cpAmountPreview').textContent='';
   document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
-  if(settings.officeDist)document.getElementById('cpKm').value=settings.officeDist;
+  
 }
 
 function editCarpool(i){
@@ -2157,6 +2237,33 @@ function editCarpool(i){
 
 function delCarpool(i){undoableDelete('carpool',i,'Carpool trip');}
 
+function renderCpQuickAdd(){
+  var el=document.getElementById('cpQuickAdd');
+  if(!el||carpools.length<3){if(el)el.innerHTML='';return;}
+  var counts={};
+  carpools.forEach(function(c){
+    if(!c.amount)return;
+    var key=(c.dir||'to_office')+'|'+(c.pax||1)+'|'+c.amount;
+    counts[key]=(counts[key]||0)+1;
+  });
+  var patterns=Object.entries(counts).filter(function(e){return e[1]>=3;})
+    .sort(function(a,b){return b[1]-a[1];}).slice(0,4);
+  if(!patterns.length){el.innerHTML='';return;}
+  var dirLabels={to_office:'\u2192 Office',to_home:'\u2190 Home'};
+  el.innerHTML='<div style="font-size:10px;color:var(--muted);margin-bottom:6px">Quick Add</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+
+    patterns.map(function(p){
+      var parts=p[0].split('|');var dir=parts[0],pax=parts[1],amt=parts[2];
+      return '<button class="ghost" style="font-size:11px;padding:8px 6px;text-align:center" onclick="quickAddCarpool(\''+dir+'\','+pax+','+amt+')">'+(dirLabels[dir]||dir)+' \u00b7 '+pax+' pax \u00b7 \u20b9'+amt+'</button>';
+    }).join('')+'</div>';
+}
+function quickAddCarpool(dir,pax,amount){
+  var km=null;
+  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),dir:dir,km:km,pax:pax,amount:amount,amountExpr:null,notes:null};
+  carpools.unshift(obj);
+  persist();renderCarpool();renderDash();
+  toast('Carpool added \u2713');
+}
 function renderCarpool(){
   const ti=carpools.reduce((a,x)=>a+(x.amount||0),0);
   const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
@@ -2200,6 +2307,214 @@ function renderCarpool(){
     cpOut+='</div>';cpMIdx++;
   });
   listEl.innerHTML=cpOut;
+  renderCpQuickAdd();
+}
+
+
+// ── EXPENSES ──────────────────────────────────────────────────────────────────────
+var expEditIndex=null;
+
+
+function previewExpAmount(){
+  var v=document.getElementById('expAmount').value;
+  var el=document.getElementById('expAmountPreview');
+  var r=evalExpr(v);
+  if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= \u20b9'+Math.round(r).toLocaleString('en-IN');el.style.color='var(--good)';}
+  else if(r!=null&&r>=1000){el.textContent='\u20b9'+Math.round(r).toLocaleString('en-IN');el.style.color='var(--muted)';}
+  else{el.textContent='';el.style.color='';}
+}
+
+function saveExpense(){
+  var date=document.getElementById('expDate').value;
+  var cat=document.getElementById('expCategory').value;
+  var raw=document.getElementById('expAmount').value.trim();
+  var amount=evalExpr(raw);
+  var amountExpr=raw.match(/[+\-*/]/)?raw:null;
+  var iceRaw=document.getElementById('expIceAmount').value.trim();
+  var iceAmount=evalExpr(iceRaw);
+  var desc=document.getElementById('expDesc').value.trim();
+  var err=document.getElementById('expError');
+  if(!date){err.textContent='Set a date';return;}
+  if(!amount||amount<=0){err.textContent='Enter a valid amount';return;}
+  err.textContent='';
+  var obj={id:expEditIndex!==null?expenses[expEditIndex].id:(Date.now()+Math.random()),date:date,category:cat,amount:amount,amountExpr:amountExpr,iceAmount:iceAmount||null,description:desc||null};
+  if(expEditIndex!==null){expenses[expEditIndex]=obj;expEditIndex=null;document.getElementById('expFormTitle').textContent='Add Expense';document.getElementById('cancelExpEdit').style.display='none';}
+  else{expenses.unshift(obj);}
+  persist();renderExpenses();clearExpForm();toast('Expense saved \u2713');
+}
+
+function clearExpForm(){
+  document.getElementById('expDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('expAmount').value='';
+  document.getElementById('expDesc').value='';
+  document.getElementById('expAmountPreview').textContent='';
+  document.getElementById('expError').textContent='';
+  document.getElementById('expIceAmount').value='';
+  document.getElementById('expCategory').selectedIndex=0;
+}
+
+function editExpense(i){
+  expEditIndex=i;var x=expenses[i];
+  document.getElementById('expDate').value=x.date;
+  document.getElementById('expCategory').value=x.category;
+  document.getElementById('expAmount').value=x.amountExpr||x.amount||'';
+  document.getElementById('expDesc').value=x.description||'';
+  document.getElementById('expIceAmount').value=x.iceAmount||'';
+  document.getElementById('expFormTitle').textContent='Edit Expense';
+  document.getElementById('cancelExpEdit').style.display='block';
+  previewExpAmount();
+  document.getElementById('expFormTitle').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelExpEdit(){expEditIndex=null;document.getElementById('expFormTitle').textContent='Add Expense';document.getElementById('cancelExpEdit').style.display='none';clearExpForm();}
+
+function deleteExpense(i){undoableDelete('expense',i,'Expense');}
+
+
+function getPetrolEquivalentCost(totalKm){
+  // Returns total petrol fuel cost based on km driven at each price period
+  // Uses session/trip dates+odo to determine km per period
+  if(!petrolLog||petrolLog.length===0)return totalKm*(settings.petrolPrice||103)/(settings.petrolMileage||15);
+  var mileage=settings.petrolMileage||15;
+  // Build sorted odo waypoints from sessions and trips with dates
+  var waypoints=[];
+  sessions.forEach(function(s){if(s.odo&&s.date)waypoints.push({date:s.date,odo:s.odo});});
+  trips.forEach(function(t){if(t.endOdo&&t.date)waypoints.push({date:t.date,odo:t.endOdo});});
+  waypoints.sort(function(a,b){return a.date.localeCompare(b.date)||a.odo-b.odo;});
+  if(waypoints.length<2){
+    // Not enough data for period-based calc — use simple weighted avg
+    var today=new Date().toISOString().slice(0,10);
+    var totalCost=0,totalDays=0;
+    for(var i=0;i<petrolLog.length;i++){
+      var start=new Date(petrolLog[i].date);
+      var end=i<petrolLog.length-1?new Date(petrolLog[i+1].date):new Date(today);
+      var days=Math.max(1,Math.round((end-start)/86400000));
+      totalCost+=petrolLog[i].price*days;totalDays+=days;
+    }
+    var avgPrice=totalDays>0?totalCost/totalDays:(settings.petrolPrice||103);
+    return totalKm*avgPrice/mileage;
+  }
+  // For each km segment, find which price was active
+  var sortedLog=petrolLog.slice().sort(function(a,b){return a.date.localeCompare(b.date);});
+  var fuelCost=0;
+  for(var w=1;w<waypoints.length;w++){
+    var segKm=waypoints[w].odo-waypoints[w-1].odo;
+    if(segKm<=0)continue;
+    var segDate=waypoints[w-1].date;
+    // Find active price for this segment's date
+    var price=sortedLog[0].price;
+    for(var p=0;p<sortedLog.length;p++){
+      if(sortedLog[p].date<=segDate)price=sortedLog[p].price;
+      else break;
+    }
+    fuelCost+=segKm*price/mileage;
+  }
+  return fuelCost>0?fuelCost:totalKm*(settings.petrolPrice||103)/mileage;
+}
+
+function renderExpenses(){
+  // TCO stats
+  var chargeCost=sessions.filter(function(s){return s.cost;}).reduce(function(a,s){return a+s.cost;},0);
+  var expenseCost=expenses.filter(function(e){return e.category!=='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
+  var purchaseCost=expenses.filter(function(e){return e.category==='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
+  var totalRunning=chargeCost+expenseCost;
+  var totalKm=sessions.reduce(function(a,s){return a+(s.km||0);},0)+trips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
+  var costPerKm=totalKm>0?(totalRunning/totalKm):0;
+
+  document.getElementById('expenseStats').innerHTML=
+    statBox(chargeCost>0?'\u20b9'+Math.round(chargeCost).toLocaleString('en-IN'):'\u2014','Charging Cost',sessions.length+' sessions')+
+    statBox(expenseCost>0?'\u20b9'+Math.round(expenseCost).toLocaleString('en-IN'):'\u2014','Other Expenses',expenses.filter(function(e){return e.category!=='purchase';}).length+' entries')+
+    statBox(totalRunning>0?'\u20b9'+Math.round(totalRunning).toLocaleString('en-IN'):'\u2014','Running Cost',totalKm>0?totalKm.toLocaleString('en-IN')+' km':'no data')+
+    statBox(costPerKm>0?'\u20b9'+costPerKm.toFixed(1):'\u2014','Cost / km','excl. purchase');
+
+  // === BREAKEVEN CALCULATOR ===
+  var premium=settings.evPremium||0;
+  var bEl=document.getElementById('breakevenResult');
+
+  // Derive purchase date from earliest "purchase" category expense
+  var purchaseEntries=expenses.filter(function(x){return x.category==='purchase';});
+  var purchDate=purchaseEntries.length>0?purchaseEntries.reduce(function(a,b){return a.date<b.date?a:b;}).date:'';
+
+  if(premium>0&&totalKm>0){
+    var petrolFuelCost=getPetrolEquivalentCost(totalKm);
+    var petrolFuelPerKm=petrolFuelCost/totalKm;
+    var iceExpenses=expenses.filter(function(e){return e.category!=='purchase'&&e.iceAmount;}).reduce(function(a,e){return a+(e.iceAmount||0);},0);
+    var iceTotalPerKm=petrolFuelPerKm+(iceExpenses/totalKm);
+    var evCostPerKm=costPerKm;
+    var savingPerKm=iceTotalPerKm-evCostPerKm;
+
+    // With carpool
+    var carpoolIncome=carpools.reduce(function(a,x){return a+(x.amount||0);},0);
+    var savingPerKmWithCp=savingPerKm+(totalKm>0?carpoolIncome/totalKm:0);
+
+    if(savingPerKm>0||savingPerKmWithCp>0){
+      var breakevenKm=savingPerKm>0?Math.ceil(premium/savingPerKm):Infinity;
+      var breakevenKmCp=savingPerKmWithCp>0?Math.ceil(premium/savingPerKmWithCp):Infinity;
+      var pctDone=breakevenKm<Infinity?Math.min(100,(totalKm/breakevenKm*100)).toFixed(0):'0';
+      var pctDoneCp=breakevenKmCp<Infinity?Math.min(100,(totalKm/breakevenKmCp*100)).toFixed(0):'0';
+      var kmLeft=breakevenKm<Infinity?Math.max(0,breakevenKm-totalKm):Infinity;
+      var kmLeftCp=breakevenKmCp<Infinity?Math.max(0,breakevenKmCp-totalKm):Infinity;
+
+      // Date projection
+      var daysOwned=1;
+      if(purchDate){var d0=new Date(purchDate),d1=new Date();daysOwned=Math.max(1,Math.round((d1-d0)/86400000));}
+      var kmPerDay=totalKm/daysOwned;
+      var daysLeft=kmPerDay>0&&kmLeft<Infinity?Math.ceil(kmLeft/kmPerDay):0;
+      var daysLeftCp=kmPerDay>0&&kmLeftCp<Infinity?Math.ceil(kmLeftCp/kmPerDay):0;
+      var beDate=new Date();beDate.setDate(beDate.getDate()+daysLeft);
+      var beDateCp=new Date();beDateCp.setDate(beDateCp.getDate()+daysLeftCp);
+      var beDateStr=purchDate&&daysLeft>0?beDate.toLocaleDateString('en-IN',{month:'short',year:'numeric'}):'';
+      var beDateCpStr=purchDate&&daysLeftCp>0?beDateCp.toLocaleDateString('en-IN',{month:'short',year:'numeric'}):'';
+
+      var reached=totalKm>=breakevenKm;
+      var reachedCp=totalKm>=breakevenKmCp;
+      var statusClass=reached?'safe':(+pctDone>=50?'reserve':'critical');
+      var statusTitle=reached?'\u2713 Breakeven reached!':pctDone+'% to breakeven';
+      var statusSub=reached?'Passed breakeven '+Math.round(totalKm-breakevenKm).toLocaleString('en-IN')+' km ago.':(kmLeft<Infinity?kmLeft.toLocaleString('en-IN')+' km remaining'+(beDateStr?' \u00b7 est. '+beDateStr:''):'');
+
+      bEl.innerHTML=
+        '<div class="plan-status-box '+statusClass+'"><div class="plan-status-title">'+statusTitle+'</div><div class="plan-status-sub">'+statusSub+'</div></div>'+
+        '<div style="margin-top:10px">'+
+        '<div class="plan-row"><span class="plan-row-label">EV premium</span><span class="plan-row-val">\u20b9'+Math.round(premium).toLocaleString('en-IN')+'</span></div>'+
+        '<div class="plan-row"><span class="plan-row-label">Saving / km (vs petrol)</span><span class="plan-row-val" style="color:var(--good)">\u20b9'+savingPerKm.toFixed(1)+'</span></div>'+
+        '<div class="plan-row"><span class="plan-row-label">Breakeven distance</span><span class="plan-row-val">'+(breakevenKm<Infinity?breakevenKm.toLocaleString('en-IN')+' km':'\u2014')+'</span></div>'+
+        '<div class="plan-row"><span class="plan-row-label">Your EV cost / km</span><span class="plan-row-val">\u20b9'+evCostPerKm.toFixed(1)+'</span></div>'+
+        '<div class="plan-row"><span class="plan-row-label">ICE equivalent</span><span class="plan-row-val" style="color:var(--warn)">\u20b9'+iceTotalPerKm.toFixed(1)+'/km</span></div>'+
+        '<div class="plan-row"><span class="plan-row-label">Total saved so far</span><span class="plan-row-val" style="color:var(--good)">\u20b9'+Math.round(savingPerKm*totalKm).toLocaleString('en-IN')+'</span></div>'+
+        '</div>'+
+        '<div class="range-meter" style="margin-top:12px"><div class="range-track"><div class="range-fill" style="width:'+pctDone+'%"></div></div></div>'+
+        (carpoolIncome>0?'<div style="margin-top:12px;padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border)"><div style="font-size:11px;font-weight:600;color:var(--text)">With carpool income (\u20b9'+Math.round(carpoolIncome).toLocaleString('en-IN')+')</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+(reachedCp?'\u2713 Already broken even!':pctDoneCp+'% \u00b7 '+kmLeftCp.toLocaleString('en-IN')+' km left'+(beDateCpStr?' \u00b7 est. '+beDateCpStr:''))+'</div><div class="range-meter" style="margin-top:6px"><div class="range-track"><div class="range-fill" style="width:'+pctDoneCp+'%"></div></div></div></div>':'');
+    } else {
+      bEl.innerHTML='<div style="font-size:12px;color:var(--warn)">EV running cost is currently higher than ICE equivalent \u2014 charge at home/office more to improve this.</div>';
+    }
+  } else if(premium<=0&&settings.evPremium!==undefined&&+settings.evPremium<0){
+    bEl.innerHTML='<div style="font-size:12px;color:var(--good)">Your EV was cheaper than the petrol equivalent \u2014 already ahead from day one! \ud83c\udf89</div>';
+  } else {
+    bEl.innerHTML='<div style="font-size:11px;color:var(--muted)">'+(premium<=0?'Set EV Premium in Settings':'Log some charges')+' to see breakeven projection.'+(purchDate?'':'<br>Add a \u201cCar Purchase\u201d expense to set ownership start date.')+'</div>';
+  }
+
+  // Expense list — monthly collapsible groups
+  var el=document.getElementById('expList');
+  if(!expenses.length){el.innerHTML='<div class="empty">No expenses logged yet.</div>';return;}
+  var catLabels={service:'\ud83d\udd27 Service',insurance:'\ud83d\udee1\ufe0f Insurance',accessories:'\ud83d\udd0c Accessories',tyres:'\ud83d\udd04 Tyres',repair:'\u2699\ufe0f Repair',tolls:'\ud83d\udee3\ufe0f Tolls',purchase:'\ud83d\ude97 Purchase',other:'\ud83d\udcdd Other'};
+  var sorted=expenses.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var groups={};sorted.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
+  var html='',mIdx=0;
+  Object.keys(groups).sort().reverse().forEach(function(month){
+    var rows=groups[month];
+    var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+month.split('-')[1]-1]+' '+month.split('-')[0];
+    var mAmt=rows.reduce(function(a,r){return a+(r.amount||0);},0);
+    var mid='egrp-'+month;
+    var collapsed=mIdx>0?' style="display:none"':'';
+    html+='<div class="month-header" onclick="var g=document.getElementById(\''+mid+'\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' \u00b7 \u20b9'+Math.round(mAmt).toLocaleString('en-IN')+' <span style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
+    html+='<div id="'+mid+'"'+collapsed+'>';
+    rows.forEach(function(x){
+      var idx=expenses.indexOf(x);
+      html+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+x.date+'</span><span class="badge">'+(catLabels[x.category]||x.category)+'</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editExpense('+idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="deleteExpense('+idx+')">\u00d7</button></div></div><div style="font-size:11.5px;margin-top:3px">'+(x.description?'<span style="color:var(--muted)">'+escapeHtml(x.description)+'</span> \u00b7 ':'')+'<span style="color:var(--text);font-weight:600">\u20b9'+(x.amount||0).toLocaleString('en-IN')+'</span>'+(x.iceAmount?' <span style="color:var(--muted);font-size:10px">(ICE: \u20b9'+x.iceAmount.toLocaleString('en-IN')+')</span>':'')+'</div></div>';
+    });
+    html+='</div>';mIdx++;
+  });
+  el.innerHTML=html;
 }
 
 // ── CHARTS ─────────────────────────────────────────────────────────────────
@@ -2319,7 +2634,7 @@ function copyMonthlySummary(){
 }
 
 function exportJSON(){
-  var p={version:30,sessions:sessions,carpools:carpools,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:30,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
   dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
   safeLS.set('cm-lastExport',''+Date.now());
@@ -2366,22 +2681,28 @@ function dlShare(blob,name,text){
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 function saveSettings(){
-  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',bufferPct:'bufferPct',officeDist:'officeDist',homeDist:'homeDist',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice'};
+  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium'};
   Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
-  safeLS.set('cm-settings',JSON.stringify(settings));render();toast('Settings saved ✓');
+  safeLS.set('cm-settings',JSON.stringify(settings));render();// Auto-log petrol price change
+  var newPrice=+settings.petrolPrice;
+  var lastLog=petrolLog.length>0?petrolLog[petrolLog.length-1]:null;
+  if(newPrice>0&&(!lastLog||lastLog.price!==newPrice)){
+    petrolLog.push({date:new Date().toISOString().slice(0,10),price:newPrice});
+    safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));
+  }
+  toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];persist();render();renderCarpool();toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();renderCarpool();toast('All data cleared');}
+    safeLS.set('cm-chargers','[]');
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
   document.getElementById('battery').value           = settings.battery;
   document.getElementById('homeRate').value          = settings.homeRate;
   document.getElementById('defaultOfficeRate').value = settings.officeRate??0;
-  document.getElementById('bufferPct').value         = settings.bufferPct??15;
-  document.getElementById('officeDist').value        = settings.officeDist??'';
-  document.getElementById('homeDist').value          = settings.homeDist??'';
   document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
   document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
+  document.getElementById('evPremium').value          = settings.evPremium||'';
   // Last saved timestamp
   var ls=safeLS.get('cm-lastSaved');var lsEl=document.getElementById('lastSavedInfo');
   if(ls&&lsEl){var ago=Math.floor((Date.now()-Number(ls))/60000);lsEl.textContent='Data last saved: '+(ago<1?'just now':ago<60?ago+' min ago':Math.floor(ago/60)+'h ago')+' · '+sessions.length+' charges · '+trips.length+' trips';}
@@ -2389,6 +2710,7 @@ function populateSettingsInputs(){
 populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
+(function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){selectType(lt);}})();
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
 try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
@@ -2425,13 +2747,13 @@ function updateThemePills(mode){
 })();
 
 // — Swipe Navigation —
-(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','expenses','plan','settings'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<60||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — PWA Service Worker (cache-first with versioning) —
 (function(){try{if(navigator.serviceWorker){var CACHE='cm-v3.0';var sw='var CACHE="'+CACHE+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}))}).then(function(){return clients.claim()}))});self.addEventListener("fetch",function(e){e.respondWith(caches.open(CACHE).then(function(c){return c.match(e.request).then(function(r){var f=fetch(e.request).then(function(res){if(res&&res.status===200)c.put(e.request,res.clone());return res}).catch(function(){return r});return r||f})}))})';if(navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
 
 // — Android Back Button (navigate tabs instead of exit) —
-(function(){var tabs=['dash','charges','carpool','plan','settings'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
+(function(){var tabs=['dash','charges','carpool','expenses','plan','settings'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
 
 // — Undo Delete —
 var _undoTimer=null,_undoData=null;
@@ -2440,6 +2762,7 @@ function undoableDelete(type,index,label){
   if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
   else if(type==='trip'){item=trips.splice(index,1)[0];safeLS.set('cm-trips',JSON.stringify(trips));render();}
   else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));renderCarpool();}
+  else if(type==='expense'){item=expenses.splice(index,1)[0];safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   if(!item)return;
   _undoData={type:type,index:index,item:item};
   if(_undoTimer)clearTimeout(_undoTimer);
@@ -2455,6 +2778,7 @@ function undoLast(){
   if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
   else if(d.type==='trip'){trips.splice(d.index,0,d.item);safeLS.set('cm-trips',JSON.stringify(trips));render();}
   else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));renderCarpool();}
+  else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   document.getElementById('toast').classList.remove('show');
   toast('Restored ✓');
 }
@@ -2482,7 +2806,7 @@ function syncStatus(msg,err){var el=document.getElementById('syncStatus');el.tex
 
 function cloudPush(){
   if(!_syncSettings.token){syncStatus('Set a GitHub token first','err');return;}
-  var payload={sessions:sessions,carpools:carpools,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
+  var payload={sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
   var body={files:{'chargemate-data.json':{content:JSON.stringify(payload)}}};
   if(!_syncSettings.gistId){body.description='ChargeMate Backup';body.public=false;}
   var url=_syncSettings.gistId?'https://api.github.com/gists/'+_syncSettings.gistId:'https://api.github.com/gists';
@@ -2506,6 +2830,8 @@ function cloudPull(){
       var p=JSON.parse(f.content);
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
       if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
+      if(p.expenses){expenses=p.expenses;safeLS.set('cm-expenses',JSON.stringify(expenses));}
+      if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
@@ -2529,7 +2855,8 @@ function importData(event){
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
       if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
-      else{trips=[];safeLS.set('cm-trips','[]');}
+      if(p.expenses){expenses=p.expenses;safeLS.set('cm-expenses',JSON.stringify(expenses));}
+      if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
       recomputeAllKm();render();renderCarpool();
