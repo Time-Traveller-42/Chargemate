@@ -2424,7 +2424,7 @@ document.getElementById('date').value              = new Date().toISOString().sl
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
-document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
+var cpEl=document.getElementById('cpDate');if(cpEl)cpEl.value=new Date().toISOString().slice(0,10);
 try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
