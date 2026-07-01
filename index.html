@@ -692,6 +692,20 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v4.10.6 <span class="cl-date">1 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Removed</b>: Service Worker entirely (was caching cross-origin resources, blocking font loading, and breaking app on subsequent loads).</li>
+      <li><b>Fixed</b>: closePopup() was undefined — charger picker would crash on selection or overlay dismiss.</li>
+    </ul>
+    <div class="cl-ver">v4.10.5 <span class="cl-date">1 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Fixed</b>: Edit not populating odo/times (selectType was undefined).</li>
+      <li><b>Fixed</b>: Last used charge type not restored on app load.</li>
+    </ul>
+    <div class="cl-ver">v4.10.4 <span class="cl-date">1 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Fixed</b>: Disabled Service Worker in APK (was causing sync failures and swipe issues after initial load).</li>
+    </ul>
     <div class="cl-ver">v4.10.3 <span class="cl-date">27 Jun 2026</span></div>
     <ul class="cl-list">
       <li><b>Removed</b>: touch-action/overscroll CSS (was breaking swipes in APK).</li>
@@ -1362,6 +1376,7 @@ function autoCalcPublic(changed){
 
 // -- Popup Selector --
 var _popupOverlay=null;
+function closePopup(){if(_popupOverlay){_popupOverlay.classList.remove('open');_popupOverlay.innerHTML='';document.body.style.overflow='';}}
 
 
 
@@ -1882,7 +1897,7 @@ function editCharge(i){
   document.getElementById('cancelChargeEdit').style.display='block';
   document.getElementById('date').value=x.date;
   document.getElementById('start').value=x.s;document.getElementById('end').value=x.e;
-  document.getElementById('type').value=x.t;selectType(x.t);document.getElementById('odo').value=x.odo||'';
+  document.getElementById('type').value=x.t;onTypeChange();document.getElementById('odo').value=x.odo||'';
   document.getElementById('startTime').value=x.startTime||'';document.getElementById('endTime').value=x.endTime||'';
   document.getElementById('timeRow').style.display=x.t==='public'?'grid':'none';
   updateAutoDuration();
@@ -2605,7 +2620,7 @@ populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
-(function(){var lt=safeLS.get('cm-lastType');if(lt){selectType(lt);}})();
+(function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
 try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
 
@@ -2642,9 +2657,6 @@ function updateThemePills(mode){
 
 // — Swipe Navigation —
 (function(){var sx=0,sy=0,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
-
-// — PWA Service Worker (cache-first with versioning) —
-(function(){try{if(navigator.serviceWorker&&window.location.protocol!=='file:'){var CACHE='cm-v4.10.3';var sw='var CACHE="'+CACHE+'";self.addEventListener("install",function(e){self.skipWaiting()});self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE}).map(function(k){return caches.delete(k)}))}).then(function(){return clients.claim()}))});self.addEventListener("fetch",function(e){e.respondWith(caches.open(CACHE).then(function(c){return c.match(e.request).then(function(r){var f=fetch(e.request).then(function(res){if(res&&res.status===200)c.put(e.request,res.clone());return res}).catch(function(){return r});return r||f})}))})';if(navigator.serviceWorker.register)navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});}}catch(e){}})();
 
 // — Android Back Button (navigate tabs instead of exit) —
 (function(){var tabs=['dash','charges','carpool','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
