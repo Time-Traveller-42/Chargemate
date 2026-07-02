@@ -703,7 +703,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Lite Changelog</div>
-    <div class="cl-ver">v5.5-lite <span class="cl-date">2 Jul 2026</span></div>
+    <div class="cl-ver">v5.5.0 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Lite version</b>: All carpool functionality removed (nav tab, forms, data, patterns).</li>
       <li>3-tab layout: Home, Charges, Costs + More sheet.</li>
@@ -940,6 +940,7 @@ function fmtDate(d){if(!d)return'—';var p=d.split('-');if(p.length!==3)return 
 function fmtCurrency(n){return '\u20b9 '+Math.round(n).toLocaleString('en-IN');}
 
 // ── STATE ──────────────────────────────────────────────────────────────────
+var settings,sessions,trips,expenses,savedChargers,petrolLog;
 try{settings=JSON.parse(safeLS.get('cm-settings')||'{}');}catch(e){settings={};}
 settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103},settings);
 function stripCommas(s){return String(s).replace(/,/g,'');}
@@ -2727,7 +2728,6 @@ document.getElementById('tripDate').value          = new Date().toISOString().sl
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
-document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
 try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
