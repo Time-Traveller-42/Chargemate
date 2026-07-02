@@ -1115,18 +1115,6 @@ function renderDash(){
   
 
 
-  // === CARPOOL DASH ===
-  const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const netCost=hasCost?totalCost-totalIncome:null;
-  const avgPerTrip=carpools.length>0?(totalIncome/carpools.length).toFixed(0):null;
-  const cpThisMonth=carpools.filter(x=>x.date.startsWith(thisMonth));
-  const cpMonthAmt=cpThisMonth.reduce((a,x)=>a+(x.amount||0),0);
-  var cdEl=document.getElementById('carpoolDash');if(cdEl)cdEl.innerHTML=
-    statBox(totalIncome>0?'₹ '+Math.round(totalIncome).toLocaleString('en-IN'):'—','Total Income',carpools.length>0?carpools.length+' trip'+(carpools.length>1?'s':''):null,'good')+
-    statBox(cpThisMonth.length>0?'₹ '+Math.round(cpMonthAmt).toLocaleString('en-IN'):'—','This Month',cpThisMonth.length>0?cpThisMonth.length+' trip'+(cpThisMonth.length>1?'s':''):null)+
-    statBox(netCost!=null?(netCost>=0?'₹ '+Math.round(netCost).toLocaleString('en-IN'):'₹ '+Math.round(Math.abs(netCost)).toLocaleString('en-IN')+' surplus'):'—','Net Cost',netCost!=null&&netCost<0?'carpool > spend':'spend − carpool',netCost!=null&&netCost<=0?'good':null)+
-    statBox(avgPerTrip?'₹'+Math.round(avgPerTrip).toLocaleString('en-IN'):'—','Avg / Trip');
-
   // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
@@ -2215,15 +2203,8 @@ function renderQuickPills(){
   var chargeSorted=Object.values(chargePatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
   if(!chargeSorted.length)chargeSorted=[{t:'office',s:20,e:100}];
   
-  // Carpool patterns
-  var cpPatterns={};
-  carpools.forEach(function(c){
-    if(!c.amount)return;
-    var key=(c.dir||'to_office')+'|'+(c.pax||1)+'|'+c.amount;
-    if(!cpPatterns[key])cpPatterns[key]={dir:c.dir,pax:c.pax,amount:c.amount,count:0};
-    cpPatterns[key].count++;
-  });
-  var cpSorted=Object.values(cpPatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
+  // Carpool patterns (disabled in lite)
+  var cpSorted=[];
   
   var typeLabels={office:'Office',home:'Home',public:'Public'};
   var dirLabels={to_office:'→ Office',to_home:'← Home'};
