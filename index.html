@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 
 :root{
@@ -20,17 +20,45 @@
   --good:#34d399;--warn:#fbbf24;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh}
-.container{max-width:500px;margin:auto;padding:16px 18px 80px}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:500px;margin:auto;padding:16px 18px 72px}
 
-.tabs{display:flex;gap:0;padding:10px 8px;position:sticky;top:0;z-index:10;
-  background:rgba(11,18,32,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);align-items:center}
-.tab{transition:background .15s ease,color .15s ease;flex:1;text-align:center;padding:9px 6px;border-radius:8px;
-  font-family:'Inter',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;
-  cursor:pointer;color:var(--muted);letter-spacing:.03em;
-  -webkit-tap-highlight-color:transparent;outline:none;white-space:nowrap}
-.tab:hover{color:var(--text)}
-.tab.active{background:var(--accent);color:#000}
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:500px;margin:0 auto;height:56px;
+  background:rgba(11,18,32,0.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;
+  padding:0 6px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;
+  border-radius:16px;cursor:pointer;transition:all .15s ease;-webkit-tap-highlight-color:transparent;user-select:none}
+.nav-item.active{background:rgba(0,229,255,0.12)}
+.nav-item:active{opacity:.7;transform:scale(.95)}
+.nav-item svg{width:22px;height:22px;fill:none;stroke:var(--muted);stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s ease,transform .15s ease}
+.nav-item.active svg{stroke:var(--accent);transform:scale(1.05)}
+.nav-label{font-size:9px;font-weight:500;color:var(--muted);letter-spacing:.02em;transition:color .15s ease}
+.nav-item.active .nav-label{color:var(--accent);font-weight:600}
+.nav-more{display:flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:12px;
+  cursor:pointer;transition:all .15s ease;-webkit-tap-highlight-color:transparent;user-select:none}
+.nav-more:active{opacity:.7;transform:scale(.95);background:rgba(0,229,255,0.12)}
+.nav-more svg{width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Bottom Sheet */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:200}
+.sheet-overlay.visible{opacity:1;pointer-events:all}
+.bottom-sheet{position:fixed;bottom:0;left:0;right:0;max-width:500px;margin:0 auto;
+  background:var(--card);border-top:1px solid var(--border);border-top-left-radius:20px;border-top-right-radius:20px;
+  padding:12px 20px 28px;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);
+  z-index:300;box-shadow:0 -8px 40px rgba(0,0,0,0.5)}
+.bottom-sheet.visible{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.sheet-item{display:flex;align-items:center;gap:14px;padding:13px 8px;border-radius:12px;cursor:pointer;transition:background .12s ease;-webkit-tap-highlight-color:transparent}
+.sheet-item:active{background:rgba(255,255,255,0.04)}
+.sheet-item-icon{width:38px;height:38px;border-radius:10px;background:rgba(0,229,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sheet-item-icon svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sheet-item-text .title{font-size:15px;font-weight:500;color:var(--text)}
+.sheet-item-text .desc{font-size:12px;color:var(--muted);margin-top:2px}
+.sheet-divider{height:1px;background:var(--border);margin:2px 8px}
 
 .card{background:var(--card);padding:18px;border-radius:14px;margin-bottom:14px;border:1px solid var(--border)}
 .card h3{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;
@@ -132,10 +160,10 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
 .stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border)}
-.stat-val{font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--accent);line-height:1.2;font-variant-numeric:tabular-nums}
+.stat-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--accent);line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
 .stat-label{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .session-row{padding:6px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
@@ -175,10 +203,11 @@ body.light .badge-trip{background:#fef3c7;color:#92400e}
 body.light .badge-tooffice{background:#e0e7ff;color:#3730a3}
 body.light .badge-tohome{background:#dcfce7;color:#166534}
 
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(60px);
   background:var(--accent);color:#000;padding:9px 18px;border-radius:20px;
   font-family:'Inter',sans-serif;font-size:12px;font-weight:700;
   transition:transform .3s;z-index:100;pointer-events:none;white-space:nowrap}
+#toast:empty{display:none}
 #toast.show{transform:translateX(-50%) translateY(0);pointer-events:auto}
 
 .file-label{display:block;padding:9px;border:1px solid var(--border);border-radius:8px;
@@ -250,7 +279,14 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 .charger-name{font-size:12px}.charger-meta{font-size:11px;color:var(--muted)}
 
 body.light{--bg:#f0f4f8;--card:#fff;--accent:#0066b8;--accent2:#6d28d9;--text:#1e293b;--muted:#475569;--danger:#dc2626;--border:#e2e8f0;--good:#059669;--warn:#d97706;}
-body.light .tabs{background:rgba(240,244,248,0.95)}
+body.light .bottom-nav{background:rgba(255,255,255,0.96);border-top:1px solid #e2e8f0}
+body.light .nav-item.active{background:rgba(0,102,184,0.08)}
+body.light .bottom-sheet{background:#fff;border-color:#e2e8f0}
+body.light .sheet-overlay{background:rgba(0,0,0,0.4)}
+body.light .sheet-item:active{background:rgba(0,0,0,0.04)}
+body.light .sheet-item-icon{background:rgba(0,102,184,0.08)}
+body.light .sheet-item-icon svg{stroke:var(--accent)}
+body.light .sheet-divider{background:#e2e8f0}
 body.light input,body.light select{background:#f8fafc;color:#1e293b;border-color:#e2e8f0}
 body.light .stat-box,body.light .toggle-row{background:#f8fafc;border-color:#e2e8f0}
 body.light #toast{color:#fff}
@@ -281,9 +317,7 @@ body.light .divider{border-color:#e2e8f0}
 body.light .ghost{border-color:#e2e8f0;color:#64748b}
 body.light .ghost:hover{border-color:var(--accent);color:var(--accent)}
 body.light .primary{background:var(--accent);color:#fff}
-body.light .tab.active{background:var(--accent);color:#fff}
 body.light .secondary{background:#e2e8f0;color:var(--accent)}
-body.light .tab{color:#64748b}
 body.light .rbar-track{background:#f1f5f9}
 body.light .charge-advice{background:#f8fafc;border-color:#e2e8f0}
 body.light .plan-row{border-color:#e2e8f0}
@@ -328,48 +362,52 @@ body.light .inline-dropdown{background:#fff;border-color:#e2e8f0;box-shadow:0 4p
 body.light .inline-dropdown div:hover{background:rgba(0,119,204,0.08)}
 body.light .inline-dropdown div:active{background:var(--accent);color:#fff}
 
-/* Drawer */
-.drawer-item{padding:14px 16px;border-radius:10px;color:var(--text);font-size:14px;cursor:pointer;margin-bottom:8px}
-.drawer-item:active{background:rgba(0,229,255,0.1)}
-body.light .drawer-item:active{background:#e2e8f0}
+/* Bottom sheet items tap feedback */
+.sheet-item:hover{background:rgba(255,255,255,0.04)}
+body.light .sheet-item:hover{background:rgba(0,0,0,0.04)}
 
 /* Tap feedback */
-.tab:active{opacity:0.7;transform:scale(0.96)}
 .btn-sm:active{opacity:0.7;transform:scale(0.92)}
 .ghost:active{transform:scale(0.97);opacity:0.8}
 .secondary:active{transform:scale(0.97);opacity:0.8}
-.drawer-item:hover{background:rgba(255,255,255,0.04)}
-body.light .drawer-item:hover{background:rgba(0,0,0,0.04)}
 
 /* v4.7 additions */
 .empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px;font-style:italic}
-.drawer-item{transition:background .12s ease}
+/* FAB */
+.fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#000;border:none;box-shadow:0 4px 16px rgba(0,229,255,0.3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:90;
+  transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}
+.fab:active{transform:scale(.92)}
+.fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+body.light .fab{box-shadow:0 4px 16px rgba(0,102,184,0.25)}
+
+/* Quick Add Overlay */
+.quick-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:400;display:flex;align-items:flex-end;justify-content:center}
+.quick-overlay.visible{opacity:1;pointer-events:all}
+.quick-panel{background:var(--card);border-top-left-radius:20px;border-top-right-radius:20px;
+  width:100%;max-width:500px;padding:20px 20px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.quick-overlay.visible .quick-panel{transform:translateY(0)}
+.quick-panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.quick-pill{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:20px;
+  border:1px solid var(--border);font-size:13px;color:var(--text);cursor:pointer;
+  transition:all .15s ease;-webkit-tap-highlight-color:transparent}
+.quick-pill:active,.quick-pill.selected{background:var(--accent);color:#000;border-color:var(--accent)}
+body.light .quick-pill:active,body.light .quick-pill.selected{color:#fff}
+.quick-fields{margin-top:14px;display:none}
+.quick-fields.visible{display:block}
+
 @media(max-width:380px){.stats-grid{grid-template-columns:1fr!important}.form-row{grid-template-columns:1fr!important}}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 </style>
 
 </head>
 <body>
-<div class="tabs">
-  <div class="tab" onclick="openDrawer()" id="t-menu" aria-label="Menu" role="button" style="flex:0 0 40px;padding:9px 0;font-size:16px;line-height:1">☰</div>
-  <div class="tab active" onclick="switchTab('dash')" id="t-dash">Home</div>
-  <div class="tab" onclick="switchTab('charges')" id="t-charges">Charging</div>
-  <div class="tab" onclick="switchTab('carpool')" id="t-carpool">Carpool</div>
-  <div class="tab" onclick="switchTab('expenses')" id="t-expenses">Expenses</div>
-</div>
+<!-- Bottom nav added after container -->
 
 
-<!-- HAMBURGER DRAWER -->
-<div id="drawerOverlay" onclick="closeDrawer()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:900;opacity:0;transition:opacity .2s ease"></div>
-<div id="drawer" style="position:fixed;top:0;left:-280px;width:280px;max-width:85vw;height:100%;background:var(--card);z-index:901;transition:left .25s ease;overflow-y:auto;padding:20px;box-shadow:2px 0 12px rgba(0,0,0,0.3)">
-  <div style="margin-bottom:24px;font-size:15px;font-weight:600;color:var(--text)">ChargeMate</div>
-  <div class="drawer-item" onclick="openDrawerView('settings')">⚙️ Settings</div>
-  <div class="drawer-item" onclick="openDrawerView('planner');closeDrawer()">🗺️ Trip Planner</div>
-  <div class="drawer-item" onclick="openDrawerView('backup')">📤 Backup & Sync</div>
-  <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
-    <div class="drawer-item" onclick="showChangelog();closeDrawer()">📋 What's New</div>
-  </div>
-</div>
+<!-- Drawer removed in v5.0 — replaced by bottom sheet -->
 
 <div class="container">
 
@@ -384,6 +422,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">🗺️ Plan a trip →</a></div></div>
   <div class="card"><h3>Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
   <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
+  <div class="card"><h3>Monthly Spend</h3><div class="chart-wrap"><canvas id="costChart" height="200"></canvas></div></div>
   </div>
 
 
@@ -440,7 +479,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
       <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='Start % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
       <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='End % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
-      <div><label>Odo (km)</label><input type="number" id="odo" placeholder="" oninput="validateOdo()"></div>
+      <div><label>Odo (km)</label><input type="text" id="odo" inputmode="numeric" placeholder="" oninput="validateOdo();formatNumericInput(this)"></div>
     </div>
     <div id="timeRow" class="time-row" style="display:none">
       <div><label>Start Time</label><input type="time" id="startTime" oninput="updateDurationPreview()"></div>
@@ -469,7 +508,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
             <div onclick="pickConn('DC')">DC (Fast)</div>
           </div>
         </div>
-        <div><label>Rated kW</label><input type="number" id="pubKw" placeholder="—" step="0.1"></div>
+        <div><label>Rated kW</label><input type="number" id="pubKw" placeholder="—" step="0.1" oninput="formatNumericInput(this)"></div>
       </div>
       <hr class="divider">
       <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Cost</div>
@@ -580,8 +619,8 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       </div>
     </div>
     <div class="form-row" style="margin-top:10px">
-      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount()"><div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="Same as amount if blank"><div style="font-size:9px;color:var(--muted);margin-top:2px">Defaults to EV amount</div></div>
+      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this)"><div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
+      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="Leave blank = same as EV" oninput="formatNumericInput(this)"><div style="font-size:9px;color:var(--muted);margin-top:2px">Defaults to EV amount</div></div>
     </div>
     <div style="margin-top:10px">
       <label>Description</label><input type="text" id="expDesc" placeholder="e.g. Annual insurance" style="width:100%;box-sizing:border-box">
@@ -632,7 +671,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <h3>Vehicle &amp; Rates</h3>
     <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40" min="1" max="200" step="0.1"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7" min="0" step="0.1"></div></div>
     <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>ICE Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
-    <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="number" id="evPremium" placeholder="e.g. 500000"></div></div>
+    <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="text" id="evPremium" placeholder="e.g. 5,00,000" inputmode="numeric" oninput="formatNumericInput(this)"></div></div>
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
   <div class="card"><h3>Appearance</h3>
@@ -654,6 +693,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 <!-- ═══════════════════ PLANNER ═══════════════════ -->
 <div id="planner" class="view">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <button onclick="switchTab('dash')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer">← Back</button>
+    <span style="font-size:13px;font-weight:600;color:var(--text)">Trip Planner</span>
+  </div>
   <div class="card">
     <h3>Trip Details</h3>
     <div class="form-row">
@@ -692,6 +735,46 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.4 <span class="cl-date">2 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Quick Add: pattern detection now uses exact (type, start%, end%) — tap pattern, enter only odo, save.</li>
+    </ul>
+    <div class="cl-ver">v5.3 <span class="cl-date">2 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>FAB Quick Add</b>: Floating + button — tap to quick-log charges or carpools from any screen.</li>
+      <li><b>Pattern detection</b>: Learns your common charge types and carpool routes, shows them as one-tap pills.</li>
+      <li><b>Charge</b>: Select pattern → enter start% + odo → save. Two fields.</li>
+      <li><b>Carpool</b>: One tap saves frequent routes instantly.</li>
+    </ul>
+    <div class="cl-ver">v5.2 <span class="cl-date">2 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Quick Charge</b>: Pattern-based one-tap logging — detects your common charge types, just enter start% and odo.</li>
+      <li><b>Monthly Spend chart</b>: Bar chart showing charging cost per month on Home.</li>
+      <li><b>Planner back button</b>: "← Back" at top of Trip Planner view.</li>
+      <li><b>Haptic feedback</b>: Subtle vibration on tab switches (APK).</li>
+    </ul>
+    <div class="cl-ver">v5.0.2 <span class="cl-date">2 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Live comma formatting as you type (odo, expenses, EV premium)</li>
+      <li>Fixed stat value overflow on narrow screens</li>
+      <li>Toast no longer hidden behind bottom nav</li>
+    </ul>
+    <div class="cl-ver">v5.0.1 <span class="cl-date">2 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Expense date defaults to today</li>
+      <li>Live comma formatting on all number fields</li>
+      <li>Fixed stat value text overflow on mobile</li>
+      <li>ICE Equivalent placeholder clarified</li>
+    </ul>
+    <div class="cl-ver">v5.0 <span class="cl-date">1 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Bottom navigation</b>: Tabs moved from top to bottom (fixed 56px nav bar).</li>
+      <li><b>Bottom sheet</b>: Replaces hamburger drawer — swipe down to dismiss.</li>
+      <li><b>Font</b>: Changed to Inter (removed JetBrains Mono).</li>
+      <li><b>SVG icons</b>: Navigation uses inline SVG icons.</li>
+      <li><b>Carpool icon</b>: People/users icon instead of text.</li>
+      <li><b>Costs icon</b>: Pie chart icon for Expenses/Costs tab.</li>
+    </ul>
     <div class="cl-ver">v4.10.6 <span class="cl-date">1 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Removed</b>: Service Worker entirely (was caching cross-origin resources, blocking font loading, and breaking app on subsequent loads).</li>
@@ -791,8 +874,71 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div style="color:var(--muted);font-size:11px;margin-top:12px;padding:10px;border-top:1px solid var(--border)">Older versions (v1.0–v4.1.1): See GitHub commit history</div>
   </div>
 </div>
+<!-- FAB -->
+<button class="fab" onclick="openQuickAdd()" aria-label="Quick add">
+  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<!-- Quick Add Overlay -->
+<div class="quick-overlay" id="quickOverlay" onclick="if(event.target===this)closeQuickAdd()">
+  <div class="quick-panel">
+    <div class="quick-panel-handle"></div>
+    <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Quick Add</div>
+    <div id="quickPills"></div>
+    <div class="quick-fields" id="quickFields"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="nav-item active" id="t-dash" onclick="switchTab('dash')">
+    <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><polyline points="9 21 9 14 15 14 15 21"/></svg>
+    <span class="nav-label">Home</span>
+  </div>
+  <div class="nav-item" id="t-charges" onclick="switchTab('charges')">
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    <span class="nav-label">Charges</span>
+  </div>
+  <div class="nav-item" id="t-carpool" onclick="switchTab('carpool')">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span class="nav-label">Carpool</span>
+  </div>
+  <div class="nav-item" id="t-expenses" onclick="switchTab('expenses')">
+    <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+    <span class="nav-label">Costs</span>
+  </div>
+  <div class="nav-more" id="moreBtn" onclick="openSheet()">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2" fill="var(--bg)" stroke-width="1.8"/><circle cx="16" cy="12" r="2" fill="var(--bg)" stroke-width="1.8"/><circle cx="11" cy="18" r="2" fill="var(--bg)" stroke-width="1.8"/></svg>
+  </div>
+</nav>
+
+<!-- ═══════════════════ BOTTOM SHEET ═══════════════════ -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-handle" id="sheetHandle"></div>
+  <div class="sheet-item" onclick="openSheetView('settings')">
+    <div class="sheet-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <div class="sheet-item-text"><div class="title">Settings</div><div class="desc">Vehicle, rates & appearance</div></div>
+  </div>
+  <div class="sheet-divider"></div>
+  <div class="sheet-item" onclick="openSheetView('planner')">
+    <div class="sheet-item-icon"><svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
+    <div class="sheet-item-text"><div class="title">Trip Planner</div><div class="desc">Plan your next trip</div></div>
+  </div>
+  <div class="sheet-divider"></div>
+  <div class="sheet-item" onclick="openSheetView('backup')">
+    <div class="sheet-item-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg></div>
+    <div class="sheet-item-text"><div class="title">Backup & Sync</div><div class="desc">Export, import & cloud sync</div></div>
+  </div>
+  <div class="sheet-divider"></div>
+  <div class="sheet-item" onclick="closeSheet();showChangelog()">
+    <div class="sheet-item-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+    <div class="sheet-item-text"><div class="title">What's New</div><div class="desc">Version history & updates</div></div>
+  </div>
+</div>
+
 <div id="toast"></div>
-<div id="offlineBadge" style="display:none;position:fixed;top:52px;right:12px;background:var(--warn);color:#000;padding:3px 8px;border-radius:12px;font-size:9px;font-family:'Inter',sans-serif;font-weight:700;z-index:50;letter-spacing:.04em">OFFLINE</div>
+<div id="offlineBadge" style="display:none;position:fixed;top:12px;right:12px;background:var(--warn);color:#000;padding:3px 8px;border-radius:12px;font-size:9px;font-family:'Inter',sans-serif;font-weight:700;z-index:50;letter-spacing:.04em">OFFLINE</div>
 
 <script>
 // localStorage shim for sandboxed environments
@@ -817,6 +963,24 @@ function fmtCurrency(n){return '\u20b9 '+Math.round(n).toLocaleString('en-IN');}
 let settings,sessions,carpools,trips;
 try{settings=JSON.parse(safeLS.get('cm-settings')||'{}');}catch(e){settings={};}
 settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103},settings);
+function stripCommas(s){return String(s).replace(/,/g,'');}
+function formatNumericInput(el){
+  var v=el.value,cp=el.selectionStart||0;
+  var ops=v.split(/([+\-*/])/);
+  var lenBefore=v.length;
+  var formatted=ops.map(function(seg){
+    if(/^[+\-*/]$/.test(seg))return seg;
+    var n=seg.replace(/,/g,'').replace(/^0+(?=\d)/,'');
+    if(n===''||isNaN(n))return seg;
+    var parts=n.split('.');
+    parts[0]=parseInt(parts[0],10).toLocaleString('en-IN');
+    return parts.join('.');
+  }).join('');
+  el.value=formatted;
+  var diff=formatted.length-lenBefore;
+  el.setSelectionRange(cp+diff,cp+diff);
+}
+
 try{sessions=JSON.parse(safeLS.get('cm-data')||'[]');}catch(e){sessions=[];}
 try{carpools=JSON.parse(safeLS.get('cm-carpool')||'[]');}catch(e){carpools=[];}
 try{trips=JSON.parse(safeLS.get('cm-trips')||'[]');}catch(e){trips=[];}
@@ -841,16 +1005,18 @@ function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')|
 
 // ── TABS ───────────────────────────────────────────────────────────────────
 function switchTab(tab) {
+  // Haptic feedback
+  if(navigator.vibrate)navigator.vibrate(10);
   // Save charge form draft if leaving charges tab
   if(document.getElementById('charges').classList.contains('active')&&tab!=='charges')saveDraft();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(t=>t.classList.remove('active'));
   var el=document.getElementById(tab);
   if(el){el.classList.add('active');}
   var tEl=document.getElementById('t-'+tab);if(tEl)tEl.classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(function(){renderDash();drawAllCharts();renderBreakevenSummary();},30);
-  if (tab==='charges') { renderCharges(); restoreDraft(); }
+  if (tab==='charges') { renderCharges(); restoreDraft(); updateOdoPlaceholder(); }
   if (tab==='carpool') renderCarpool();
   if (tab==='expenses') renderExpenses();
   if (tab==='planner') runPlan();
@@ -869,10 +1035,14 @@ function fmt12hr(t){
 const calcKwh=(s,e)=>{var v=settings.battery*(e-s)/100;return isFinite(v)?v:0;};
 function escapeHtml(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
+var _toastTimer=null;
 function toast(msg){
+  if(!msg)return;
   const t=document.getElementById('toast');
+  if(_toastTimer)clearTimeout(_toastTimer);
+  if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;_undoData=null;}
   t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2200);
+  _toastTimer=setTimeout(function(){t.classList.remove('show');t.textContent='';_toastTimer=null;},2200);
 }
 
 function badgeHtml(type){
@@ -1446,18 +1616,17 @@ function updateOdoPlaceholder(){
   const odoInput=document.getElementById('odo');
   if(odoInput.value) return; // don't override if user typed
   const withOdo=sessions.filter(s=>s.odo>0);
-  if(!withOdo.length){odoInput.placeholder='e.g. 12450';return;}
+  if(!withOdo.length){odoInput.placeholder='e.g. 12,450';return;}
   const last=withOdo.reduce((a,b)=>b.odo>a.odo?b:a);
   if(editIndex!==null&&sessions[editIndex]?.odo===last.odo){
-    // editing the session that IS the last — find second last
     const others=withOdo.filter(s=>s!==sessions[editIndex]);
-    odoInput.placeholder=others.length?'prev: '+(others.reduce((a,b)=>b.odo>a.odo?b:a).odo):'e.g. 12450';
+    odoInput.placeholder=others.length?'prev: '+(others.reduce((a,b)=>b.odo>a.odo?b:a).odo).toLocaleString('en-IN'):'e.g. 12,450';
   } else {
-    odoInput.placeholder='prev: '+last.odo;
+    odoInput.placeholder='prev: '+last.odo.toLocaleString('en-IN');
   }
 }
 function validateOdo(){
-  const odo=+document.getElementById('odo').value;
+  const odo=+stripCommas(document.getElementById('odo').value);
   const warnEl=document.getElementById('odoWarn'),odoEl=document.getElementById('odo');
   if(!odo){warnEl.textContent='';odoEl.classList.remove('warn-input');return;}
   const others=sessions.filter((_,i)=>i!==editIndex);
@@ -1484,13 +1653,13 @@ function saveCharge(){
   let cost=null;
   if(type==='home')   cost=kwh*settings.homeRate;
   if(type==='office') cost=kwh*(settings.officeRate||0);
-  if(type==='public'){const t=document.getElementById('pubTotal').value;cost=t!==''?+t:null;
+  if(type==='public'){const t=stripCommas(document.getElementById('pubTotal').value);cost=t!==''?+t:null;
     // track last public rate for plan tab
-    const pr=document.getElementById('pubRate').value;
+    const pr=stripCommas(document.getElementById('pubRate').value);
     if(pr!==''){settings.lastPublicRate=+pr;safeLS.set('cm-settings',JSON.stringify(settings));}
   }
 
-  const odoVal=document.getElementById('odo').value;
+  const odoVal=stripCommas(document.getElementById('odo').value);
   if(!odoVal||isNaN(+odoVal)||+odoVal<=0){errEl.textContent='Odometer reading is required.';return;}
   const odo=+odoVal;
   const startTime=document.getElementById('startTime').value||null;
@@ -1500,9 +1669,9 @@ function saveCharge(){
     location: document.getElementById('pubLocation').value||null,
     mapsLink: document.getElementById('pubMapsLink').value||null,
     connector:document.getElementById('pubConnector').value||null,
-    kw:       document.getElementById('pubKw').value!==''?+document.getElementById('pubKw').value:null,
+    kw:       stripCommas(document.getElementById('pubKw').value)!==''?+stripCommas(document.getElementById('pubKw').value):null,
     rate:     document.getElementById('pubRate').value!==''?+document.getElementById('pubRate').value:null,
-    units:    document.getElementById('pubUnits').value!==''?+document.getElementById('pubUnits').value:null,
+    units:    stripCommas(document.getElementById('pubUnits').value)!==''?+stripCommas(document.getElementById('pubUnits').value):null,
   }:null;
 
   const notes=document.getElementById('chargeNotes').value.trim()||null;
@@ -1948,7 +2117,7 @@ function renderDash(){
   const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
   document.getElementById('stats').innerHTML=
     statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
-    statBox(avgEff?`${avgEff} km/kWh · ${(+avgEff*settings.battery/100).toFixed(1)} km/%`:'—','Efficiency',avgEff?`${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
+    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
     statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'charging only':null)+
     statBox(lastDateStr,'Last Charged',lastSess?lastSess.t:'');
 
@@ -1989,13 +2158,13 @@ function renderDash(){
   // === RANGE CARD ===
   document.getElementById('rangeCard').innerHTML=avgEff
     ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on avg efficiency (${avgEff} km/kWh)</div>
-      <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">${(+avgEff*settings.battery*0.8).toFixed(0)} km<span style="font-size:13px;color:var(--muted);font-family:'JetBrains Mono'"> at 80% charge</span></div>
+      <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">${(+avgEff*settings.battery*0.8).toFixed(0)} km<span style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif"> at 80% charge</span></div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Full charge: ${(+avgEff*settings.battery).toFixed(0)} km theoretical</div>
       <div class="range-meter"><div class="range-track"><div class="range-fill" style="width:80%"></div></div>
       <div class="range-labels"><span>0 km</span><span>${(+avgEff*settings.battery).toFixed(0)} km</span></div></div>`
     :'<div class="empty" style="padding:12px 0">Log sessions with odometer readings to see range estimates.</div>';
 
-  requestAnimationFrame(drawAllCharts);
+  requestAnimationFrame(function(){drawAllCharts();drawCostChart();});
 }
 function makeSplitBar(label,data){
   const tot=((data.home||0)+(data.public||0)+(data.office||0))||1;
@@ -2014,10 +2183,187 @@ function makeSplitBar(label,data){
     </div></div>`;
 }
 
+// ── QUICK ADD (FAB) ────────────────────────────────────────────────────────
+function openQuickAdd(){
+  if(navigator.vibrate)navigator.vibrate(10);
+  var overlay=document.getElementById('quickOverlay');
+  overlay.classList.add('visible');
+  document.body.style.overflow='hidden';
+  renderQuickPills();
+}
+function closeQuickAdd(){
+  document.getElementById('quickOverlay').classList.remove('visible');
+  document.body.style.overflow='';
+  document.getElementById('quickFields').classList.remove('visible');
+  document.getElementById('quickFields').innerHTML='';
+}
+
+function renderQuickPills(){
+  var el=document.getElementById('quickPills');
+  // Charge patterns — exact (type, start%, end%) triple
+  var chargePatterns={};
+  sessions.forEach(function(s){
+    var key=s.t+'|'+s.s+'|'+s.e;
+    if(!chargePatterns[key])chargePatterns[key]={t:s.t,s:s.s,e:s.e,count:0};
+    chargePatterns[key].count++;
+  });
+  var chargeSorted=Object.values(chargePatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
+  if(!chargeSorted.length)chargeSorted=[{t:'office',s:20,e:100}];
+  
+  // Carpool patterns
+  var cpPatterns={};
+  carpools.forEach(function(c){
+    if(!c.amount)return;
+    var key=(c.dir||'to_office')+'|'+(c.pax||1)+'|'+c.amount;
+    if(!cpPatterns[key])cpPatterns[key]={dir:c.dir,pax:c.pax,amount:c.amount,count:0};
+    cpPatterns[key].count++;
+  });
+  var cpSorted=Object.values(cpPatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
+  
+  var typeLabels={office:'Office',home:'Home',public:'Public'};
+  var dirLabels={to_office:'→ Office',to_home:'← Home'};
+  
+  var html='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">⚡ Charge</div>';
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+  chargeSorted.forEach(function(p,i){
+    html+='<div class="quick-pill" onclick="selectQuickCharge('+i+')">'+typeLabels[p.t]+' '+p.s+'% → '+p.e+'%</div>';
+  });
+  html+='</div>';
+  
+  if(cpSorted.length){
+    html+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">🚗 Carpool</div>';
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    cpSorted.forEach(function(p,i){
+      html+='<div class="quick-pill" onclick="quickCarpoolSave(\''+p.dir+'\','+p.pax+','+p.amount+')">'+(dirLabels[p.dir]||p.dir)+' · '+p.pax+' pax · ₹'+p.amount+'</div>';
+    });
+    html+='</div>';
+  }
+  
+  el.innerHTML=html;
+  window._qcChargePatterns=chargeSorted;
+}
+
+function selectQuickCharge(idx){
+  var pattern=window._qcChargePatterns[idx];
+  var lastOdo=0;
+  sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});
+  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
+  
+  // Highlight selected pill
+  document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
+  document.querySelectorAll('#quickPills .quick-pill')[idx].classList.add('selected');
+  
+  var fields=document.getElementById('quickFields');
+  fields.classList.add('visible');
+  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+    '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qcStart" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
+    '<div><label style="margin:0 0 3px">Odo</label><input type="text" id="qcOdo" inputmode="numeric" placeholder="'+(lastOdo?lastOdo.toLocaleString('en-IN'):'odo')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
+    '</div>'+
+    '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">⚡ Save</button>';
+  setTimeout(function(){document.getElementById('qcOdo').focus();},100);
+}
+
+function saveQuickCharge(idx){
+  if(navigator.vibrate)navigator.vibrate(10);
+  var pattern=window._qcChargePatterns[idx];
+  var s=+document.getElementById('qcStart').value;
+  var odoRaw=stripCommas(document.getElementById('qcOdo').value);
+  var odo=+odoRaw;
+  if(isNaN(s)||s<0||s>=pattern.e){toast('Enter valid start % (below '+pattern.e+'%)');return;}
+  if(!odo||odo<=0){toast('Enter odometer reading');return;}
+  var e=pattern.e;
+  var type=pattern.t;
+  var kwh=settings.battery*(e-s)/100;
+  var cost=type==='office'?0:type==='home'?kwh*(settings.homeRate||0):null;
+  var lastOdo=0;
+  sessions.forEach(function(x){if(x.odo&&x.odo>lastOdo)lastOdo=x.odo;});
+  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
+  var km=lastOdo>0&&odo>lastOdo?odo-lastOdo:null;
+  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false};
+  sessions.unshift(obj);
+  recomputeAllKm();persist();render();
+  closeQuickAdd();
+  toast((type==='office'?'Office':'Home')+' charge saved ✓');
+}
+
+function quickCarpoolSave(dir,pax,amount){
+  if(navigator.vibrate)navigator.vibrate(10);
+  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),dir:dir,km:null,pax:pax,amount:amount,amountExpr:null,notes:null};
+  carpools.unshift(obj);
+  persist();renderCarpool();renderDash();
+  closeQuickAdd();
+  toast('Carpool added ✓');
+}
+
+// ── MONTHLY COST BAR CHART ─────────────────────────────────────────────────
+function drawCostChart(){
+  var canvas=document.getElementById('costChart');if(!canvas)return;
+  // Aggregate monthly: charging cost + expenses (excl. purchase)
+  var months={};
+  sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].charge+=s.cost;}});
+  expenses.forEach(function(e){if(e.category==='purchase'||!e.amount||!e.date)return;var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].expense+=e.amount;});
+  var monthKeys=Object.keys(months).sort().slice(-6);
+  if(monthKeys.length<2){
+    var ctx=canvas.getContext('2d');var dpr=window.devicePixelRatio||1;
+    var W=canvas.offsetWidth||canvas.parentElement.offsetWidth||300;
+    canvas.width=W*dpr;canvas.height=200*dpr;canvas.style.width=W+'px';canvas.style.height='200px';
+    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,200);
+    ctx.fillStyle='#94a3b8';ctx.font='11px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('Need at least 2 months of data',10,100);
+    return;
+  }
+  var values=monthKeys.map(function(m){return months[m].charge+months[m].expense;});
+  var labels=monthKeys.map(function(m){return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m.split('-')[1]-1];});
+  
+  var ctx=canvas.getContext('2d');var dpr=window.devicePixelRatio||1;
+  var W=canvas.offsetWidth||canvas.parentElement.offsetWidth||300;var H=200;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  
+  var pad={l:44,r:16,t:24,b:28};
+  var gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  var max=Math.max.apply(null,values)*1.15;if(max===0)max=1;
+  var barW=Math.min(36,gW/values.length-6);
+  var gap=(gW-barW*values.length)/(values.length+1);
+  
+  var isLight=document.body.classList.contains('light');
+  ctx.lineWidth=1;
+  [0,0.25,0.5,0.75,1].forEach(function(f){
+    var y=pad.t+gH*(1-f);
+    ctx.strokeStyle=isLight?'#e2e8f0':'#1e2d45';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle=isLight?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';ctx.textAlign='right';
+    var v=Math.round(f*max);ctx.fillText(v>=1000?(v/1000).toFixed(1)+'k':'\u20b9'+v,pad.l-4,y+3);
+  });
+  
+  // Stacked bars: charging (bottom, accent) + expenses (top, amber)
+  var accentColor=isLight?'rgba(0,102,184,0.8)':'rgba(0,229,255,0.7)';
+  var expColor='rgba(245,158,11,0.7)';
+  monthKeys.forEach(function(m,i){
+    var d=months[m];
+    var x=pad.l+gap+(barW+gap)*i;
+    var chargeH=(d.charge/max)*gH;
+    var expH=(d.expense/max)*gH;
+    var baseY=pad.t+gH;
+    // Charging bar (bottom)
+    if(d.charge>0){ctx.fillStyle=accentColor;ctx.beginPath();ctx.roundRect(x,baseY-chargeH,barW,chargeH,3);ctx.fill();}
+    // Expense bar (stacked on top)
+    if(d.expense>0){ctx.fillStyle=expColor;ctx.beginPath();ctx.roundRect(x,baseY-chargeH-expH,barW,expH,3);ctx.fill();}
+    // Label
+    ctx.fillStyle=isLight?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText(labels[i],x+barW/2,H-4);
+  });
+  
+  // Legend
+  ctx.font='9px Inter,sans-serif';ctx.textAlign='left';
+  ctx.fillStyle=accentColor;ctx.fillRect(pad.l+4,6,8,8);
+  ctx.fillStyle=isLight?'#334155':'#e2e8f0';ctx.fillText('Charging',pad.l+16,13);
+  ctx.fillStyle=expColor;ctx.fillRect(pad.l+74,6,8,8);
+  ctx.fillStyle=isLight?'#334155':'#e2e8f0';ctx.fillText('Expenses',pad.l+86,13);
+}
+
 // ── CARPOOL ────────────────────────────────────────────────────────────────
 function evalExpr(str){
   // Safe math eval: only digits, +, -, *, /, ., (, ), spaces
-  const s=(str||'').trim();
+  const s=(str||'').replace(/,/g,'').trim();
   if(!s)return null;
   if(!/^[\d+\-*/().\s]+$/.test(s))return null;
   try{const r=Function('"use strict";return ('+s+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(e){return null;}
@@ -2160,7 +2506,7 @@ function previewExpAmount(){
 function saveExpense(){
   var date=document.getElementById('expDate').value;
   var cat=document.getElementById('expCategory').value;
-  var raw=document.getElementById('expAmount').value.trim();
+  var raw=stripCommas(document.getElementById('expAmount').value.trim());
   var amount=evalExpr(raw);
   var amountExpr=raw.match(/[+\-*/]/)?raw:null;
   var iceRaw=document.getElementById('expIceAmount').value.replace(/,/g,'').trim();
@@ -2400,24 +2746,42 @@ function renderBreakevenSummary(){
 }
 
 
-function openDrawer(){
-  var ov=document.getElementById('drawerOverlay');
-  ov.style.display='';
-  setTimeout(function(){ov.style.opacity='1';},10);
-  document.getElementById('drawer').style.left='0';
+// ── BOTTOM SHEET ───────────────────────────────────────────────────────────
+function openSheet(){
+  document.getElementById('sheetOverlay').classList.add('visible');
+  document.getElementById('bottomSheet').classList.add('visible');
   document.body.style.overflow='hidden';
 }
-function closeDrawer(){
-  var ov=document.getElementById('drawerOverlay');
-  ov.style.opacity='0';
-  document.getElementById('drawer').style.left='-280px';
-  setTimeout(function(){ov.style.display='none';},200);
+function closeSheet(){
+  document.getElementById('sheetOverlay').classList.remove('visible');
+  document.getElementById('bottomSheet').classList.remove('visible');
   document.body.style.overflow='';
 }
-function openDrawerView(view){
-  closeDrawer();
+function openSheetView(view){
+  closeSheet();
   switchTab(view);
 }
+
+// Sheet swipe-down-to-dismiss
+(function(){
+  var sheet=document.getElementById('bottomSheet');
+  var handle=document.getElementById('sheetHandle');
+  var startY=0,currentY=0,isDragging=false;
+  sheet.addEventListener('touchstart',function(e){
+    var t=e.touches[0];startY=t.clientY;currentY=startY;isDragging=true;
+  },{passive:true});
+  sheet.addEventListener('touchmove',function(e){
+    if(!isDragging)return;currentY=e.touches[0].clientY;
+    var diff=currentY-startY;
+    if(diff>0)sheet.style.transform='translateY('+diff+'px)';
+  },{passive:true});
+  sheet.addEventListener('touchend',function(){
+    if(!isDragging)return;isDragging=false;
+    var diff=currentY-startY;
+    if(diff>80){closeSheet();}
+    sheet.style.transform='';
+  });
+})();
 
 function openPlanOverlay(){
   switchTab('planner');
@@ -2438,7 +2802,7 @@ function drawChart(id,pts,dates,color){
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
   const valid=pts.map((v,i)=>({v,d:dates[i]})).filter(x=>x.v!=null&&!isNaN(x.v));
-  if(valid.length<2){ctx.fillStyle='#94a3b8';ctx.font='11px JetBrains Mono,monospace';ctx.textAlign='left';ctx.fillText('Need at least 2 data points',10,H/2);return;}
+  if(valid.length<2){ctx.fillStyle='#94a3b8';ctx.font='11px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('Need at least 2 data points',10,H/2);return;}
   const values=valid.map(x=>x.v);
   const pad={l:38,r:36,t:16,b:32},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
   let max=Math.max(...values),min=Math.min(...values);if(max===min)max=min+1;
@@ -2448,7 +2812,7 @@ function drawChart(id,pts,dates,color){
   ctx.lineWidth=1;
   [0,0.25,0.5,0.75,1].forEach(f=>{
     const y=pad.t+gH*(1-f);ctx.strokeStyle=document.body.classList.contains('light')?'#e2e8f0':'#1e2d45';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-    ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='right';ctx.fillText((min+f*(max-min)).toFixed(1),pad.l-4,y+3);
+    ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';ctx.textAlign='right';ctx.fillText((min+f*(max-min)).toFixed(1),pad.l-4,y+3);
   });
   const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);
   grad.addColorStop(0,document.body.classList.contains('light')?'rgba(0,119,204,0.15)':'rgba(0,229,255,0.18)');grad.addColorStop(1,'rgba(0,0,0,0)');
@@ -2461,11 +2825,11 @@ function drawChart(id,pts,dates,color){
   const avg=values.reduce((a,v)=>a+v,0)/values.length,avgY=toY(avg);
   ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,avgY);ctx.lineTo(W-pad.r,avgY);ctx.stroke();
-  ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='left';
+  ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px Inter,sans-serif';ctx.textAlign='left';
   ctx.fillText('avg '+avg.toFixed(1),pad.l+4,avgY-3);ctx.restore();
   
   valid.forEach(({v},i)=>{ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
-  ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px JetBrains Mono,monospace';
+  ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';
   const maxL=Math.max(2,Math.floor(gW/44));
   valid.forEach(({d},i)=>{
     const step=Math.ceil((valid.length-1)/Math.max(1,maxL-1));
@@ -2590,7 +2954,7 @@ function dlShare(blob,name,text){
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 function saveSettings(){
   const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium'};
-  Object.entries(fields).forEach(([k,id])=>{const v=document.getElementById(id).value;if(v!=='')settings[k]=+v;});
+  Object.entries(fields).forEach(([k,id])=>{const v=stripCommas(document.getElementById(id).value);if(v!=='')settings[k]=+v;});
   // Validate battery range
   if(settings.battery<1||settings.battery>200){toast('Battery must be 1–200 kWh');settings.battery=Math.max(1,Math.min(200,settings.battery));}
   safeLS.set('cm-settings',JSON.stringify(settings));render();// Auto-log petrol price change
@@ -2619,6 +2983,7 @@ function populateSettingsInputs(){
 populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
+var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
@@ -2656,7 +3021,7 @@ function updateThemePills(mode){
 })();
 
 // — Swipe Navigation —
-(function(){var sx=0,sy=0,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;},{passive:true});document.addEventListener('touchend',function(e){var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,st=null,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;st=e.target;},{passive:true});document.addEventListener('touchend',function(e){if(st&&st.closest&&st.closest('.bottom-nav,.bottom-sheet,.sheet-overlay'))return;var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — Android Back Button (navigate tabs instead of exit) —
 (function(){var tabs=['dash','charges','carpool','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
@@ -2672,10 +3037,11 @@ function undoableDelete(type,index,label){
   if(!item)return;
   _undoData={type:type,index:index,item:item};
   if(_undoTimer)clearTimeout(_undoTimer);
+  if(_toastTimer)clearTimeout(_toastTimer);
   var t=document.getElementById('toast');
   t.innerHTML=label+' deleted. <span onclick="undoLast()" style="text-decoration:underline;cursor:pointer;margin-left:8px">Undo</span>';
   t.classList.add('show');
-  _undoTimer=setTimeout(function(){t.classList.remove('show');_undoData=null;},5000);
+  _undoTimer=setTimeout(function(){t.classList.remove('show');t.textContent='';_undoData=null;_undoTimer=null;},5000);
 }
 function undoLast(){
   if(!_undoData)return;
@@ -2690,7 +3056,7 @@ function undoLast(){
 }
 
 // — Backup Reminder (7 days) —
-(function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=7&&sessions.length>5)setTimeout(function(){toast('💾 Backup reminder — last export was '+Math.floor(d)+' days ago');},3000);})();
+(function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=7&&sessions.length>5)setTimeout(function(){toast('💾 Backup reminder — last export was '+Math.floor(d)+' days ago');},15000);})();
 
 // — Offline Detection —
 (function(){var badge=document.getElementById('offlineBadge');function upd(){badge.style.display=navigator.onLine?'none':'block';}window.addEventListener('online',upd);window.addEventListener('offline',upd);upd();})();
