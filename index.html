@@ -2023,6 +2023,81 @@ function render(){
   updateOdoPlaceholder();
 }
 
+function makeSplitBar(label,data){
+  const tot=((data.home||0)+(data.public||0)+(data.office||0))||1;
+  const pH=((data.home||0)/tot*100).toFixed(0),pP=((data.public||0)/tot*100).toFixed(0),pO=((data.office||0)/tot*100).toFixed(0);
+  return `<div style="margin-bottom:14px">
+    <div class="split-label">${label}</div>
+    <div class="split-track">
+      <div style="width:${pO}%;background:#a3e635;border-radius:4px;min-width:${pO>0?2:0}px"></div>
+      <div style="width:${pH}%;background:var(--good);border-radius:4px;min-width:${pH>0?2:0}px"></div>
+      <div style="width:${pP}%;background:#818cf8;border-radius:4px;min-width:${pP>0?2:0}px"></div>
+    </div>
+    <div class="split-legend">
+      <span class="split-legend-item"><span class="split-dot" style="background:#a3e635"></span>Office ${pO}%</span>
+      <span class="split-legend-item"><span class="split-dot" style="background:var(--good)"></span>Home ${pH}%</span>
+      <span class="split-legend-item"><span class="split-dot" style="background:#818cf8"></span>Public ${pP}%</span>
+    </div></div>`;
+}
+
+function renderPubHistory(){
+  const pub=sessions.filter(x=>x.t==='public'&&x.charger?.location);
+  const card=document.getElementById('pubHistoryCard');
+  if(!pub.length){card.style.display='none';return;}
+  card.style.display='block';
+  const by={};
+  pub.forEach(x=>{const l=escapeHtml(x.charger.location.trim());
+    if(!by[l])by[l]={visits:0,cost:0,kwh:0,totalMin:0,connector:x.charger.connector||'\u2014',kw:x.charger.kw||null,rates:[],mapsLink:null};
+    by[l].visits++;by[l].cost+=x.cost||0;by[l].kwh+=x.kwh||0;
+    if(x.duration)by[l].totalMin+=x.duration;
+    if(x.charger.rate)by[l].rates.push(x.charger.rate);
+    if(x.charger.mapsLink&&!by[l].mapsLink)by[l].mapsLink=x.charger.mapsLink;
+  });
+  document.getElementById('pubHistory').innerHTML=
+    Object.entries(by).sort((a,b)=>b[1].visits-a[1].visits).map(([loc,d])=>{
+      const avgSpeed=d.totalMin>0?(d.kwh/(d.totalMin/60)).toFixed(0)+' kW avg':'';
+      const avgRate=d.rates.length>0?'\u20b9'+(d.rates.reduce((a,b)=>a+b,0)/d.rates.length).toFixed(1)+'/unit':'';
+      var rateTrend='';if(d.rates.length>=2){var diff=d.rates[d.rates.length-1]-d.rates[0];if(Math.abs(diff)>=0.5)rateTrend=diff>0?' <span style="color:var(--danger)">\u2191\u20b9'+diff.toFixed(1)+'</span>':' <span style="color:var(--good)">\u2193\u20b9'+Math.abs(diff).toFixed(1)+'</span>';}
+      const link=d.mapsLink||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(loc));
+      return `<div class="charger-row">
+        <div><div class="charger-name"><a href="${link}" target="_blank" style="color:var(--accent);text-decoration:none">${loc} \u2197</a></div>
+        <div class="charger-meta"><span style="color:var(--text)">${d.connector}${d.kw?' \u00b7 '+d.kw+' kW rated':''}</span> \u00b7 ${d.visits} visit${d.visits>1?'s':''} \u00b7 ${d.kwh.toFixed(1)} kWh</div>
+        <div class="charger-meta"><span style="color:var(--text)">${avgSpeed}${avgSpeed&&avgRate?' \u00b7 ':''}${avgRate}${rateTrend}</span></div></div>
+        <div style="text-align:right"><div style="font-family:'Inter',sans-serif;font-weight:600;color:var(--good);font-size:11px">${d.cost>0?'\u20b9'+d.cost.toFixed(0):'Free'}</div></div>
+      </div>`;
+    }).join('');
+}
+
+function editCharge(i){
+  const x=sessions[i];editIndex=i;switchTab('charges');
+  document.getElementById('chargeFormTitle').textContent='Edit Session';
+  document.getElementById('cancelChargeEdit').style.display='block';
+  document.getElementById('date').value=x.date;
+  document.getElementById('start').value=x.s;document.getElementById('end').value=x.e;
+  document.getElementById('type').value=x.t;onTypeChange();document.getElementById('odo').value=x.odo||'';
+  document.getElementById('startTime').value=x.startTime||'';document.getElementById('endTime').value=x.endTime||'';
+  document.getElementById('timeRow').style.display=x.t==='public'?'grid':'none';
+  updateAutoDuration();
+  document.getElementById('publicBlock').style.display=x.t==='public'?'block':'none';
+  if(x.t==='public'&&x.charger){
+    document.getElementById('pubLocation').value=x.charger.location||'';
+    document.getElementById('pubMapsLink').value=x.charger.mapsLink||'';
+    document.getElementById('pubConnector').value=x.charger.connector||'';
+    document.getElementById('pubKw').value=x.charger.kw!=null?x.charger.kw:'';
+    document.getElementById('pubRate').value=x.charger.rate!=null?x.charger.rate:'';
+    document.getElementById('pubUnits').value=x.charger.units!=null?x.charger.units:'';
+    document.getElementById('pubTotal').value=x.cost!=null?x.cost.toFixed(0):'';
+  }
+  updatePreview();
+  document.getElementById('chargeNotes').value=x.notes||'';
+  document.getElementById('chargeFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function delCharge(i){
+  undoableDelete('charge',i,'Session');
+}
+
+
 function renderCharges(){
   if(entryMode==='trip'){renderTripsOnly();}else{renderList();}
   renderPubHistory();renderSavedChargers();
@@ -2143,7 +2218,7 @@ function renderTripsOnly(){
       var line1=x.startPct+'% \u2192 '+x.endPct+'% \u00b7 '+x.km+' km';
       var line2=x.startOdo.toLocaleString('en-IN')+' \u2192 '+x.endOdo.toLocaleString('en-IN');
       if(effStr) line2+=' \u00b7 '+effStr;
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')">\u270f</button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u00d7</button></div></div><div class="session-detail">'+line1+'</div><div class="session-detail" style="color:var(--muted)">'+line2+'</div></div>';
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div class="session-detail">'+line1+'</div><div class="session-detail">'+line2+'</div></div>';
     });
     out+='</div>';
     mIdx++;
