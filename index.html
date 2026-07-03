@@ -735,6 +735,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.5.1 <span class="cl-date">3 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fixed: Efficiency trend uses charge-to-charge as primary (longest segments). Trips only fill gaps where no charge covers them. Overlapping trips merged into longest span.</li>
+      <li>Fixed: Edit/delete/add no longer collapses expanded month groups or resets view state.</li>
+    </ul>
     <div class="cl-ver">v5.5.0 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Carpool quick-add removed from tab (FAB handles it).</li>
@@ -1929,9 +1934,7 @@ function delTrip(i){
 
 // ── UNIFIED TIMELINE EFFICIENCY ────────────────────────────────────────────
 function computeUnifiedEfficiency(){
-  // Build waypoints — consolidate charges at same odo
-  var waypoints=[];
-  // Group charges by odo: at each odo, keep min(start%) as arrival, max(end%) as departure
+  // === STEP 1: Charge-to-charge segments (primary, longest by nature) ===
   var odoMap={};
   sessions.forEach(function(s){
     if(s.odo&&s.odo>0){
@@ -1944,53 +1947,81 @@ function computeUnifiedEfficiency(){
       }
     }
   });
-  Object.keys(odoMap).forEach(function(k){
-    var o=+k,d=odoMap[k];
-    waypoints.push({odo:o, pct:d.s, type:'charge_start', date:d.date, chargedSince:d.chargedSince});
-    waypoints.push({odo:o, pct:d.e, type:'charge_end', date:d.date});
-  });
-  // From trips: each trip gives two waypoints
-  trips.forEach(function(t){
-    waypoints.push({odo:t.startOdo, pct:t.startPct, type:'trip_start', date:t.date, chargedSince:t.chargedSince});
-    waypoints.push({odo:t.endOdo, pct:t.endPct, type:'trip_end', date:t.date});
-  });
-  // Sort by odo, then type priority (trip_end < charge_start < trip_start < charge_end)
-  var typeOrd={'trip_end':0,'charge_start':1,'trip_start':2,'charge_end':3};
-  waypoints.sort(function(a,b){if(a.odo!==b.odo)return a.odo-b.odo;return(typeOrd[a.type]||2)-(typeOrd[b.type]||2);});
-  // Compute efficiency between consecutive waypoints
-  var segments=[];
-  for(var i=1;i<waypoints.length;i++){
-    var prev=waypoints[i-1], curr=waypoints[i];
+  // Build sorted charge points: [{odo, arrival, departure, date, chargedSince}]
+  var chargePoints=Object.keys(odoMap).map(function(k){
+    return {odo:+k, arrival:odoMap[k].s, departure:odoMap[k].e, date:odoMap[k].date, chargedSince:odoMap[k].chargedSince};
+  }).sort(function(a,b){return a.odo-b.odo;});
+
+  // Charge-to-charge segments
+  var chargeSegs=[];
+  for(var i=1;i<chargePoints.length;i++){
+    var prev=chargePoints[i-1], curr=chargePoints[i];
     if(curr.chargedSince) continue;
-    // % up + odo same = charge (break). % up + odo increased = regen (valid)
-    if(curr.pct>=prev.pct && curr.odo<=prev.odo) continue;
     var km=curr.odo-prev.odo;
-    var drop=prev.pct-curr.pct;
-    if(km>0&&drop>0){  // normal driving
+    var drop=prev.departure-curr.arrival;
+    if(km>0&&drop>0){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
-      segments.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:prev.odo,toOdo:curr.odo,fromPct:prev.pct,toPct:curr.pct,
-        date:curr.date});
-    } else if(km>0&&drop<0){  // regen
-      var regenKwh=Math.abs(drop)*settings.battery/100;
-      segments.push({km:km,drop:drop,consumption:-regenKwh,efficiency:null,regen:true,regenKwh:regenKwh,
-        fromOdo:prev.odo,toOdo:curr.odo,fromPct:prev.pct,toPct:curr.pct,
-        date:curr.date});
+      chargeSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
+        fromOdo:prev.odo,toOdo:curr.odo,date:curr.date,regen:false,flag:null,source:'charge'});
+    } else if(km>0&&drop<0&&!curr.chargedSince){
+      // Regen: % went up while driving
+      chargeSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
+        fromOdo:prev.odo,toOdo:curr.odo,date:curr.date,regen:true,flag:null,source:'charge'});
     }
   }
-  // Flag unrealistic segments: adaptive thresholds
-  var normalSegs=segments.filter(function(s){return !s.regen&&s.efficiency;});
-  if(normalSegs.length<5){_effWarnThresh=12;_effErrorThresh=18;}
-  else{
-    var sumEff=normalSegs.reduce(function(a,s){return a+s.efficiency;},0);
-    var avgEff=normalSegs.length>0?sumEff/normalSegs.length:8;
+
+  // === STEP 2: Merge overlapping/chaining trips into longest spans ===
+  var tripSpans=trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo;})
+    .map(function(t){return {fromOdo:t.startOdo,toOdo:t.endOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:!!t.chargedSince};})
+    .sort(function(a,b){return a.fromOdo-b.fromOdo;});
+  // Merge overlapping spans
+  var merged=[];
+  tripSpans.forEach(function(t){
+    if(!merged.length){merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince});return;}
+    var last=merged[merged.length-1];
+    if(t.fromOdo<=last.toOdo){
+      // Overlapping or chaining — extend
+      if(t.toOdo>last.toOdo){last.toOdo=t.toOdo;last.endPct=t.endPct;last.date=t.date;}
+    } else {
+      merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince});
+    }
+  });
+
+  // === STEP 3: Only use trip spans where no charge segment covers them ===
+  var tripSegs=[];
+  merged.forEach(function(t){
+    if(t.chargedSince) return;
+    // Check if any charge segment fully covers this trip
+    var covered=chargeSegs.some(function(c){return c.fromOdo<=t.fromOdo&&c.toOdo>=t.toOdo;});
+    if(covered) return;
+    var km=t.toOdo-t.fromOdo;
+    var drop=t.startPct-t.endPct;
+    if(km>0&&drop>0){
+      var consumption=drop*settings.battery/100;
+      var eff=km/consumption;
+      tripSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
+        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:false,flag:null,source:'trip'});
+    } else if(km>0&&drop<0){
+      tripSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
+        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:true,flag:null,source:'trip'});
+    }
+  });
+
+  // === STEP 4: Combine and sort by date ===
+  var segments=chargeSegs.concat(tripSegs);
+  segments.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.fromOdo-b.fromOdo;});
+
+  // === STEP 5: Flag outliers ===
+  var validEffs=segments.filter(function(s){return !s.regen&&s.efficiency&&isFinite(s.efficiency);});
+  if(validEffs.length>=5){
+    var sumEff=validEffs.reduce(function(a,s){return a+s.efficiency;},0);
+    var avgEff=sumEff/validEffs.length;
     var warnThresh=avgEff*1.5;
-    var flagThresh=avgEff*2;
-    _effWarnThresh=warnThresh;
-    _effErrorThresh=flagThresh;
+    var errThresh=avgEff*2;
     segments.forEach(function(s){
-      if(s.efficiency>flagThresh) s.flag='error';
+      if(!s.efficiency||!isFinite(s.efficiency)) return;
+      if(s.efficiency>errThresh) s.flag='error';
       else if(s.efficiency>warnThresh) s.flag='warn';
     });
   }
@@ -2098,6 +2129,28 @@ function delCharge(i){
 }
 
 
+
+// ── MONTH GROUP STATE PRESERVATION ─────────────────────────────────────────
+function getExpandedGroups(){
+  var expanded={};
+  ['mgrp-','cpgrp-','tgrp-','egrp-'].forEach(function(prefix){
+    document.querySelectorAll('[id^="'+prefix+'"]').forEach(function(el){
+      if(el.style.display!=='none') expanded[el.id]=true;
+    });
+  });
+  // Also save pubHistory state
+  var ph=document.getElementById('pubHistory');
+  if(ph&&ph.style.display!=='none') expanded['pubHistory']=true;
+  return expanded;
+}
+function restoreExpandedGroups(state){
+  if(!state||!Object.keys(state).length) return;
+  Object.keys(state).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display='block';
+  });
+}
+
 function renderCharges(){
   if(entryMode==='trip'){renderTripsOnly();}else{renderList();}
   renderPubHistory();renderSavedChargers();
@@ -2107,6 +2160,7 @@ function renderCharges(){
 
 
 function renderList(){
+  var _expandState=getExpandedGroups();
   const el=document.getElementById('list');
   if(!sessions.length){el.innerHTML='<div class="empty">No sessions yet. Log your first charge above.</div>';return;}
   const sorted=[...sessions].sort((a,b)=>{
@@ -2191,8 +2245,10 @@ function renderList(){
     _mIdx++;
   });
   el.innerHTML=out;
+  restoreExpandedGroups(_expandState);
 }
 function renderTripsOnly(){
+  var _expandState=getExpandedGroups();
   var listEl=document.getElementById('list');
   if(!trips.length){listEl.innerHTML='<div class="empty">No trips logged yet.</div>';return;}
   var sorted=[...trips].sort(function(a,b){return b.date.localeCompare(a.date);});
@@ -2224,6 +2280,7 @@ function renderTripsOnly(){
     mIdx++;
   });
   listEl.innerHTML=out;
+  restoreExpandedGroups(_expandState);
 }
 
 function openQuickAdd(){
@@ -2461,6 +2518,7 @@ function editCarpool(i){
 function delCarpool(i){undoableDelete('carpool',i,'Carpool trip');}
 
 function renderCarpool(){
+  var _expandState=getExpandedGroups();
   const ti=carpools.reduce((a,x)=>a+(x.amount||0),0);
   const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
   const tp=carpools.reduce((a,x)=>a+(x.pax||0),0);
@@ -2507,6 +2565,7 @@ function renderCarpool(){
     cpOut+='</div>';cpMIdx++;
   });
   listEl.innerHTML=cpOut;
+  restoreExpandedGroups(_expandState);
 }
 
 
@@ -2612,6 +2671,7 @@ function getPetrolEquivalentCost(totalKm){
 }
 
 function renderExpenses(){
+  var _expandState=getExpandedGroups();
   // TCO stats
   var chargeCost=sessions.filter(function(s){return s.cost;}).reduce(function(a,s){return a+s.cost;},0);
   var expenseCost=expenses.filter(function(e){return e.category!=='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
@@ -2715,6 +2775,7 @@ function renderExpenses(){
     html+='</div>';mIdx++;
   });
   el.innerHTML=html;
+  restoreExpandedGroups(_expandState);
 }
 
 
