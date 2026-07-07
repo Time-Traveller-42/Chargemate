@@ -1141,8 +1141,7 @@ function renderDash(){
     var monStr=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
     var wkCharge=sessions.filter(function(s){return s.date>=monStr&&s.cost>0}).reduce(function(a,b){return a+(b.cost||0)},0);
     var netC=wkCharge;
-    var ncVal=netC<=0?('<span style="color:var(--good)">\u20b9'+Math.abs(netC)+' surplus</span>'):('\u20b9'+netC);
-    return statBox(ncVal,'Net Commute','this week');
+    return statBox('\u20b9'+netC,'Charging','this week');
   })();
   // v5.6.0: Make efficiency stat tappable -> Charges tab
   (function(){var grid=document.getElementById('stats');if(grid&&grid.children.length>1){var effBox=grid.children[1];effBox.classList.add('tappable');effBox.onclick=function(){switchTab('charges')};}})();
