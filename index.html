@@ -401,6 +401,13 @@ body.light .quick-pill:active,body.light .quick-pill.selected{color:#fff}
 
 @media(max-width:380px){.stats-grid{grid-template-columns:1fr!important}.form-row{grid-template-columns:1fr!important}}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+/* Operator bar for expression fields */
+
+
+.op-btn:active{opacity:0.7;transform:scale(0.95)}
+/* Tappable cards */
+.tappable{cursor:pointer}.tappable:active{opacity:0.7;transition:opacity .1s}
 </style>
 
 </head>
@@ -419,11 +426,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <h3>EV vs ICE <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px">tap for details →</span></h3>
     <div id="breakevenSummary" style="font-size:13px;color:var(--muted)">Configure EV Premium in Settings to track breakeven.</div>
   </div>
-  <div class="card"><h3>Estimated Range</h3><div id="rangeCard"></div>
+  <div class="card tappable" onclick="openPlanOverlay()"><h3>Estimated Range</h3><div id="rangeCard"></div>
     <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">🗺️ Plan a trip →</a></div></div>
-  <div class="card"><h3>Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
+  <div class="card tappable" onclick="switchTab('expenses')"><h3 id="spendingTitle">Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
   <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
-  <div class="card"><h3>Monthly Spend</h3><div class="chart-wrap"><canvas id="costChart" height="200"></canvas></div></div>
+  <div class="card"><h3>Monthly Expenditures</h3><div class="chart-wrap"><canvas id="costChart" height="200"></canvas></div></div>
   </div>
 
 
@@ -457,6 +464,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <div id="tripPreview" class="small" style="margin-top:8px"></div>
       <div id="tripError" class="error-msg"></div>
       <button class="primary" onclick="saveTrip()" style="margin-top:10px">Save Trip</button>
+          <button class="ghost" onclick="clearTripForm()" style="margin-top:8px">Reset</button>
       <button class="ghost" onclick="clearTripForm()" style="margin-top:8px">Reset</button>
       <button class="secondary" id="cancelTripEdit" style="display:none" onclick="cancelTripEdit()">Cancel Edit</button>
     </div>
@@ -583,12 +591,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row" style="margin-top:10px">
       <input type="hidden" id="cpKm" value="">
       <div><label>Passengers</label><input type="number" id="cpPax" placeholder="" min="1"></div>
-      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()"><div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
+      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
+<div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
     </div>
     <label style="margin-top:10px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="cpNotes" placeholder="">
     <div id="cpError" class="error-msg"></div>
     <button class="primary" onclick="saveCarpool()">Save</button>
+          <button class="ghost" onclick="clearCpForm()" style="margin-top:8px">Reset</button>
     <button class="secondary" id="cancelCpEdit" style="display:none" onclick="cancelCpEdit()">Cancel Edit</button>
   </div>
   <div class="card"><h3>Trips</h3><div id="cpList"></div></div>
@@ -606,7 +616,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row">
       <div><label>Date</label><input type="date" id="expDate"></div>
       <div><label>Category</label>
-        <select id="expCategory" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
+        <select id="expCategory" onchange="document.getElementById('purchaseNote').style.display=this.value==='purchase'?'block':'none'" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
           <option value="service">🔧 Service</option>
           <option value="insurance">🛡️ Insurance</option>
           <option value="accessories">🔌 Accessories</option>
@@ -616,17 +626,21 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <option value="purchase">🚗 Car Purchase</option>
           <option value="other">📝 Other</option>
         </select>
+<div id="purchaseNote" style="display:none;font-size:11px;color:var(--muted);font-style:italic;margin-top:4px">Not included in running cost/km calculations</div>
       </div>
     </div>
     <div class="form-row" style="margin-top:10px">
-      <div><label>Amount (₹)</label><input type="text" inputmode="decimal" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';"><div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)"><div style="font-size:9px;color:var(--muted);margin-top:2px">= EV amount if left empty</div></div>
+      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';" >
+<div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
+      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)" >
+<div style="font-size:9px;color:var(--muted);margin-top:2px">= EV amount if left empty</div></div>
     </div>
     <div style="margin-top:10px">
       <label>Description</label><input type="text" id="expDesc" placeholder="e.g. Annual insurance" style="width:100%;box-sizing:border-box">
     </div>
     <div id="expError" class="error-msg"></div>
     <button class="primary" onclick="saveExpense()">Save</button>
+          <button class="ghost" onclick="clearExpForm()" style="margin-top:8px">Reset</button>
     <button class="secondary" id="cancelExpEdit" style="display:none" onclick="cancelExpEdit()">Cancel</button>
   </div>
   <div class="card"><h3>History</h3><div id="expList"></div></div>
@@ -640,11 +654,13 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="card">
     <h3>Backup & Restore</h3>
     <p style="color:var(--muted);font-size:12px;margin:0 0 14px">Export your data as JSON or import a previous backup.</p>
-    <div style="display:flex;gap:10px;align-items:center">
+    <div style="display:flex;gap:10px">
       <button class="ghost" onclick="exportJSON()" style="flex:1">📤 Export</button>
-      <label class="file-label" for="importInput" style="flex:1;text-align:center;margin:0;cursor:pointer">📥 Import</label>
+      <label class="file-label" for="importInput" style="flex:1;margin:0;cursor:pointer">📥 Import</label>
       <input type="file" id="importInput" accept=".json" onchange="importData(event)">
     </div>
+    <div class="charged-since-row" style="margin-top:12px;cursor:pointer" onclick="var cb=document.getElementById('credExport');cb.checked=!cb.checked;cb.onchange()"><input type="checkbox" id="credExport" onchange="document.getElementById('credWarn').style.display=this.checked?'block':'none'"><label for="credExport" style="font-size:12px;color:var(--muted);cursor:pointer">Include sync credentials</label></div>
+    <div id="credWarn" style="display:none;color:#fbbf24;font-size:11px;margin-top:4px">⚠ Credentials stored in plain text. Use only for device migration. Delete file after import.</div>
   </div>
   <div class="card">
     <h3>☁️ Cloud Sync</h3>
@@ -735,6 +751,25 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.6.7 <span class="cl-date">7 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Spending card: dynamic month header, simplified labels</li>
+      <li>Removed recent efficiency trend from At a Glance</li>
+      <li>Monthly chart: Y-axis labels, grid lines, proper axes</li>
+      <li>Operator bar moved below input fields (static)</li>
+      <li>Car Purchase shows "not in cost/km" note</li>
+      <li>Trip Planner: multi-stop with uneven spacing (first leg longer)</li>
+      <li>Trip Planner: enhanced "Won't reach" with multiple options</li>
+    </ul>
+    <div class="cl-ver">v5.6.0 <span class="cl-date">7 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Operator bar (+−×÷) for math expression fields</li>
+      <li>Tappable Home cards navigate to relevant tabs</li>
+      <li>Spending card: This Month, Avg/Month, Carpool Income, Net Cost</li>
+      <li>Monthly Expenditures chart with carpool below axis and net markers</li>
+      <li>Net Commute Cost replaces Last Charged in At a Glance</li>
+      <li>Backup export/import supports sync credentials (opt-in)</li>
+    </ul>
     <div class="cl-ver">v5.5.1 <span class="cl-date">3 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fixed: Efficiency trend uses charge-to-charge as primary (longest segments). Trips only fill gaps where no charge covers them. Overlapping trips merged into longest span.</li>
@@ -962,6 +997,8 @@ try{_ls=window.localStorage;_ls.getItem('_test');}catch(e){_ls={_d:{},getItem:fu
 var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);return true;}catch(e){if(e.name==='QuotaExceededError'||e.code===22)setTimeout(function(){toast('⚠️ Storage full — export backup soon!');},100);return false;}}};
 
 // ── PERFORMANCE: Debounce utility ─────────────────────────────────────────
+
+
 function debounce(fn,ms){var t;return function(){var a=arguments,c=this;clearTimeout(t);t=setTimeout(function(){fn.apply(c,a);},ms);};}
 
 // ── SAFE NUMBER: Prevent NaN propagation ──────────────────────────────────
@@ -1137,22 +1174,41 @@ function renderDash(){
   const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
   document.getElementById('stats').innerHTML=
     statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
-    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km${recentEff?' · recent '+recentEff+(+recentEff<+avgEff-0.3?' ↓':+recentEff>+avgEff+0.3?' ↑':' →'):''}`:null)+
+    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km`:null)+
     statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'charging only':null)+
-    statBox(lastDateStr,'Last Charged',lastSess?lastSess.t:'');
+    (function(){
+    var today=new Date(),dow=today.getDay(),offset=dow===0?6:dow-1;
+    var mon=new Date(today.getTime()-offset*86400000);
+    var monStr=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
+    var wkCharge=sessions.filter(function(s){return s.date>=monStr&&s.cost>0}).reduce(function(a,b){return a+(b.cost||0)},0);
+    var wkCarpool=carpools.filter(function(c){return c.date>=monStr}).reduce(function(a,b){return a+(b.amount||0)},0);
+    var netC=wkCharge-wkCarpool;
+    var ncVal=netC<=0?('<span style="color:var(--good)">\u20b9'+Math.abs(netC)+' surplus</span>'):('\u20b9'+netC);
+    return statBox(ncVal,'Net Commute','this week');
+  })();
+  // v5.6.0: Make efficiency stat tappable -> Charges tab
+  (function(){var grid=document.getElementById('stats');if(grid&&grid.children.length>1){var effBox=grid.children[1];effBox.classList.add('tappable');effBox.onclick=function(){switchTab('charges')};}})();
 
-  // === SPENDING ===
-  const monthSpend=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null).reduce((a,x)=>a+x.cost,0);
-  const paidSessions=sessions.filter(x=>x.cost!=null&&x.cost>0);
-  const avgPerSession=paidSessions.length>0?(totalCost/paidSessions.length).toFixed(0):null;
-  const paidKwh=paidSessions.reduce((a,x)=>a+(x.kwh||0),0);
-  const avgRpKwh=paidKwh>0&&hasCost?(totalCost/paidKwh).toFixed(1):null;
+
+  // === SPENDING (v5.6.1 redesign) ===
+  var spTitle=document.getElementById('spendingTitle');if(spTitle){var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];spTitle.textContent='Spending \u2014 '+mNames[new Date().getMonth()]+' '+new Date().getFullYear();}
+  const monthCharging=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null&&x.cost>0).reduce((a,x)=>a+x.cost,0);
+  const monthExpenses=(expenses||[]).filter(x=>x.date&&x.date.startsWith(thisMonth)&&x.category!=='purchase').reduce((a,x)=>a+(x.amount||0),0);
+  const monthExpenditure=monthCharging+monthExpenses;
+  const totalCharging=sessions.filter(x=>x.cost!=null&&x.cost>0).reduce((a,x)=>a+x.cost,0);
+  const totalExpenses=(expenses||[]).filter(x=>x.category!=='purchase').reduce((a,x)=>a+(x.amount||0),0);
+  const totalLifetime=totalCharging+totalExpenses;
+  const allMonths=new Set();sessions.forEach(function(s){if(s.date&&s.cost>0)allMonths.add(s.date.slice(0,7))});(expenses||[]).forEach(function(e){if(e.date&&e.category!=='purchase')allMonths.add(e.date.slice(0,7))});
+  const numMonths=Math.max(1,allMonths.size);
+  const avgMonth=Math.round(totalLifetime/numMonths);
+  const cpThisMonthAmt=carpools.filter(x=>x.date&&x.date.startsWith(thisMonth)).reduce((a,x)=>a+(x.amount||0),0);
+  const netMonthlyCost=monthExpenditure-cpThisMonthAmt;
 
   document.getElementById('paidStats').innerHTML=
-    statBox(hasCost?'₹ '+Math.round(monthSpend).toLocaleString('en-IN'):'—','This Month')+
-    statBox(hasCost?'₹ '+Math.round(totalCost).toLocaleString('en-IN'):'—','Total Spend')+
-    statBox(avgRpKwh?'₹ '+avgRpKwh:'—','Avg ₹/unit')+
-    statBox(avgPerSession?'₹ '+avgPerSession:'—','Avg / Session',paidSessions.length>0?paidSessions.length+' paid session'+(paidSessions.length>1?'s':''):null);
+    statBox('₹ '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure')+
+    statBox('₹ '+avgMonth.toLocaleString('en-IN'),'Avg/Month')+
+    '<div class="stat-box tappable" onclick="switchTab(\'carpool\')"><div class="stat-val" style="color:var(--good)">₹ '+Math.round(cpThisMonthAmt).toLocaleString('en-IN')+'</div><div class="stat-label">Carpool</div></div>'+
+    (netMonthlyCost<=0?statBox('<span style="color:var(--good)">Surplus ₹'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN')+'</span>','Net Cost'):statBox('₹ '+Math.round(netMonthlyCost).toLocaleString('en-IN'),'Net Cost'));
 
   
 
@@ -1437,8 +1493,13 @@ function runPlan(){
             <span style="font-size:11px;color:${leg.arriveBatt>=20?'var(--good)':leg.arriveBatt>=10?'var(--warn)':'var(--danger)'};font-weight:700">${leg.reachable?leg.arriveBatt.toFixed(0)+'%':'\u2717 Short'}</span>
           </div>
           <div style="font-size:11px;color:var(--muted);margin-top:3px">${leg.startBatt.toFixed(0)}% \u2192 ${leg.reachable?leg.arriveBatt.toFixed(0)+'%':leg.arriveBatt.toFixed(0)+'% (need '+(Math.abs(leg.arriveBatt)).toFixed(0)+'% more)'}</div>
-          ${leg.chargeTo?'<div style="font-size:11px;color:var(--accent);margin-top:3px">\u26a1 Charge to '+leg.chargeTo+'%</div>':'<div style="font-size:11px;color:var(--good);margin-top:3px">\ud83c\udfc1 Destination</div>'}
-          ${!leg.reachable?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Won\u2019t reach! ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or r':'R'}educe leg to ${leg.safeReachKm} km (arrive at 20%).</div>`:''}
+          ${leg.chargeTo?(function(){
+          var nextLeg=stopsResult.legs[i+1];
+          var minNeeded=nextLeg?Math.ceil(nextLeg.dist/kmPerPct)+20:null;
+          var tip=(minNeeded&&minNeeded<leg.chargeTo&&minNeeded<=100)?'<div style="font-size:10px;color:var(--muted);margin-top:2px">Tip: '+minNeeded+'% is enough for the next '+(nextLeg.chargeTo?'stop':'destination')+'</div>':'';
+          return '<div style="font-size:11px;color:var(--accent);margin-top:3px">\u26a1 Charge to '+leg.chargeTo+'%</div>'+tip;
+        })():'<div style="font-size:11px;color:var(--good);margin-top:3px">\ud83c\udfc1 Destination</div>'}
+          ${!leg.reachable?`<div style="font-size:11px;color:var(--danger);margin-top:3px">⚠ Won’t reach! ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at the previous stop to complete this leg.':'Add a charging stop around '+leg.safeReachKm+' km into this leg. Charge to '+Math.ceil((leg.dist-leg.safeReachKm)/kmPerPct+20)+'% to continue safely.'}</div>`:''}
           ${leg.reachable&&leg.arriveBatt<10?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Critical (${leg.arriveBatt.toFixed(0)}%). ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
           ${leg.reachable&&leg.arriveBatt>=10&&leg.arriveBatt<20?`<div style="font-size:11px;color:var(--warn);margin-top:3px">\u26a0 Reserve zone. ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
         </div>
@@ -1508,12 +1569,30 @@ function runPlan(){
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Energy to add</span><span class="advice-val">${topUpKwh.toFixed(1)} kWh</span></div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (home rate)</span><span class="advice-val">₹${topUpCost}</span></div>
         ${settings.lastPublicRate?`<div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (public ~₹${settings.lastPublicRate}/unit)</span><span class="advice-val">₹${(topUpKwh*settings.lastPublicRate).toFixed(0)}</span></div>`:''}
-      </div>`:status==='impossible'?`
-      <div class="charge-advice">
-        <div class="charge-advice-title">⚡ Charge Advice</div>
-        <div class="advice-row"><span style="color:var(--muted);font-size:11px">This trip exceeds your max range (${safeRangeKm.toFixed(0)} km safe).</span></div>
-        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Plan a charging stop around ${(safeRangeKm*0.7).toFixed(0)}–${(safeRangeKm*0.8).toFixed(0)} km into the trip.</span></div>
-      </div>`:''}
+      </div>`:status==='impossible'?(function(){
+        var dcChargeTo=80,buffer=20;
+        var leg1Range=Math.max(0,(current-buffer))*kmPerPct;
+        var legNRange=(dcChargeTo-buffer)*kmPerPct;
+        var remaining=dist-leg1Range;
+        var numStops=remaining>0?Math.ceil(remaining/legNRange):0;
+        var stops=[];var cumDist=0;
+        if(numStops>0){
+          stops.push({km:Math.round(leg1Range),arrPct:buffer});cumDist=leg1Range;
+          for(var si=1;si<numStops;si++){cumDist+=legNRange;stops.push({km:Math.round(cumDist),arrPct:buffer});}
+        }
+        var lastLeg=dist-cumDist;
+        var lastStopCharge=Math.ceil(lastLeg/kmPerPct)+buffer;
+        if(lastStopCharge>dcChargeTo)lastStopCharge=dcChargeTo;
+        var stopsHtml=stops.map(function(s,i){
+          var chgTo=(i===stops.length-1)?lastStopCharge:dcChargeTo;
+          return '<div class="advice-row"><span style="color:var(--text);font-size:11px">Stop '+(i+1)+' at ~'+s.km+' km — charge to '+chgTo+'%</span></div>';
+        }).join('');
+        return '<div class="charge-advice"><div class="charge-advice-title">⚡ Charge Advice</div>'+
+          '<div class="advice-row"><span style="color:var(--muted);font-size:11px">This trip exceeds your safe range ('+safeRangeKm.toFixed(0)+' km). You need '+numStops+' charging stop'+(numStops>1?'s':'')+'.</span></div>'+
+          stopsHtml+
+          '<div class="advice-row"><span style="color:var(--good);font-size:11px">Arrive with ~'+buffer+'% battery</span></div>'+
+          '<div class="advice-row"><span style="color:var(--muted);font-size:10px">Earlier stops charge to '+dcChargeTo+'% for range; last stop charges just enough.</span></div></div>';
+      })():''}
 
       ${pubChargers.length?`
       <hr class="divider">
@@ -2399,69 +2478,97 @@ function quickCarpoolSave(dir,pax,amount){
 // ── MONTHLY COST BAR CHART ─────────────────────────────────────────────────
 function drawCostChart(){
   var canvas=document.getElementById('costChart');if(!canvas)return;
-  // Aggregate monthly: charging cost + expenses (excl. purchase)
+  // v5.6.0: Monthly Expenditures with carpool below axis + net markers
   var months={};
-  sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].charge+=s.cost;}});
-  expenses.forEach(function(e){if(e.category==='purchase'||!e.amount||!e.date)return;var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].expense+=e.amount;});
-  var monthKeys=Object.keys(months).sort().slice(-6);
-  if(monthKeys.length<2){
-    var ctx=canvas.getContext('2d');var dpr=window.devicePixelRatio||1;
-    var W=canvas.offsetWidth||canvas.parentElement.offsetWidth||300;
-    canvas.width=W*dpr;canvas.height=200*dpr;canvas.style.width=W+'px';canvas.style.height='200px';
-    ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,200);
-    ctx.fillStyle='#94a3b8';ctx.font='11px Inter,sans-serif';ctx.textAlign='left';ctx.fillText('Need at least 2 months of data',10,100);
-    return;
-  }
-  var values=monthKeys.map(function(m){return months[m].charge+months[m].expense;});
-  var labels=monthKeys.map(function(m){return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m.split('-')[1]-1];});
-  
-  var ctx=canvas.getContext('2d');var dpr=window.devicePixelRatio||1;
-  var W=canvas.offsetWidth||canvas.parentElement.offsetWidth||300;var H=200;
-  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
-  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
-  
-  var pad={l:44,r:16,t:24,b:28};
-  var gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
-  var max=Math.max.apply(null,values)*1.15;if(max===0)max=1;
-  var barW=Math.min(36,gW/values.length-6);
-  var gap=(gW-barW*values.length)/(values.length+1);
-  
-  var isLight=document.body.classList.contains('light');
-  ctx.lineWidth=1;
-  [0,0.25,0.5,0.75,1].forEach(function(f){
-    var y=pad.t+gH*(1-f);
-    ctx.strokeStyle=isLight?'#e2e8f0':'#1e2d45';ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-    ctx.fillStyle=isLight?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';ctx.textAlign='right';
-    var v=Math.round(f*max);ctx.fillText(v>=1000?(v/1000).toFixed(1)+'k':'\u20b9'+v,pad.l-4,y+3);
-  });
-  
-  // Stacked bars: charging (bottom, accent) + expenses (top, amber)
-  var accentColor=isLight?'rgba(0,102,184,0.8)':'rgba(0,229,255,0.7)';
-  var expColor='rgba(245,158,11,0.7)';
-  monthKeys.forEach(function(m,i){
-    var d=months[m];
+  sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].charge+=s.cost}});
+  (expenses||[]).forEach(function(e){if(e.date&&e.amount>0&&e.category!=='purchase'){var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].expense+=e.amount}});
+  carpools.forEach(function(c){if(c.date&&c.amount>0){var m=c.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].carpool+=c.amount}});
+  var keys=Object.keys(months).sort();if(keys.length<1)return;
+  var data=keys.map(function(k){var d=months[k];return{month:k,charge:d.charge,expense:d.expense,carpool:d.carpool,net:d.charge+d.expense-d.carpool}});
+  var maxUp=Math.max.apply(null,data.map(function(d){return d.charge+d.expense}))||100;
+  var maxDown=Math.max.apply(null,data.map(function(d){return d.carpool}))||0;
+  var avgNet=data.reduce(function(a,d){return a+d.net},0)/data.length;
+  var monNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  var dpr=window.devicePixelRatio||1;
+  var w=canvas.parentElement.clientWidth||canvas.width;
+  var h=200;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+
+  var pad={t:14,b:44,l:40,r:10};
+  var cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  var totalRange=maxUp+(maxDown||1);
+  var zeroY=pad.t+(maxUp/totalRange)*ch;
+  var barW=Math.min(28,cw/data.length*0.6);
+  var gap=(cw-barW*data.length)/(data.length+1);
+
+  // Y-axis line
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,h-pad.b);ctx.stroke();
+  // X-axis line
+  ctx.beginPath();ctx.moveTo(pad.l,h-pad.b);ctx.lineTo(w-pad.r,h-pad.b);ctx.stroke();
+  // Zero line (if negative values)
+  if(maxDown>0){ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,zeroY);ctx.lineTo(w-pad.r,zeroY);ctx.stroke();}
+  // Y-axis grid lines + labels
+  ctx.font='9px Inter,sans-serif';ctx.textAlign='right';
+  var fmtY=function(v){if(Math.abs(v)>=100000)return(v/100000).toFixed(1)+'L';if(Math.abs(v)>=1000)return(v/1000).toFixed(v>=10000?0:1)+'K';return Math.round(v).toString();};
+  var yTicks=5;var yStep=totalRange/yTicks;
+  for(var ti=0;ti<=yTicks;ti++){var val=maxUp-ti*yStep;var y=pad.t+(ti/yTicks)*ch;ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillStyle='#64748b';ctx.fillText(fmtY(val),pad.l-4,y+3);}
+
+  // Bars + markers
+  var netPts=[];
+  data.forEach(function(d,i){
     var x=pad.l+gap+(barW+gap)*i;
-    var chargeH=(d.charge/max)*gH;
-    var expH=(d.expense/max)*gH;
-    var baseY=pad.t+gH;
-    // Charging bar (bottom)
-    if(d.charge>0){ctx.fillStyle=accentColor;ctx.beginPath();ctx.roundRect(x,baseY-chargeH,barW,chargeH,3);ctx.fill();}
+    var cx=x+barW/2;
+    // Charging bar (up)
+    var chH=(d.charge/totalRange)*ch;
+    ctx.fillStyle='#00e5ff';
+    ctx.fillRect(x,zeroY-chH,barW,chH);
     // Expense bar (stacked on top)
-    if(d.expense>0){ctx.fillStyle=expColor;ctx.beginPath();ctx.roundRect(x,baseY-chargeH-expH,barW,expH,3);ctx.fill();}
-    // Label
-    ctx.fillStyle=isLight?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
-    ctx.fillText(labels[i],x+barW/2,H-4);
+    var exH=(d.expense/totalRange)*ch;
+    ctx.fillStyle='#ff6b6b';
+    ctx.fillRect(x,zeroY-chH-exH,barW,exH);
+    // Carpool bar (down)
+    if(d.carpool>0){
+      var cpH=(d.carpool/totalRange)*ch;
+      ctx.fillStyle='#4ade80';
+      ctx.fillRect(x,zeroY,barW,cpH);
+    }
+    // Net marker position
+    var netY=zeroY-(d.net/totalRange)*ch;
+    netPts.push({x:cx,y:netY,net:d.net});
+    // X label
+    var mi=parseInt(d.month.slice(5,7))-1;
+    ctx.fillStyle='#b4c0cc';ctx.font='10px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText(monNames[mi],cx,h-pad.b+14);
   });
+
+  // Net marker on each bar (dashed line at net level per month)
+  data.forEach(function(d,i){
+    var x=pad.l+gap+(barW+gap)*i;
+    var netY=zeroY-(d.net/totalRange)*ch;
+    ctx.setLineDash([3,2]);ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(x,netY);ctx.lineTo(x+barW,netY);ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
   
-  // Legend
-  ctx.font='9px Inter,sans-serif';ctx.textAlign='left';
-  ctx.fillStyle=accentColor;ctx.fillRect(pad.l+4,6,8,8);
-  ctx.fillStyle=isLight?'#334155':'#e2e8f0';ctx.fillText('Charging',pad.l+16,13);
-  ctx.fillStyle=expColor;ctx.fillRect(pad.l+74,6,8,8);
-  ctx.fillStyle=isLight?'#334155':'#e2e8f0';ctx.fillText('Expenses',pad.l+86,13);
+
+  // Legend (centered below chart)
+  ctx.font='9px Inter,sans-serif';
+  var legY=h-4;var legItems=[{c:'#00e5ff',t:'Charging'},{c:'#ff6b6b',t:'Expenses'},{c:'#4ade80',t:'Carpool'},{c:'#fbbf24',t:'Net',dash:true}];
+  var legW=legItems.reduce(function(a,it){return a+ctx.measureText(it.t).width+16;},0);
+  var legX=(w-legW)/2;
+  legItems.forEach(function(it){
+    if(it.dash){ctx.setLineDash([3,2]);ctx.strokeStyle=it.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(legX,legY-3);ctx.lineTo(legX+8,legY-3);ctx.stroke();ctx.setLineDash([]);}
+    else{ctx.fillStyle=it.c;ctx.fillRect(legX,legY-7,8,8);}
+    ctx.fillStyle='#b4c0cc';ctx.textAlign='left';ctx.fillText(it.t,legX+10,legY);legX+=ctx.measureText(it.t).width+16;
+  });
 }
 
-// ── CARPOOL ────────────────────────────────────────────────────────────────
+
 function evalExpr(str){
   // Safe math eval: only digits, +, -, *, /, ., (, ), spaces
   const s=(str||'').replace(/,/g,'').trim();
@@ -2984,6 +3091,11 @@ function copyMonthlySummary(){
 
 function exportJSON(){
   var p={version:31,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  // v5.6.0: Include sync credentials if checkbox checked
+  var credCb=document.getElementById('credExport');
+  if(credCb&&credCb.checked&&settings.gistId&&settings.gistToken){
+    p.credentials={gistId:settings.gistId,gistToken:settings.gistToken};
+  }
   var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
   dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
   safeLS.set('cm-lastExport',''+Date.now());
@@ -3221,6 +3333,13 @@ function importData(event){
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
       recomputeAllKm();render();renderCarpool();
+      // v5.6.0: Handle credentials import
+      if(p.credentials&&p.credentials.gistId&&p.credentials.gistToken){
+        if(confirm('This backup contains sync credentials. Import them?')){
+          settings.gistId=p.credentials.gistId;settings.gistToken=p.credentials.gistToken;
+          safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();
+        }
+      }
       toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
     }catch(e){toast('⚠️ Import failed: '+e.message);}finally{event.target.value='';}
   };r.readAsText(file);
