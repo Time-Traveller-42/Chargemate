@@ -619,9 +619,9 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="card">
     <h3>Backup & Restore</h3>
     <p style="color:var(--muted);font-size:12px;margin:0 0 14px">Export your data as JSON or import a previous backup.</p>
-    <div style="display:flex;gap:10px;align-items:center">
-      <button class="ghost" onclick="exportJSON()">📤 Export</button>
-      <label class="file-label" for="importInput" style="margin:0;cursor:pointer">📥 Import</label>
+    <div style="display:flex;gap:10px">
+      <button class="ghost" onclick="exportJSON()" style="flex:1">📤 Export</button>
+      <label class="file-label" for="importInput" style="flex:1;margin:0;cursor:pointer">📥 Import</label>
       <input type="file" id="importInput" accept=".json" onchange="importData(event)">
     </div>
     <div class="charged-since-row" style="margin-top:12px;cursor:pointer" onclick="var cb=document.getElementById('credExport');cb.checked=!cb.checked;cb.onchange()"><input type="checkbox" id="credExport" onchange="document.getElementById('credWarn').style.display=this.checked?'block':'none'"><label for="credExport" style="font-size:12px;color:var(--muted);cursor:pointer">Include sync credentials</label></div>
@@ -716,7 +716,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v5.6.6 <span class="cl-date">7 Jul 2026</span></div>
+    <div class="cl-ver">v5.6.7 <span class="cl-date">7 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Spending card: dynamic month header, simplified labels</li>
       <li>Removed recent efficiency trend from At a Glance</li>
@@ -2894,7 +2894,7 @@ function copyMonthlySummary(){
 }
 
 function exportJSON(){
-  var p={version:31,sessions:sessions:expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:31,sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   // v5.6.0: Include sync credentials if checkbox checked
   var credCb=document.getElementById('credExport');
   if(credCb&&credCb.checked&&settings.gistId&&settings.gistToken){
@@ -2963,7 +2963,7 @@ function saveSettings(){
   }
   toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();renderCarpool();safeLS.set('cm-chargers','[]');toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();safeLS.set('cm-chargers','[]');toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
@@ -2983,7 +2983,7 @@ document.getElementById('tripDate').value          = new Date().toISOString().sl
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
-try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
+try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
 function setTheme(mode){
@@ -3072,7 +3072,7 @@ function syncStatus(msg,err){var el=document.getElementById('syncStatus');el.tex
 
 function cloudPush(){
   if(!_syncSettings.token){syncStatus('Set a GitHub token first','err');return;}
-  var payload={sessions:sessions:expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
+  var payload={sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
   var body={files:{'chargemate-data.json':{content:JSON.stringify(payload)}}};
   if(!_syncSettings.gistId){body.description='ChargeMate Backup';body.public=false;}
   var url=_syncSettings.gistId?'https://api.github.com/gists/'+_syncSettings.gistId:'https://api.github.com/gists';
@@ -3100,7 +3100,7 @@ function cloudPull(){
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      recomputeAllKm();render();renderCarpool();
+      recomputeAllKm();render();
       syncStatus('Pulled ✓ — '+sessions.length+' charges, '+trips.length+' trips');
       toast('Cloud data loaded ✓');
     }).catch(function(e){syncStatus('Pull failed: '+e.message,'err');});
@@ -3131,7 +3131,7 @@ function importData(event){
       if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      recomputeAllKm();render();renderCarpool();
+      recomputeAllKm();render();
       // v5.6.0: Handle credentials import
       if(p.credentials&&p.credentials.gistId&&p.credentials.gistToken){
         if(confirm('This backup contains sync credentials. Import them?')){
