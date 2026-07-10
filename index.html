@@ -2411,7 +2411,7 @@ function renderQuickPills(){
   
   if(cpSorted.length){
     html+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">🚗 Carpool</div>';
-    html+='<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">';
+    html+='<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly">';
     cpSorted.forEach(function(p,i){
       html+='<div class="quick-pill" onclick="quickCarpoolSave(\''+p.dir+'\','+p.pax+','+p.amount+')">'+(dirLabels[p.dir]||p.dir)+' · '+p.pax+' pax · ₹'+p.amount+'</div>';
     });
