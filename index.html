@@ -591,7 +591,8 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row" style="margin-top:10px">
       <input type="hidden" id="cpKm" value="">
       <div><label>Passengers</label><input type="number" id="cpPax" placeholder="" min="1"></div>
-      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
+      <div id="farePills" style="margin-bottom:10px"></div>
+    <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
 <div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
     </div>
     <label style="margin-top:10px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
@@ -751,7 +752,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v5.6.7 <span class="cl-date">7 Jul 2026</span></div>
+    <div class="cl-ver">v5.6.8 <span class="cl-date">10 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Spending card: dynamic month header, simplified labels</li>
       <li>Removed recent efficiency trend from At a Glance</li>
@@ -2583,6 +2584,45 @@ function previewCpAmount(){
   if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= ₹'+r.toLocaleString('en-IN');el.style.color='var(--good)';}
   else{el.textContent='';el.style.color='';}
 }
+
+var _selectedFares=[];
+function renderFarePills(){
+  var el=document.getElementById('farePills');if(!el)return;
+  // Extract individual amounts from all carpool amountExpr fields
+  var freq={};
+  carpools.forEach(function(c){
+    var expr=c.amountExpr||String(c.amount||'');
+    expr.split('+').forEach(function(part){
+      var v=parseFloat(part.trim());
+      if(v>0&&v===Math.round(v)){freq[v]=(freq[v]||0)+1;}
+    });
+  });
+  // Sort by frequency desc, take top 8
+  var sorted=Object.keys(freq).map(function(k){return{amt:+k,count:freq[k]};})
+    .sort(function(a,b){return b.count-a.count;}).slice(0,8);
+  if(!sorted.length){el.innerHTML='';return;}
+  var html='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Tap to add riders</div>';
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  sorted.forEach(function(p){
+    var isActive=_selectedFares.indexOf(p.amt)>=0;
+    html+='<div class="quick-pill'+(isActive?' active':'')+'" onclick="toggleFare('+p.amt+')" style="'+(isActive?'background:var(--accent);color:#000;border-color:var(--accent)':'')+'">\u20b9'+p.amt+'</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+function toggleFare(amt){
+  var idx=_selectedFares.indexOf(amt);
+  if(idx>=0)_selectedFares.splice(idx,1);else _selectedFares.push(amt);
+  // Update amount field
+  var field=document.getElementById('cpAmount');
+  field.value=_selectedFares.join('+');
+  previewCpAmount();
+  // Update pax
+  var paxEl=document.getElementById('cpPax');
+  if(paxEl&&_selectedFares.length>0)paxEl.value=_selectedFares.length;
+  renderFarePills();
+}
+
 function saveCarpool(){
   const date=document.getElementById('cpDate').value,dir=document.getElementById('cpDir').value;
   const km=null;
@@ -2607,6 +2647,7 @@ function saveCarpool(){
 function cancelCpEdit(){cpEditIndex=null;document.getElementById('cpFormTitle').textContent='Log Trip';document.getElementById('cancelCpEdit').style.display='none';clearCpForm();}
 
 function clearCpForm(){
+  _selectedFares=[];renderFarePills();
   ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cpAmountPreview').textContent='';
   document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
@@ -2673,6 +2714,7 @@ function renderCarpool(){
   });
   listEl.innerHTML=cpOut;
   restoreExpandedGroups(_expandState);
+  renderFarePills();
 }
 
 
