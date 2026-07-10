@@ -591,10 +591,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row" style="margin-top:10px">
       <input type="hidden" id="cpKm" value="">
       <div><label>Passengers</label><input type="number" id="cpPax" placeholder="" min="1"></div>
-      <div id="farePills" style="margin-bottom:10px"></div>
-    <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
+      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
 <div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
     </div>
+    <div id="farePills" style="margin-top:8px"></div>
     <label style="margin-top:10px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="cpNotes" placeholder="">
     <div id="cpError" class="error-msg"></div>
@@ -2599,7 +2599,7 @@ function renderFarePills(){
   });
   // Sort by frequency desc, take top 8
   var sorted=Object.keys(freq).map(function(k){return{amt:+k,count:freq[k]};})
-    .sort(function(a,b){return b.count-a.count;}).slice(0,8);
+    .sort(function(a,b){return b.count-a.count;}).slice(0,6);
   if(!sorted.length){el.innerHTML='';return;}
   var html='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Tap to add riders</div>';
   html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
