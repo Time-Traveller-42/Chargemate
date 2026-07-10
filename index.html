@@ -2616,7 +2616,7 @@ function clearCpForm(){
 function editCarpool(i){
   const x=carpools[i];cpEditIndex=i;
   document.getElementById('cpFormTitle').textContent='Edit Trip';document.getElementById('cancelCpEdit').style.display='block';
-  document.getElementById('cpDate').value=x.date;document.getElementById('cpDir').value=x.dir||'to_office';
+  document.getElementById('cpDate').value=x.date;document.getElementById('cpDir').value=x.dir||'to_office';(function(){var dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home'};document.getElementById('cpDirDisplay').textContent=dl[x.dir]||x.dir;})();
   document.getElementById('cpKm').value=x.km!=null?x.km:'';document.getElementById('cpPax').value=x.pax!=null?x.pax:'';
   document.getElementById('cpAmount').value=x.amountExpr||x.amount||'';previewCpAmount();document.getElementById('cpNotes').value=x.notes||'';
   document.getElementById('cpFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
