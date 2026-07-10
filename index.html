@@ -576,15 +576,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <h3 id="cpFormTitle">Log Trip</h3>
     <div class="form-row">
       <div><label>Date</label><input type="date" id="cpDate"></div>
-      <div style="position:relative"><label>Direction</label>
-        <div class="popup-trigger" onclick="toggleDropdown('cpDirDropdown')">
-          <span id="cpDirDisplay">→ To Office</span>
-          <span class="arrow">▼</span>
-        </div>
+      <div><label>Direction</label>
         <input type="hidden" id="cpDir" value="to_office">
-        <div id="cpDirDropdown" class="inline-dropdown" style="display:none">
-          <div onclick="pickCpDir('to_office')">→ To Office</div>
-          <div onclick="pickCpDir('to_home')">← To Home</div>
+        <div style="display:flex;gap:8px">
+          <div id="dirPill_office" onclick="selectDir('to_office')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#000;font-size:13px;cursor:pointer">🏢 Office</div>
+          <div id="dirPill_home" onclick="selectDir('to_home')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--border);background:#0d1525;color:var(--text);font-size:13px;cursor:pointer">🏠 Home</div>
         </div>
       </div>
     </div>
@@ -594,8 +590,8 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
 <div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
     </div>
-    <div id="farePills" style="margin-top:8px"></div>
-    <label style="margin-top:10px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
+    <div id="farePills" style="margin-top:-6px"></div>
+    <label style="margin-top:14px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="cpNotes" placeholder="">
     <div id="cpError" class="error-msg"></div>
     <button class="primary" onclick="saveCarpool()">Save</button>
@@ -1178,14 +1174,9 @@ function renderDash(){
     statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km`:null)+
     statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'charging only':null)+
     (function(){
-    var today=new Date(),dow=today.getDay(),offset=dow===0?6:dow-1;
-    var mon=new Date(today.getTime()-offset*86400000);
-    var monStr=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
-    var wkCharge=sessions.filter(function(s){return s.date>=monStr&&s.cost>0}).reduce(function(a,b){return a+(b.cost||0)},0);
-    var wkCarpool=carpools.filter(function(c){return c.date>=monStr}).reduce(function(a,b){return a+(b.amount||0)},0);
-    var netC=wkCharge-wkCarpool;
-    var ncVal=netC<=0?('<span style="color:var(--good)">\u20b9'+Math.abs(netC)+' surplus</span>'):('\u20b9'+netC);
-    return statBox(ncVal,'Net Commute','this week');
+    var now=new Date();var thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    var moCarpool=carpools.filter(function(c){return c.date&&c.date.startsWith(thisMonth)}).reduce(function(a,b){return a+(b.amount||0)},0);
+    return statBox('<span style="color:var(--good)">₹ '+Math.round(moCarpool).toLocaleString('en-IN')+'</span>','Carpool','this month');
   })();
   // v5.6.0: Make efficiency stat tappable -> Charges tab
   (function(){var grid=document.getElementById('stats');if(grid&&grid.children.length>1){var effBox=grid.children[1];effBox.classList.add('tappable');effBox.onclick=function(){switchTab('charges')};}})();
@@ -1770,12 +1761,17 @@ function pickConn(val){
   document.getElementById('connDisplay').textContent=val;
   document.getElementById('connDropdown').style.display='none';
 }
-function pickCpDir(val){
+function selectDir(val){
   document.getElementById('cpDir').value=val;
-  var labels={to_office:'→ To Office',to_home:'← To Home'};
-  document.getElementById('cpDirDisplay').textContent=labels[val]||val;
-  document.getElementById('cpDirDropdown').style.display='none';
-  document.getElementById('cpKm').value='';
+  var oEl=document.getElementById('dirPill_office');
+  var hEl=document.getElementById('dirPill_home');
+  if(val==='to_office'){
+    oEl.style.background='var(--accent)';oEl.style.color='#000';oEl.style.borderColor='var(--accent)';
+    hEl.style.background='#0d1525';hEl.style.color='var(--text)';hEl.style.borderColor='var(--border)';
+  } else {
+    hEl.style.background='var(--accent)';hEl.style.color='#000';hEl.style.borderColor='var(--accent)';
+    oEl.style.background='#0d1525';oEl.style.color='var(--text)';oEl.style.borderColor='var(--border)';
+  }
 }
 function pickScType(val){
   document.getElementById('scType').value=val;
@@ -2411,7 +2407,7 @@ function renderQuickPills(){
   
   if(cpSorted.length){
     html+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">🚗 Carpool</div>';
-    html+='<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly">';
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
     cpSorted.forEach(function(p,i){
       html+='<div class="quick-pill" onclick="quickCarpoolSave(\''+p.dir+'\','+p.pax+','+p.amount+')">'+(dirLabels[p.dir]||p.dir)+' · '+p.pax+' pax · ₹'+p.amount+'</div>';
     });
@@ -2601,7 +2597,7 @@ function renderFarePills(){
   var sorted=Object.keys(freq).map(function(k){return{amt:+k,count:freq[k]};})
     .sort(function(a,b){return b.count-a.count;}).slice(0,6);
   if(!sorted.length){el.innerHTML='';return;}
-  var html='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Tap to add riders</div>';
+  var html='';
   html+='<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;gap:8px 0">';
   sorted.forEach(function(p){
     var isActive=_selectedFares.indexOf(p.amt)>=0;
