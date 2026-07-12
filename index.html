@@ -769,6 +769,19 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.8.2 <span class="cl-date">12 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>FAB quick-add: added driving type selector (City/Highway/Mixed) with visible pills</li>
+    </ul>
+    <div class="cl-ver">v5.8.1 <span class="cl-date">12 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fixed: direction pills sizing to match date input (padding:10.5px, line-height:1)</li>
+      <li>Fixed: fare pills overlapping amount preview (margin adjusted)</li>
+      <li>Fixed: "one way" removed from trip planner result header</li>
+      <li>Added: Mixed efficiency mode pill in trip planner (City/Highway/Mixed/Custom)</li>
+      <li>Added: Reset button for trip planner form</li>
+      <li>Lite: fixed brace imbalance, removed carpool runtime references</li>
+    </ul>
     <div class="cl-ver">v5.8.0 <span class="cl-date">12 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Trip Type tagging</b>: Tag charges and trips as City / Highway / Mixed</li>
@@ -2574,9 +2587,24 @@ function selectQuickCharge(idx){
     '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qcStart" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
     '<div><label style="margin:0 0 3px">Odo</label><input type="text" id="qcOdo" inputmode="numeric" placeholder="'+(lastOdo?lastOdo.toLocaleString('en-IN'):'odo')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
     '</div>'+
+    '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Driving type</label>'+
+    '<div class="eff-tabs" style="margin:6px 0">'+
+      '<div class="eff-tab" onclick="pickQcDrivingType(\'city\',this)">City</div>'+
+      '<div class="eff-tab" onclick="pickQcDrivingType(\'highway\',this)">Highway</div>'+
+      '<div class="eff-tab active" onclick="pickQcDrivingType(\'mixed\',this)">Mixed</div>'+
+    '</div>'+
+    '<input type="hidden" id="qcDrivingType" value="mixed">'+
     '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">⚡ Save</button>';
   setTimeout(function(){document.getElementById('qcOdo').focus();},100);
 }
+function pickQcDrivingType(val,el){
+  var tabs=el.parentNode.querySelectorAll('.eff-tab');
+  tabs.forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  var inp=document.getElementById('qcDrivingType');
+  if(inp)inp.value=val;
+}
+
 
 function saveQuickCharge(idx){
   if(navigator.vibrate)navigator.vibrate(10);
@@ -2594,7 +2622,8 @@ function saveQuickCharge(idx){
   sessions.forEach(function(x){if(x.odo&&x.odo>lastOdo)lastOdo=x.odo;});
   trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
   var km=lastOdo>0&&odo>lastOdo?odo-lastOdo:null;
-  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false};
+  var drivingType=document.getElementById('qcDrivingType')?document.getElementById('qcDrivingType').value:'mixed';
+  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false,drivingType:drivingType};
   sessions.unshift(obj);
   recomputeAllKm();persist();render();
   closeQuickAdd();
