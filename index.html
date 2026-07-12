@@ -447,6 +447,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="tripForm" style="display:none">
       <h3 id="tripFormTitle">New Trip</h3>
       <label>Date</label><input type="date" id="tripDate">
+      <div style="margin-top:10px">
+        <label>Trip Type</label>
+        <div class="eff-tabs" id="tripTypeTabs">
+          <div class="eff-tab" id="tt-city" onclick="pickTripType('city')">City</div>
+          <div class="eff-tab active" id="tt-mixed" onclick="pickTripType('mixed')">Mixed</div>
+          <div class="eff-tab" id="tt-highway" onclick="pickTripType('highway')">Highway</div>
+        </div>
+        <input type="hidden" id="tripType" value="mixed">
+      </div>
       <div class="form-row" style="margin-top:10px">
         <div><label>Start Odo</label><input type="number" id="tripStartOdo" placeholder="e.g. 4000" oninput="updateTripPreview()"></div>
         <div><label>End Odo</label><input type="number" id="tripEndOdo" placeholder="e.g. 4070" oninput="updateTripPreview()"></div>
@@ -484,6 +493,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <div onclick="pickType('public')">Public</div>
         </div>
       </div>
+    </div>
+    <div style="margin-top:10px">
+      <label>Driving Since Last Charge</label>
+      <div class="eff-tabs" id="drivingTypeTabs">
+        <div class="eff-tab" id="dt-city" onclick="pickDrivingType('city')">City</div>
+        <div class="eff-tab active" id="dt-mixed" onclick="pickDrivingType('mixed')">Mixed</div>
+        <div class="eff-tab" id="dt-highway" onclick="pickDrivingType('highway')">Highway</div>
+      </div>
+      <input type="hidden" id="drivingType" value="mixed">
     </div>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
       <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='Start % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
@@ -590,7 +608,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
 <div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
     </div>
-    <div id="farePills" style="margin-top:-6px"></div>
+    <div id="farePills" style="margin-top:4px"></div>
     <label style="margin-top:14px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
     <input type="text" id="cpNotes" placeholder="">
     <div id="cpError" class="error-msg"></div>
@@ -685,6 +703,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40" min="1" max="200" step="0.1"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7" min="0" step="0.1"></div></div>
     <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>ICE Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
     <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="text" id="evPremium" placeholder="e.g. 5,00,000" inputmode="numeric" oninput="formatNumericInput(this)"></div></div>
+    <div class="form-row"><div><label>Highway Penalty (%)</label><input type="number" id="highwayPenalty" placeholder="25" min="0" max="50" step="1"></div><div style="display:flex;align-items:flex-end;padding-bottom:4px"><span style="font-size:10px;color:var(--muted)">Applied when insufficient highway data for Trip Planner</span></div></div>
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
   <div class="card"><h3>Appearance</h3>
@@ -720,18 +739,19 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <hr class="divider">
     <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
     <div class="eff-tabs">
-      <div class="eff-tab active" id="eff-tab-avg" onclick="setEffMode('avg')">Avg</div>
-      <div class="eff-tab" id="eff-tab-last" onclick="setEffMode('last')">Last Trip</div>
-      <div class="eff-tab" id="eff-tab-live" onclick="setEffMode('live')">Custom</div>
+      <div class="eff-tab active" id="eff-tab-city" onclick="setEffMode('city')">City</div>
+      <div class="eff-tab" id="eff-tab-highway" onclick="setEffMode('highway')">Highway</div>
+      <div class="eff-tab" id="eff-tab-mixed" onclick="setEffMode('mixed')">Mixed</div>
+      <div class="eff-tab" id="eff-tab-custom" onclick="setEffMode('custom')">Custom</div>
     </div>
     <div id="effModeDisplay" class="eff-display" style="display:none">
       <span class="eff-display-label" id="effModeLabel">—</span>
       <span class="eff-display-val" id="effModeVal">—</span>
     </div>
-    <div id="liveEffBlock" style="display:none;margin-top:8px">
-      <label>Your Efficiency (Wh/km)</label>
-      <input type="number" id="planLiveEff" placeholder="e.g. 160" step="1" oninput="_debouncedRunPlan()">
-      <div style="font-size:10px;color:var(--muted);margin-top:4px">As shown on your car's display. Lower = more efficient. Typical: 120–200 Wh/km</div>
+    <div id="customEffBlock" style="display:none;margin-top:8px">
+      <label>Your Efficiency (km/kWh)</label>
+      <input type="number" id="planCustomEff" placeholder="e.g. 7.5" step="0.1" oninput="_debouncedRunPlan()">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Enter any km/kWh value for planning. Typical: 5–9 km/kWh</div>
     </div>
   </div>
   <div class="card" id="planStopsCard">
@@ -739,6 +759,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="planStopsList"></div>
     <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
   </div>
+  <button class="ghost" onclick="clearPlanForm()" style="margin-top:0;margin-bottom:14px">Reset</button>
   <div id="planResult"></div>
 </div>
 
@@ -748,6 +769,17 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.8.0 <span class="cl-date">12 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Trip Type tagging</b>: Tag charges and trips as City / Highway / Mixed</li>
+      <li><b>Charge form</b>: "Driving Since Last Charge" selector with smart defaults (Public → Highway, Home/Office → Mixed)</li>
+      <li><b>Trip form</b>: "Trip Type" selector (defaults to Mixed)</li>
+      <li><b>Trip Planner</b>: Efficiency mode replaced — now City / Highway / Custom instead of Avg / Last 10</li>
+      <li><b>Typed efficiency</b>: City and Highway averages computed from tagged data (source-agnostic, pooling charges + trips)</li>
+      <li><b>Fallback</b>: When insufficient tagged data (&lt;3 entries), Highway = City × (1 − penalty%)</li>
+      <li><b>Settings</b>: Configurable Highway Penalty % (default 25%)</li>
+      <li><b>Import/Export</b>: drivingType and tripType fields preserved</li>
+    </ul>
     <div class="cl-ver">v5.7.0 <span class="cl-date">10 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Spending card: dynamic month header, simplified labels</li>
@@ -1011,7 +1043,7 @@ function fmtCurrency(n){return '\u20b9 '+Math.round(n).toLocaleString('en-IN');}
 // ── STATE ──────────────────────────────────────────────────────────────────
 let settings,sessions,carpools,trips;
 try{settings=JSON.parse(safeLS.get('cm-settings')||'{}');}catch(e){settings={};}
-settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103},settings);
+settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103,highwayPenalty:25},settings);
 function stripCommas(s){return String(s).replace(/,/g,'');}
 function formatNumericInput(el){
   var v=el.value,cp=el.selectionStart||0;
@@ -1036,7 +1068,7 @@ try{trips=JSON.parse(safeLS.get('cm-trips')||'[]');}catch(e){trips=[];}
 let expenses=[];try{expenses=JSON.parse(safeLS.get('cm-expenses')||'[]');}catch(e){expenses=[];}
 let petrolLog=[];try{petrolLog=JSON.parse(safeLS.get('cm-petrol-log')||'[]');}catch(e){petrolLog=[];}
 let tripEditIndex = null;
-let planEffMode = 'avg';
+let planEffMode = 'city';
 let entryMode = 'charge'; // 'charge' or 'trip'
 let editIndex=null, cpEditIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
@@ -1048,9 +1080,9 @@ function _trapFocus(e){if(e.key==='Escape'){closeChangelog();return;}if(e.key!==
 
 
 // ── FORM DRAFT (preserve mid-entry state on tab switch) ────────────────────
-var _draftFields=['date','start','end','odo','type','pubLocation','pubMapsLink','pubRate','pubUnits','pubTotal','startTime','endTime','chargeNotes'];
+var _draftFields=['date','start','end','odo','type','pubLocation','pubMapsLink','pubRate','pubUnits','pubTotal','startTime','endTime','chargeNotes','drivingType'];
 function saveDraft(){try{var d={};_draftFields.forEach(function(f){var el=document.getElementById(f);if(el)d[f]=el.value;});sessionStorage.setItem('cm-draft',JSON.stringify(d));}catch(e){}}
-function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')||'null');if(!d)return;_draftFields.forEach(function(f){var el=document.getElementById(f);if(el&&d[f])el.value=d[f];});sessionStorage.removeItem('cm-draft');if(d.type)onTypeChange();updatePreview();}catch(e){}}
+function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')||'null');if(!d)return;_draftFields.forEach(function(f){var el=document.getElementById(f);if(el&&d[f])el.value=d[f];});sessionStorage.removeItem('cm-draft');if(d.type)onTypeChange();if(d.drivingType)pickDrivingType(d.drivingType);updatePreview();}catch(e){}}
 
 // ── TABS ───────────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -1269,12 +1301,85 @@ function getLastEff(){
   return null;
 }
 
+// ── TYPED EFFICIENCY (City/Highway) ────────────────────────────────────────
+function computeTypedEfficiency(type){
+  // Pool 1: Charge-to-charge segments where the CLOSING charge has drivingType === type
+  var odoMap={};
+  sessions.forEach(function(s){ if(s.odo>0){ var key=s.odo+'_'+s.date; odoMap[key]={odo:s.odo,s:s.s,e:s.e,date:s.date,drivingType:s.drivingType||null}; }});
+  var chargePoints=Object.keys(odoMap).map(function(k){return odoMap[k];}).sort(function(a,b){return a.odo-b.odo;});
+  var totalKm=0, totalKwh=0, count=0;
+  for(var i=1;i<chargePoints.length;i++){
+    var prev=chargePoints[i-1], curr=chargePoints[i];
+    if(curr.drivingType===type){
+      var km=curr.odo-prev.odo;
+      var kwh=(prev.e-curr.s)/100*settings.battery;
+      if(km>0&&kwh>0&&km<500){ totalKm+=km; totalKwh+=kwh; count++; }
+    }
+  }
+  // Pool 2: Trip entries where tripType === type (exclude if covered by charge segments)
+  var tripSpans=trips.filter(function(t){return t.tripType===type&&t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&t.startPct>t.endPct;});
+  tripSpans.forEach(function(t){
+    var covered=false;
+    for(var i=1;i<chargePoints.length;i++){
+      if(chargePoints[i-1].odo<=t.startOdo&&chargePoints[i].odo>=t.endOdo&&chargePoints[i].drivingType===type){covered=true;break;}
+    }
+    if(!covered){
+      var km=t.endOdo-t.startOdo;
+      var kwh=(t.startPct-t.endPct)/100*settings.battery;
+      if(km>0&&kwh>0){ totalKm+=km; totalKwh+=kwh; count++; }
+    }
+  });
+  if(count<3)return null;
+  return totalKwh>0?totalKm/totalKwh:null;
+}
+
+function getCityEff(){
+  var typed=computeTypedEfficiency('city');
+  if(typed)return typed;
+  return getAvgEff(); // fallback to overall average
+}
+function getCityEffSource(){ return computeTypedEfficiency('city')?'data':'fallback'; }
+
+function getHighwayEff(){
+  var typed=computeTypedEfficiency('highway');
+  if(typed)return typed;
+  var city=getCityEff();
+  if(city)return city*(1-settings.highwayPenalty/100);
+  var avg=getAvgEff();
+  if(avg)return avg*(1-settings.highwayPenalty/100);
+  return null;
+}
+function getHighwayEffSource(){ return computeTypedEfficiency('highway')?'data':'fallback'; }
+
+function getMixedEff(){
+  var typed=computeTypedEfficiency('mixed');
+  if(typed)return typed;
+  return getAvgEff(); // fallback to overall average
+}
+function getMixedEffSource(){ return computeTypedEfficiency('mixed')?'data':'fallback'; }
+
+// ── DRIVING TYPE / TRIP TYPE PICKERS ───────────────────────────────────────
+function pickDrivingType(val){
+  document.getElementById('drivingType').value=val;
+  ['city','mixed','highway'].forEach(function(m){document.getElementById('dt-'+m).classList.toggle('active',m===val);});
+}
+function pickTripType(val){
+  document.getElementById('tripType').value=val;
+  ['city','mixed','highway'].forEach(function(m){document.getElementById('tt-'+m).classList.toggle('active',m===val);});
+}
+function setDrivingTypeDefault(){
+  var type=document.getElementById('type').value;
+  if(type==='public'){pickDrivingType('highway');}
+  else{pickDrivingType('mixed');}
+}
+
 function getActiveEff(){
-  if(planEffMode==='avg') return getAvgEff();
-  if(planEffMode==='last'){ const l=getLastEff(); return l?l.eff:null; }
-  if(planEffMode==='live'){
-    const whkm=+document.getElementById('planLiveEff').value;
-    return whkm>0?1000/whkm:null;
+  if(planEffMode==='city') return getCityEff();
+  if(planEffMode==='highway') return getHighwayEff();
+  if(planEffMode==='mixed') return getMixedEff();
+  if(planEffMode==='custom'){
+    const v=+document.getElementById('planCustomEff').value;
+    return v>0?v:null;
   }
   return null;
 }
@@ -1282,10 +1387,10 @@ function getActiveEff(){
 // ── EFF MODE UI ────────────────────────────────────────────────────────────
 function setEffMode(mode){
   planEffMode=mode;
-  ['avg','last','live'].forEach(m=>{
+  ['city','highway','mixed','custom'].forEach(m=>{
     document.getElementById('eff-tab-'+m).classList.toggle('active',m===mode);
   });
-  document.getElementById('liveEffBlock').style.display=mode==='live'?'block':'none';
+  document.getElementById('customEffBlock').style.display=mode==='custom'?'block':'none';
   updateEffModeDisplay();
   runPlan();
 }
@@ -1295,16 +1400,32 @@ function updateEffModeDisplay(){
   const labelEl=document.getElementById('effModeLabel');
   const valEl  =document.getElementById('effModeVal');
 
-  if(planEffMode==='live'){ display.style.display='none'; return; }
+  if(planEffMode==='custom'){ display.style.display='none'; return; }
 
-  if(planEffMode==='avg'){
-    const e=getAvgEff();
-    if(e){ labelEl.textContent='Overall average'; valEl.textContent=(1000/e).toFixed(0)+' Wh/km  ·  '+e.toFixed(2)+' km/kWh'; display.style.display='flex'; }
-    else { display.style.display='none'; }
-  } else if(planEffMode==='last'){
-    const l=getLastEff();
-    if(l){ labelEl.textContent='Last trip ('+fmtDateShort(l.date)+')'; valEl.textContent=(1000/l.eff).toFixed(0)+' Wh/km  ·  '+l.eff.toFixed(2)+' km/kWh'; display.style.display='flex'; }
-    else { display.style.display='none'; }
+  if(planEffMode==='city'){
+    const e=getCityEff();
+    if(e){ 
+      const src=getCityEffSource();
+      labelEl.textContent=src==='data'?'City (from tagged data)':'City (overall avg)'; 
+      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      display.style.display='flex'; 
+    } else { display.style.display='none'; }
+  } else if(planEffMode==='highway'){
+    const e=getHighwayEff();
+    if(e){ 
+      const src=getHighwayEffSource();
+      labelEl.textContent=src==='data'?'Highway (from tagged data)':'Highway (~est.)'; 
+      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      display.style.display='flex'; 
+    } else { display.style.display='none'; }
+  } else if(planEffMode==='mixed'){
+    const e=getMixedEff();
+    if(e){ 
+      const src=getMixedEffSource();
+      labelEl.textContent=src==='data'?'Mixed (from tagged data)':'Mixed (overall avg)'; 
+      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      display.style.display='flex'; 
+    } else { display.style.display='none'; }
   }
 }
 
@@ -1340,6 +1461,15 @@ function renderPlanStops(){
       <div style="display:flex;align-items:flex-end;padding-bottom:4px"><button class="btn-sm btn-del" onclick="removePlanStop(${i})">✕</button></div>
     </div>
   `).join('');
+}
+
+function clearPlanForm(){
+  document.getElementById('planCurrent').value='';
+  document.getElementById('planDist').value='';
+  planStops=[];
+  renderPlanStops();
+  document.getElementById('planResult').innerHTML='';
+  setEffMode('city');
 }
 
 function calcWithStops(current, totalDist, kmPerPct, stops){
@@ -1390,7 +1520,7 @@ function runPlan(){
   if(!eff){
   
     resultEl.innerHTML=`<div class="card"><div class="empty" style="padding:12px 0">
-      ${planEffMode==='live'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
+      ${planEffMode==='custom'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
     </div></div>`;
     return;
   }
@@ -1501,7 +1631,7 @@ function runPlan(){
 
   resultEl.innerHTML=`
     <div class="card">
-      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(one way · ${dist} km) · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
+      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(${dist} km) · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
 
       
 
@@ -1784,6 +1914,8 @@ function onTypeChange(){
   document.getElementById('publicBlock').style.display=isPub?'block':'none';
   document.getElementById('notesBlock').style.display=isPub?'block':'none';
   document.getElementById('timeRow').style.display=isPub?'grid':'none';
+  // Smart default for driving type
+  setDrivingTypeDefault();
   // Show auto-duration for office/home
   updateAutoDuration();
   // Auto-fill from last public charge if fields are empty
@@ -1865,8 +1997,9 @@ function saveCharge(){
 
   const notes=document.getElementById('chargeNotes').value.trim()||null;
   const chargedSince=document.getElementById('chargeChargedSince').checked;
+  const drivingType=document.getElementById('drivingType').value||null;
   const obj={id:editIndex!==null?sessions[editIndex].id:(Date.now()+Math.random()),date:document.getElementById('date').value,
-    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince};
+    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince,drivingType:drivingType};
 
   const wasEditing=editIndex!==null;
   if(wasEditing){sessions[editIndex]=obj;editIndex=null;
@@ -1897,6 +2030,8 @@ function clearChargeForm(){
   document.getElementById('formError').textContent='';
   document.getElementById('odoWarn').textContent='';
   document.getElementById('odo').classList.remove('warn-input');
+  // Reset driving type to smart default based on current charge type
+  setDrivingTypeDefault();
   // Native time inputs clear themselves via value=''
   document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
   document.getElementById('autoDuration').style.display='none';
@@ -1961,9 +2096,10 @@ function saveTrip(){
   var consumption=(sp-ep)*settings.battery/100;
   var isRegen=sp<=ep;
   var eff=isRegen?null:km/consumption;
+  var tripTypeVal=document.getElementById('tripType').value||null;
   var obj={id:tripEditIndex!==null?trips[tripEditIndex].id:(Date.now()+Math.random()),
     date:date,startOdo:so,endOdo:eo,startPct:sp,endPct:ep,km:km,
-    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince};
+    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal};
   var wasEditing=tripEditIndex!==null;
   if(wasEditing){trips[tripEditIndex]=obj;tripEditIndex=null;
     document.getElementById('tripFormTitle').textContent='New Trip';
@@ -1980,6 +2116,7 @@ function clearTripForm(){
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
+  pickTripType('mixed');
 }
 
 function cancelTripEdit(){
@@ -2001,6 +2138,7 @@ function editTrip(i){
   document.getElementById('tripEndPct').value=x.endPct;
   document.getElementById('tripNote').value=x.note||'';
   document.getElementById('tripChargedSince').checked=x.chargedSince||false;
+  pickTripType(x.tripType||'mixed');
   updateTripPreview();
 }
 
@@ -2197,6 +2335,8 @@ function editCharge(i){
   }
   updatePreview();
   document.getElementById('chargeNotes').value=x.notes||'';
+  // Restore driving type
+  pickDrivingType(x.drivingType||'mixed');
   document.getElementById('chargeFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -3128,7 +3268,7 @@ function copyMonthlySummary(){
 }
 
 function exportJSON(){
-  var p={version:31,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:32,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   // v5.6.0: Include sync credentials if checkbox checked
   var credCb=document.getElementById('credExport');
   if(credCb&&credCb.checked&&settings.gistId&&settings.gistToken){
@@ -3184,7 +3324,7 @@ function dlShare(blob,name,text){
 
 // ── SETTINGS ───────────────────────────────────────────────────────────────
 function saveSettings(){
-  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium'};
+  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium',highwayPenalty:'highwayPenalty'};
   Object.entries(fields).forEach(([k,id])=>{const v=stripCommas(document.getElementById(id).value);if(v!=='')settings[k]=+v;});
   // Validate battery range
   if(settings.battery<1||settings.battery>200){toast('Battery must be 1–200 kWh');settings.battery=Math.max(1,Math.min(200,settings.battery));}
@@ -3207,6 +3347,7 @@ function populateSettingsInputs(){
   document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
   document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
   document.getElementById('evPremium').value          = settings.evPremium||'';
+  document.getElementById('highwayPenalty').value     = settings.highwayPenalty||25;
   // Last saved timestamp
   var ls=safeLS.get('cm-lastSaved');var lsEl=document.getElementById('lastSavedInfo');
   if(ls&&lsEl){var ago=Math.floor((Date.now()-Number(ls))/60000);lsEl.textContent='Data last saved: '+(ago<1?'just now':ago<60?ago+' min ago':Math.floor(ago/60)+'h ago')+' · '+sessions.length+' charges · '+trips.length+' trips';}
