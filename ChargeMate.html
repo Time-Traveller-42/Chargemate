@@ -415,38 +415,47 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 <!-- Bottom nav added after container -->
 
 
-<!-- Drawer removed in v5.0 — replaced by bottom sheet -->
+<!-- Drawer removed in v5.0 â€” replaced by bottom sheet -->
 
 <div class="container">
 
-<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DASHBOARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="dash" class="view active">
   <div class="card"><h3>At a Glance</h3><div class="stats-grid" id="stats"></div></div>
   <div class="card" id="breakevenHome" onclick="switchTab('expenses');setTimeout(function(){document.getElementById('breakevenResult').scrollIntoView({behavior:'smooth'})},100)" style="cursor:pointer">
-    <h3>EV vs ICE <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px">tap for details →</span></h3>
+    <h3>EV vs ICE <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px">tap for details â†’</span></h3>
     <div id="breakevenSummary" style="font-size:13px;color:var(--muted)">Configure EV Premium in Settings to track breakeven.</div>
   </div>
   <div class="card tappable" onclick="openPlanOverlay()"><h3>Estimated Range</h3><div id="rangeCard"></div>
-    <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">🗺️ Plan a trip →</a></div></div>
-  <div class="card tappable" onclick="switchTab('expenses')"><h3 id="spendingTitle">Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
+    <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">ðŸ—ºï¸ Plan a trip â†’</a></div></div>
+  <div class="card tappable" onclick="switchTab('expenses')"><h3 id="spendingTitle">Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">ðŸ“‹ Copy monthly summary</button></div>
   <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
   <div class="card"><h3>Monthly Expenditures</h3><div class="chart-wrap"><canvas id="costChart" height="200"></canvas></div></div>
   </div>
 
 
-<!-- ═══════════════════ CHARGES ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CHARGES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="charges" class="view">
 
-<!-- ═══════════════════ CHARGES ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CHARGES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   
   <div class="card">
     <div class="entry-mode-toggle">
-      <div class="entry-mode-btn active" id="mode-charge" onclick="setEntryMode('charge')">⚡ Charge</div>
-      <div class="entry-mode-btn" id="mode-trip" onclick="setEntryMode('trip')">🚗 Trip</div>
+      <div class="entry-mode-btn active" id="mode-charge" onclick="setEntryMode('charge')">âš¡ Charge</div>
+      <div class="entry-mode-btn" id="mode-trip" onclick="setEntryMode('trip')">ðŸš— Trip</div>
     </div>
     <div id="tripForm" style="display:none">
       <h3 id="tripFormTitle">New Trip</h3>
       <label>Date</label><input type="date" id="tripDate">
+      <div style="margin-top:10px">
+        <label>Trip Type</label>
+        <div class="eff-tabs" id="tripTypeTabs">
+          <div class="eff-tab" id="tt-city" onclick="pickTripType('city')">City</div>
+          <div class="eff-tab active" id="tt-mixed" onclick="pickTripType('mixed')">Mixed</div>
+          <div class="eff-tab" id="tt-highway" onclick="pickTripType('highway')">Highway</div>
+        </div>
+        <input type="hidden" id="tripType" value="mixed">
+      </div>
       <div class="form-row" style="margin-top:10px">
         <div><label>Start Odo</label><input type="number" id="tripStartOdo" placeholder="e.g. 4000" oninput="updateTripPreview()"></div>
         <div><label>End Odo</label><input type="number" id="tripEndOdo" placeholder="e.g. 4070" oninput="updateTripPreview()"></div>
@@ -475,7 +484,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <div style="position:relative"><label>Type</label>
         <div class="popup-trigger" onclick="toggleDropdown('typeDropdown')">
           <span id="typeDisplay">Office</span>
-          <span class="arrow">▼</span>
+          <span class="arrow">â–¼</span>
         </div>
         <input type="hidden" id="type" value="office">
         <div id="typeDropdown" class="inline-dropdown" style="display:none">
@@ -484,6 +493,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <div onclick="pickType('public')">Public</div>
         </div>
       </div>
+    </div>
+    <div style="margin-top:10px">
+      <label>Driving Since Last Charge</label>
+      <div class="eff-tabs" id="drivingTypeTabs">
+        <div class="eff-tab" id="dt-city" onclick="pickDrivingType('city')">City</div>
+        <div class="eff-tab active" id="dt-mixed" onclick="pickDrivingType('mixed')">Mixed</div>
+        <div class="eff-tab" id="dt-highway" onclick="pickDrivingType('highway')">Highway</div>
+      </div>
+      <input type="hidden" id="drivingType" value="mixed">
     </div>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
       <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='Start % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
@@ -509,7 +527,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
         <div style="position:relative"><label>Connector</label>
           <div class="popup-trigger" onclick="toggleDropdown('connDropdown')">
             <span id="connDisplay">DC</span>
-            <span class="arrow">▼</span>
+            <span class="arrow">â–¼</span>
           </div>
           <input type="hidden" id="pubConnector" value="DC">
           <div id="connDropdown" class="inline-dropdown" style="display:none">
@@ -517,15 +535,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
             <div onclick="pickConn('DC')">DC (Fast)</div>
           </div>
         </div>
-        <div><label>Rated kW</label><input type="number" id="pubKw" placeholder="—" step="0.1" oninput="formatNumericInput(this)"></div>
+        <div><label>Rated kW</label><input type="number" id="pubKw" placeholder="â€”" step="0.1" oninput="formatNumericInput(this)"></div>
       </div>
       <hr class="divider">
       <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Cost</div>
       <div class="form-row">
-        <div><label>₹ / unit</label><input type="number" id="pubRate" placeholder="e.g. 18" step="0.01" oninput="autoCalcPublic('rate')"></div>
+        <div><label>â‚¹ / unit</label><input type="number" id="pubRate" placeholder="e.g. 18" step="0.01" oninput="autoCalcPublic('rate')"></div>
         <div><label>Units (kWh)</label><input type="number" id="pubUnits" placeholder="auto" step="0.01" oninput="autoCalcPublic('units')"></div>
       </div>
-      <label>Total ₹</label>
+      <label>Total â‚¹</label>
       <input type="number" id="pubTotal" placeholder="auto-calculated" oninput="autoCalcPublic('total')">
     </div>
     
@@ -556,7 +574,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <input type="text" id="scName" placeholder="Charger name" style="margin-bottom:6px">
       <input type="url" id="scLink" placeholder="Google Maps link (paste share URL)" style="margin-bottom:6px">
       <div class="form-row" style="margin-bottom:6px">
-        <div style="position:relative"><div class="popup-trigger" onclick="toggleDropdown('scTypeDropdown')" style="width:fit-content;min-width:80px"><span id="scTypeDisplay">DC</span><span class="arrow">▼</span></div><input type="hidden" id="scType" value="DC"><div id="scTypeDropdown" class="inline-dropdown" style="display:none;min-width:120px"><div onclick="pickScType('DC')">DC (Fast)</div><div onclick="pickScType('AC')">AC (Slow)</div></div></div>
+        <div style="position:relative"><div class="popup-trigger" onclick="toggleDropdown('scTypeDropdown')" style="width:fit-content;min-width:80px"><span id="scTypeDisplay">DC</span><span class="arrow">â–¼</span></div><input type="hidden" id="scType" value="DC"><div id="scTypeDropdown" class="inline-dropdown" style="display:none;min-width:120px"><div onclick="pickScType('DC')">DC (Fast)</div><div onclick="pickScType('AC')">AC (Slow)</div></div></div>
         <div><input type="number" id="scKw" placeholder="kW" step="0.1"></div>
       </div>
       <button class="ghost" onclick="addSavedCharger()" style="font-size:11px">+ Save Charger</button>
@@ -569,7 +587,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   </div>
 </div>
 
-<!-- ═══════════════════ EXPENSES ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• EXPENSES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="expenses" class="view">
   <div class="card"><h3>Total Cost of Ownership</h3><div class="stats-grid" id="expenseStats"></div></div>
   <div class="card">
@@ -582,22 +600,22 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <div><label>Date</label><input type="date" id="expDate"></div>
       <div><label>Category</label>
         <select id="expCategory" onchange="document.getElementById('purchaseNote').style.display=this.value==='purchase'?'block':'none'" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px">
-          <option value="service">🔧 Service</option>
-          <option value="insurance">🛡️ Insurance</option>
-          <option value="accessories">🔌 Accessories</option>
-          <option value="tyres">🔄 Tyres</option>
-          <option value="repair">⚙️ Repair</option>
-          <option value="tolls">🛣️ Tolls</option>
-          <option value="purchase">🚗 Car Purchase</option>
-          <option value="other">📝 Other</option>
+          <option value="service">ðŸ”§ Service</option>
+          <option value="insurance">ðŸ›¡ï¸ Insurance</option>
+          <option value="accessories">ðŸ”Œ Accessories</option>
+          <option value="tyres">ðŸ”„ Tyres</option>
+          <option value="repair">âš™ï¸ Repair</option>
+          <option value="tolls">ðŸ›£ï¸ Tolls</option>
+          <option value="purchase">ðŸš— Car Purchase</option>
+          <option value="other">ðŸ“ Other</option>
         </select>
 <div id="purchaseNote" style="display:none;font-size:11px;color:var(--muted);font-style:italic;margin-top:4px">Not included in running cost/km calculations</div>
       </div>
     </div>
     <div class="form-row" style="margin-top:10px">
-      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';" >
+      <div><label>Amount (â‚¹)</label><input type="text" inputmode="text" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';" >
 <div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)" >
+      <div><label>ICE Equivalent (â‚¹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)" >
 <div style="font-size:9px;color:var(--muted);margin-top:2px">= EV amount if left empty</div></div>
     </div>
     <div style="margin-top:10px">
@@ -614,21 +632,21 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 
 
-<!-- ═══════════════════ BACKUP ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BACKUP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="backup" class="view">
   <div class="card">
     <h3>Backup & Restore</h3>
     <p style="color:var(--muted);font-size:12px;margin:0 0 14px">Export your data as JSON or import a previous backup.</p>
     <div style="display:flex;gap:10px">
-      <button class="ghost" onclick="exportJSON()" style="flex:1">📤 Export</button>
-      <label class="file-label" for="importInput" style="flex:1;margin:0;cursor:pointer">📥 Import</label>
+      <button class="ghost" onclick="exportJSON()" style="flex:1">ðŸ“¤ Export</button>
+      <label class="file-label" for="importInput" style="flex:1;margin:0;cursor:pointer">ðŸ“¥ Import</label>
       <input type="file" id="importInput" accept=".json" onchange="importData(event)">
     </div>
     <div class="charged-since-row" style="margin-top:12px;cursor:pointer" onclick="var cb=document.getElementById('credExport');cb.checked=!cb.checked;cb.onchange()"><input type="checkbox" id="credExport" onchange="document.getElementById('credWarn').style.display=this.checked?'block':'none'"><label for="credExport" style="font-size:12px;color:var(--muted);cursor:pointer">Include sync credentials</label></div>
-    <div id="credWarn" style="display:none;color:#fbbf24;font-size:11px;margin-top:4px">⚠ Credentials stored in plain text. Use only for device migration. Delete file after import.</div>
+    <div id="credWarn" style="display:none;color:#fbbf24;font-size:11px;margin-top:4px">âš  Credentials stored in plain text. Use only for device migration. Delete file after import.</div>
   </div>
   <div class="card">
-    <h3>☁️ Cloud Sync</h3>
+    <h3>â˜ï¸ Cloud Sync</h3>
     <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Sync data via GitHub Gist. Create a <a href="https://github.com/settings/tokens/new?scopes=gist&description=ChargeMate" target="_blank" style="color:var(--accent)">Personal Access Token</a> (gist scope only).</div>
     <label>GitHub Token</label>
     <input type="password" id="syncToken" placeholder="ghp_..." oninput="saveSyncSettings()">
@@ -639,20 +657,21 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <label class="toggle"><input type="checkbox" id="syncAutoEnabled" onchange="saveSyncSettings()"><span class="toggle-slider"></span></label>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="ghost" onclick="cloudPush()" style="flex:1;font-size:11px">⬆ Push</button>
-      <button class="ghost" onclick="cloudPull()" style="flex:1;font-size:11px">⬇ Pull</button>
+      <button class="ghost" onclick="cloudPush()" style="flex:1;font-size:11px">â¬† Push</button>
+      <button class="ghost" onclick="cloudPull()" style="flex:1;font-size:11px">â¬‡ Pull</button>
     </div>
     <div id="syncStatus" style="font-size:10px;color:var(--muted);margin-top:6px;min-height:14px"></div>
   </div>
 </div>
 
-<!-- ═══════════════════ SETTINGS ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SETTINGS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="settings" class="view">
   <div class="card">
     <h3>Vehicle &amp; Rates</h3>
-    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40" min="1" max="200" step="0.1"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7" min="0" step="0.1"></div></div>
-    <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>ICE Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
-    <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="text" id="evPremium" placeholder="e.g. 5,00,000" inputmode="numeric" oninput="formatNumericInput(this)"></div></div>
+    <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40" min="1" max="200" step="0.1"></div><div><label>Home Rate (â‚¹/unit)</label><input type="number" id="homeRate" placeholder="7" min="0" step="0.1"></div></div>
+    <div class="form-row"><div><label>Office Rate (â‚¹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>ICE Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
+    <div class="form-row"><div><label>ICE Fuel Price (â‚¹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (â‚¹)</label><input type="text" id="evPremium" placeholder="e.g. 5,00,000" inputmode="numeric" oninput="formatNumericInput(this)"></div></div>
+    <div class="form-row"><div><label>Highway Penalty (%)</label><input type="number" id="highwayPenalty" placeholder="25" min="0" max="50" step="1"></div><div style="display:flex;align-items:flex-end;padding-bottom:4px"><span style="font-size:10px;color:var(--muted)">Applied when insufficient highway data for Trip Planner</span></div></div>
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
   <div class="card"><h3>Appearance</h3>
@@ -668,14 +687,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="card">
     <h3>Advanced</h3>
     <div id="lastSavedInfo" style="font-size:10px;color:var(--muted);margin-bottom:8px"></div>
-    <span class="danger-link" onclick="clearAll()">⚠ Clear all data permanently</span>
+    <span class="danger-link" onclick="clearAll()">âš  Clear all data permanently</span>
   </div>
 </div>
 
-<!-- ═══════════════════ PLANNER ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PLANNER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="planner" class="view">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-    <button onclick="switchTab('dash')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer">← Back</button>
+    <button onclick="switchTab('dash')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer">â† Back</button>
     <span style="font-size:13px;font-weight:600;color:var(--text)">Trip Planner</span>
   </div>
   <div class="card">
@@ -688,18 +707,19 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <hr class="divider">
     <div style="font-size:11px;color:var(--accent);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Efficiency Mode</div>
     <div class="eff-tabs">
-      <div class="eff-tab active" id="eff-tab-avg" onclick="setEffMode('avg')">Avg</div>
-      <div class="eff-tab" id="eff-tab-last" onclick="setEffMode('last')">Last Trip</div>
-      <div class="eff-tab" id="eff-tab-live" onclick="setEffMode('live')">Custom</div>
+      <div class="eff-tab active" id="eff-tab-city" onclick="setEffMode('city')">City</div>
+      <div class="eff-tab" id="eff-tab-highway" onclick="setEffMode('highway')">Highway</div>
+      <div class="eff-tab" id="eff-tab-mixed" onclick="setEffMode('mixed')">Mixed</div>
+      <div class="eff-tab" id="eff-tab-custom" onclick="setEffMode('custom')">Custom</div>
     </div>
     <div id="effModeDisplay" class="eff-display" style="display:none">
-      <span class="eff-display-label" id="effModeLabel">—</span>
-      <span class="eff-display-val" id="effModeVal">—</span>
+      <span class="eff-display-label" id="effModeLabel">â€”</span>
+      <span class="eff-display-val" id="effModeVal">â€”</span>
     </div>
-    <div id="liveEffBlock" style="display:none;margin-top:8px">
-      <label>Your Efficiency (Wh/km)</label>
-      <input type="number" id="planLiveEff" placeholder="e.g. 160" step="1" oninput="_debouncedRunPlan()">
-      <div style="font-size:10px;color:var(--muted);margin-top:4px">As shown on your car's display. Lower = more efficient. Typical: 120–200 Wh/km</div>
+    <div id="customEffBlock" style="display:none;margin-top:8px">
+      <label>Your Efficiency (km/kWh)</label>
+      <input type="number" id="planCustomEff" placeholder="e.g. 7.5" step="0.1" oninput="_debouncedRunPlan()">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Enter any km/kWh value for planning. Typical: 5â€“9 km/kWh</div>
     </div>
   </div>
   <div class="card" id="planStopsCard">
@@ -707,6 +727,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="planStopsList"></div>
     <button class="ghost" onclick="addPlanStop()" style="margin-top:8px;font-size:11px">+ Add Charging Stop</button>
   </div>
+  <button class="ghost" onclick="clearPlanForm()" style="margin-top:0;margin-bottom:14px">Reset</button>
   <div id="planResult"></div>
 </div>
 
@@ -714,9 +735,30 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 <div class="changelog-modal" id="changelogModal" onclick="if(event.target===this)closeChangelog()">
   <div class="changelog-content">
-    <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
-    <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v5.6.7 <span class="cl-date">7 Jul 2026</span></div>
+    <div class="cl-close"><span onclick="closeChangelog()">Ã—</span></div>
+    <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">âš¡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.8.1 <span class="cl-date">12 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fixed: direction pills sizing to match date input (padding:10.5px, line-height:1)</li>
+      <li>Fixed: fare pills overlapping amount preview (margin-top adjusted)</li>
+      <li>Fixed: "one way" removed from trip planner result header</li>
+      <li>Added: Mixed efficiency mode pill in trip planner (City/Highway/Mixed/Custom)</li>
+      <li>Added: Reset button for trip planner form</li>
+      <li>Fixed: fare pills spacing (margin-top:0, Notes margin-top adjusted)</li>
+      <li>Lite: fixed brace imbalance, removed all carpool runtime references, fixed malformed export JSON</li>
+    </ul>
+    <div class="cl-ver">v5.8.0 <span class="cl-date">12 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Trip Type tagging</b>: Tag charges and trips as City / Highway / Mixed</li>
+      <li><b>Charge form</b>: "Driving Since Last Charge" selector with smart defaults (Public â†’ Highway, Home/Office â†’ Mixed)</li>
+      <li><b>Trip form</b>: "Trip Type" selector (defaults to Mixed)</li>
+      <li><b>Trip Planner</b>: Efficiency mode replaced â€” now City / Highway / Custom instead of Avg / Last 10</li>
+      <li><b>Typed efficiency</b>: City and Highway averages computed from tagged data (source-agnostic, pooling charges + trips)</li>
+      <li><b>Fallback</b>: When insufficient tagged data (&lt;3 entries), Highway = City Ã— (1 âˆ’ penalty%)</li>
+      <li><b>Settings</b>: Configurable Highway Penalty % (default 25%)</li>
+      <li><b>Import/Export</b>: drivingType and tripType fields preserved</li>
+    </ul>
+    <div class="cl-ver">v5.7.0 <span class="cl-date">10 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Spending card: dynamic month header, simplified labels</li>
       <li>Removed recent efficiency trend from At a Glance</li>
@@ -728,10 +770,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     </ul>
     <div class="cl-ver">v5.6.0 <span class="cl-date">7 Jul 2026</span></div>
     <ul class="cl-list">
-      <li>Operator bar (+−×÷) for math expression fields</li>
+      <li>Operator bar (+âˆ’Ã—Ã·) for math expression fields</li>
       <li>Tappable Home cards navigate to relevant tabs</li>
       <li>Spending card: This Month, Avg/Month, Carpool Income, Net Cost</li>
-      <li>Monthly Expenditures chart with carpool below axis and net markers</li>
+      <li>Monthly Expenditures chart with net markers and net markers</li>
       <li>Net Commute Cost replaces Last Charged in At a Glance</li>
       <li>Backup export/import supports sync credentials (opt-in)</li>
     </ul>
@@ -752,20 +794,20 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     </ul>
     <div class="cl-ver">v5.4 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
-      <li>Quick Add: pattern detection now uses exact (type, start%, end%) — tap pattern, enter only odo, save.</li>
+      <li>Quick Add: pattern detection now uses exact (type, start%, end%) â€” tap pattern, enter only odo, save.</li>
     </ul>
     <div class="cl-ver">v5.3 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
-      <li><b>FAB Quick Add</b>: Floating + button — tap to quick-log charges or carpools from any screen.</li>
+      <li><b>FAB Quick Add</b>: Floating + button â€” tap to quick-log charges or carpools from any screen.</li>
       <li><b>Pattern detection</b>: Learns your common charge types and carpool routes, shows them as one-tap pills.</li>
-      <li><b>Charge</b>: Select pattern → enter start% + odo → save. Two fields.</li>
+      <li><b>Charge</b>: Select pattern â†’ enter start% + odo â†’ save. Two fields.</li>
       <li><b>Carpool</b>: One tap saves frequent routes instantly.</li>
     </ul>
     <div class="cl-ver">v5.2 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
-      <li><b>Quick Charge</b>: Pattern-based one-tap logging — detects your common charge types, just enter start% and odo.</li>
+      <li><b>Quick Charge</b>: Pattern-based one-tap logging â€” detects your common charge types, just enter start% and odo.</li>
       <li><b>Monthly Spend chart</b>: Bar chart showing charging cost per month on Home.</li>
-      <li><b>Planner back button</b>: "← Back" at top of Trip Planner view.</li>
+      <li><b>Planner back button</b>: "â† Back" at top of Trip Planner view.</li>
       <li><b>Haptic feedback</b>: Subtle vibration on tab switches (APK).</li>
     </ul>
     <div class="cl-ver">v5.0.2 <span class="cl-date">2 Jul 2026</span></div>
@@ -784,7 +826,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="cl-ver">v5.0 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Bottom navigation</b>: Tabs moved from top to bottom (fixed 56px nav bar).</li>
-      <li><b>Bottom sheet</b>: Replaces hamburger drawer — swipe down to dismiss.</li>
+      <li><b>Bottom sheet</b>: Replaces hamburger drawer â€” swipe down to dismiss.</li>
       <li><b>Font</b>: Changed to Inter (removed JetBrains Mono).</li>
       <li><b>SVG icons</b>: Navigation uses inline SVG icons.</li>
       <li><b>Carpool icon</b>: People/users icon instead of text.</li>
@@ -793,7 +835,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="cl-ver">v4.10.6 <span class="cl-date">1 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Removed</b>: Service Worker entirely (was caching cross-origin resources, blocking font loading, and breaking app on subsequent loads).</li>
-      <li><b>Fixed</b>: closePopup() was undefined — charger picker would crash on selection or overlay dismiss.</li>
+      <li><b>Fixed</b>: closePopup() was undefined â€” charger picker would crash on selection or overlay dismiss.</li>
     </ul>
     <div class="cl-ver">v4.10.5 <span class="cl-date">1 Jul 2026</span></div>
     <ul class="cl-list">
@@ -817,13 +859,13 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     </ul>
     <div class="cl-ver">v4.10.1 <span class="cl-date">27 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>Fixed</b>: ICE Equivalent of ₹0 no longer incorrectly treated as blank.</li>
+      <li><b>Fixed</b>: ICE Equivalent of â‚¹0 no longer incorrectly treated as blank.</li>
     </ul>
     <div class="cl-ver">v4.10 <span class="cl-date">27 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>Fixed</b>: Swipe sensitivity for APK (threshold 60→40px).</li>
+      <li><b>Fixed</b>: Swipe sensitivity for APK (threshold 60â†’40px).</li>
       <li><b>Improved</b>: ICE Equivalent now defaults to EV amount when not specified (fairer breakeven).</li>
-      <li><b>Optimized</b>: Font loading (preload instead of @import — faster render).</li>
+      <li><b>Optimized</b>: Font loading (preload instead of @import â€” faster render).</li>
       <li><b>Note</b>: Requires CapacitorHttp in capacitor.config.json for APK cloud sync.</li>
     </ul>
     <div class="cl-ver">v4.9.1 <span class="cl-date">27 Jun 2026</span></div>
@@ -834,12 +876,12 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <ul class="cl-list">
       <li><b>Fix</b>: Total km no longer double-counts trip distances (was adding trip km on top of odo range).</li>
       <li><b>Fix</b>: Home breakeven card now uses full ICE comparison (including ICE-equivalent expenses), consistent with Expenses tab.</li>
-      <li><b>Fix</b>: Avg ₹/unit now shows actual paid rate (excludes free office kWh from denominator).</li>
+      <li><b>Fix</b>: Avg â‚¹/unit now shows actual paid rate (excludes free office kWh from denominator).</li>
     </ul>
     <div class="cl-ver">v4.8.1 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
       <li><b>Trip Planner</b>: Now opens as a full view (like Settings/Backup) instead of a popup overlay.</li>
-      <li><b>Import button</b>: Matched styling with Export — solid border, same font size, aligned.</li>
+      <li><b>Import button</b>: Matched styling with Export â€” solid border, same font size, aligned.</li>
     </ul>
     <div class="cl-ver">v4.8 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
@@ -862,31 +904,31 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     </ul>
     <div class="cl-ver">v4.6 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>Hamburger menu</b>: ☰ on the left opens drawer with Costs, Plan Trip, Settings, What's New.</li>
-      <li><b>Hamburger + 4 tabs</b>: ☰ | Home | Charging | Carpool | Expenses.</li>
-      <li><b>Drawer (☰)</b>: Settings, Trip Planner, Backup/Import, Cloud Sync, What's New.</li>
-      <li><b>Home redesign</b>: At a Glance → EV vs ICE (breakeven progress) → Range + Plan → Spending → Efficiency chart.</li>
-      <li><b>ICE terminology</b>: "Petrol" labels → "ICE" (covers petrol + diesel).</li>
+      <li><b>Hamburger menu</b>: â˜° on the left opens drawer with Costs, Plan Trip, Settings, What's New.</li>
+      <li><b>Hamburger + 4 tabs</b>: â˜° | Home | Charging | Carpool | Expenses.</li>
+      <li><b>Drawer (â˜°)</b>: Settings, Trip Planner, Backup/Import, Cloud Sync, What's New.</li>
+      <li><b>Home redesign</b>: At a Glance â†’ EV vs ICE (breakeven progress) â†’ Range + Plan â†’ Spending â†’ Efficiency chart.</li>
+      <li><b>ICE terminology</b>: "Petrol" labels â†’ "ICE" (covers petrol + diesel).</li>
     </ul>
     <div class="cl-ver">v4.4 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>4 tabs</b>: Home | Log | Costs | ⚙️ — cleaner, no cramping.</li>
-      <li><b>Log tab</b>: Charges+Trips and Carpool under pill toggles (⚡ Charging | 🚐 Carpool).</li>
-      <li><b>Trip Planner overlay</b>: Tap “🗺️ Plan a Trip” on Home — opens as full-screen overlay.</li>
+      <li><b>4 tabs</b>: Home | Log | Costs | âš™ï¸ â€” cleaner, no cramping.</li>
+      <li><b>Log tab</b>: Charges+Trips and Carpool under pill toggles (âš¡ Charging | ðŸš Carpool).</li>
+      <li><b>Trip Planner overlay</b>: Tap â€œðŸ—ºï¸ Plan a Tripâ€ on Home â€” opens as full-screen overlay.</li>
     </ul>
     <div class="cl-ver">v4.3 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>Tab bar</b>: Shortened labels (Home, Charges, Costs, Plan, ⚙️) to fix cramping on mobile.</li>
+      <li><b>Tab bar</b>: Shortened labels (Home, Charges, Costs, Plan, âš™ï¸) to fix cramping on mobile.</li>
       <li><b>Description field</b>: Now full-width in expense form.</li>
     </ul>
     <div class="cl-ver">v4.2 <span class="cl-date">26 Jun 2026</span></div>
     <ul class="cl-list">
-      <li><b>ICE equivalent per expense</b>: Optional field — enter what an ICE car would pay. Breakeven now compares full EV cost vs full ICE cost (fuel + maintenance).</li>
-      <li><b>Petrol price log</b>: Price changes are auto-tracked with date. Breakeven uses time-weighted average — accurate over months/years of ownership.</li>
-      <li><b>Amount preview</b>: Shows ₹-formatted number with commas while typing (for amounts ≥1,000).</li>
+      <li><b>ICE equivalent per expense</b>: Optional field â€” enter what an ICE car would pay. Breakeven now compares full EV cost vs full ICE cost (fuel + maintenance).</li>
+      <li><b>Petrol price log</b>: Price changes are auto-tracked with date. Breakeven uses time-weighted average â€” accurate over months/years of ownership.</li>
+      <li><b>Amount preview</b>: Shows â‚¹-formatted number with commas while typing (for amounts â‰¥1,000).</li>
     </ul>
     
-    <div style="color:var(--muted);font-size:11px;margin-top:12px;padding:10px;border-top:1px solid var(--border)">Older versions (v1.0–v4.1.1): See GitHub commit history</div>
+    <div style="color:var(--muted);font-size:11px;margin-top:12px;padding:10px;border-top:1px solid var(--border)">Older versions (v1.0â€“v4.1.1): See GitHub commit history</div>
   </div>
 </div>
 <!-- FAB -->
@@ -904,7 +946,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   </div>
 </div>
 
-<!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BOTTOM NAV â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <nav class="bottom-nav" id="bottomNav">
   <div class="nav-item active" id="t-dash" onclick="switchTab('dash')">
     <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><polyline points="9 21 9 14 15 14 15 21"/></svg>
@@ -923,7 +965,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   </div>
 </nav>
 
-<!-- ═══════════════════ BOTTOM SHEET ═══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BOTTOM SHEET â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
 <div class="bottom-sheet" id="bottomSheet">
   <div class="sheet-handle" id="sheetHandle"></div>
@@ -955,27 +997,27 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 // localStorage shim for sandboxed environments
 var _ls;
 try{_ls=window.localStorage;_ls.getItem('_test');}catch(e){_ls={_d:{},getItem:function(k){return k in this._d?this._d[k]:null;},setItem:function(k,v){this._d[k]=''+v;},removeItem:function(k){delete this._d[k];}};}
-var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);return true;}catch(e){if(e.name==='QuotaExceededError'||e.code===22)setTimeout(function(){toast('⚠️ Storage full — export backup soon!');},100);return false;}}};
+var safeLS={get:function(k){try{return _ls.getItem(k);}catch(e){return null;}},set:function(k,v){try{_ls.setItem(k,v);return true;}catch(e){if(e.name==='QuotaExceededError'||e.code===22)setTimeout(function(){toast('âš ï¸ Storage full â€” export backup soon!');},100);return false;}}};
 
-// ── PERFORMANCE: Debounce utility ─────────────────────────────────────────
+// â”€â”€ PERFORMANCE: Debounce utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 function debounce(fn,ms){var t;return function(){var a=arguments,c=this;clearTimeout(t);t=setTimeout(function(){fn.apply(c,a);},ms);};}
 
-// ── SAFE NUMBER: Prevent NaN propagation ──────────────────────────────────
+// â”€â”€ SAFE NUMBER: Prevent NaN propagation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function safeNum(v,fallback){var n=Number(v);return isFinite(n)?n:(fallback||0);}
-function fmtVal(v,suffix,fallback){return isFinite(v)&&v>0?v.toFixed(1)+(suffix||''):(fallback||'—');}
+function fmtVal(v,suffix,fallback){return isFinite(v)&&v>0?v.toFixed(1)+(suffix||''):(fallback||'â€”');}
 
-// Date formatting: YYYY-MM-DD → DD Mon YYYY
-function fmtDate(d){if(!d)return'—';var p=d.split('-');if(p.length!==3)return d;var m=parseInt(p[1])-1;var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];if(m<0||m>11)return d;return parseInt(p[2])+' '+months[m]+' '+p[0];}
+// Date formatting: YYYY-MM-DD â†’ DD Mon YYYY
+function fmtDate(d){if(!d)return'â€”';var p=d.split('-');if(p.length!==3)return d;var m=parseInt(p[1])-1;var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];if(m<0||m>11)return d;return parseInt(p[2])+' '+months[m]+' '+p[0];}
 
-// ── HELPERS ─────────────────────────────────────────────────────────────────
+// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmtCurrency(n){return '\u20b9 '+Math.round(n).toLocaleString('en-IN');}
 
-// ── STATE ──────────────────────────────────────────────────────────────────
+// â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let settings,sessions,trips;
 try{settings=JSON.parse(safeLS.get('cm-settings')||'{}');}catch(e){settings={};}
-settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103},settings);
+settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103,highwayPenalty:25},settings);
 function stripCommas(s){return String(s).replace(/,/g,'');}
 function formatNumericInput(el){
   var v=el.value,cp=el.selectionStart||0;
@@ -999,23 +1041,23 @@ try{trips=JSON.parse(safeLS.get('cm-trips')||'[]');}catch(e){trips=[];}
 let expenses=[];try{expenses=JSON.parse(safeLS.get('cm-expenses')||'[]');}catch(e){expenses=[];}
 let petrolLog=[];try{petrolLog=JSON.parse(safeLS.get('cm-petrol-log')||'[]');}catch(e){petrolLog=[];}
 let tripEditIndex = null;
-let planEffMode = 'avg';
+let planEffMode = 'city';
 let entryMode = 'charge'; // 'charge' or 'trip'
 let editIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
 
-// ── CHANGELOG ─────────────────────────────────────────────────────────────────
+// â”€â”€ CHANGELOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showChangelog(){var m=document.getElementById('changelogModal');m.classList.add('open');document.body.style.overflow='hidden';m.querySelector('.cl-close span').focus();m.addEventListener('keydown',_trapFocus);}
 function closeChangelog(){var m=document.getElementById('changelogModal');m.classList.remove('open');document.body.style.overflow='';m.removeEventListener('keydown',_trapFocus);}
 function _trapFocus(e){if(e.key==='Escape'){closeChangelog();return;}if(e.key!=='Tab')return;var m=document.getElementById('changelogModal');var focusable=m.querySelectorAll('button,[tabindex],a,span[onclick]');if(!focusable.length)return;var first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
 
 
-// ── FORM DRAFT (preserve mid-entry state on tab switch) ────────────────────
-var _draftFields=['date','start','end','odo','type','pubLocation','pubMapsLink','pubRate','pubUnits','pubTotal','startTime','endTime','chargeNotes'];
+// â”€â”€ FORM DRAFT (preserve mid-entry state on tab switch) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+var _draftFields=['date','start','end','odo','type','pubLocation','pubMapsLink','pubRate','pubUnits','pubTotal','startTime','endTime','chargeNotes','drivingType'];
 function saveDraft(){try{var d={};_draftFields.forEach(function(f){var el=document.getElementById(f);if(el)d[f]=el.value;});sessionStorage.setItem('cm-draft',JSON.stringify(d));}catch(e){}}
-function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')||'null');if(!d)return;_draftFields.forEach(function(f){var el=document.getElementById(f);if(el&&d[f])el.value=d[f];});sessionStorage.removeItem('cm-draft');if(d.type)onTypeChange();updatePreview();}catch(e){}}
+function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')||'null');if(!d)return;_draftFields.forEach(function(f){var el=document.getElementById(f);if(el&&d[f])el.value=d[f];});sessionStorage.removeItem('cm-draft');if(d.type)onTypeChange();if(d.drivingType)pickDrivingType(d.drivingType);updatePreview();}catch(e){}}
 
-// ── TABS ───────────────────────────────────────────────────────────────────
+// â”€â”€ TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function switchTab(tab) {
   // Haptic feedback
   if(navigator.vibrate)navigator.vibrate(10);
@@ -1029,6 +1071,7 @@ function switchTab(tab) {
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(function(){renderDash();drawAllCharts();renderBreakevenSummary();},30);
   if (tab==='charges') { renderCharges(); restoreDraft(); updateOdoPlaceholder(); }
+  if (tab==='carpool')
   if (tab==='expenses') renderExpenses();
   if (tab==='planner') runPlan();
 }
@@ -1042,7 +1085,7 @@ function fmt12hr(t){
   const hr=h%12||12;
   return hr+':'+String(m).padStart(2,'0')+ampm;
 }
-// ── HELPERS ────────────────────────────────────────────────────────────────
+// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const calcKwh=(s,e)=>{var v=settings.battery*(e-s)/100;return isFinite(v)?v:0;};
 function escapeHtml(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
@@ -1057,7 +1100,7 @@ function toast(msg){
 }
 
 function badgeHtml(type){
-  const map={home:'Home',office:'Office',public:'Public',to_office:'→ Office',to_home:'← Home',both:'↔ Both'};
+  const map={home:'Home',office:'Office',public:'Public',to_office:'â†’ Office',to_home:'â† Home',both:'â†” Both'};
   return `<span class="badge badge-${type.replace('_','')}">${map[type]||type}</span>`;
 }
 
@@ -1086,7 +1129,7 @@ function calcDuration(st,et){
   return m>0?m:null;
 }
 
-// ── EFFICIENCY HELPERS ─────────────────────────────────────────────────────
+// â”€â”€ EFFICIENCY HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getAvgEff(){
   // Use unified timeline if trips exist
   var segments=computeUnifiedEfficiency();
@@ -1130,19 +1173,18 @@ function renderDash(){
 
   // === AT A GLANCE ===
   const lastSess=sorted.length>0?sorted[sorted.length-1]:null;
-  const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
+  const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'â€”';
   document.getElementById('stats').innerHTML=
-    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
-    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km`:null)+
-    statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'charging only':null)+
+    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'â€”','Total Distance',monthKm>0?monthKm+' km this month':null)+
+    statBox(avgEff?`${avgEff} km/kWh`:'â€”','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% Â· ${(1000/+avgEff).toFixed(0)} Wh/km`:null)+
+    statBox(hasCost&&totalKm>0?'â‚¹'+(totalCost/totalKm).toFixed(2):'â€”','Cost / km',hasCost&&totalKm>0?'charging only':null)+
     (function(){
-    var today=new Date(),dow=today.getDay(),offset=dow===0?6:dow-1;
-    var mon=new Date(today.getTime()-offset*86400000);
+    var now=new Date(),dow=now.getDay(),offset=dow===0?6:dow-1;
+    var mon=new Date(now.getTime()-offset*86400000);
     var monStr=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
     var wkCharge=sessions.filter(function(s){return s.date>=monStr&&s.cost>0}).reduce(function(a,b){return a+(b.cost||0)},0);
-    var netC=wkCharge;
-    return statBox('\u20b9'+netC,'Charging','this week');
-  })();
+    return statBox('\u20b9'+wkCharge,'Charging','this week');
+  })()
   // v5.6.0: Make efficiency stat tappable -> Charges tab
   (function(){var grid=document.getElementById('stats');if(grid&&grid.children.length>1){var effBox=grid.children[1];effBox.classList.add('tappable');effBox.onclick=function(){switchTab('charges')};}})();
 
@@ -1161,20 +1203,19 @@ function renderDash(){
   const netMonthlyCost=monthExpenditure;
 
   document.getElementById('paidStats').innerHTML=
-    statBox('₹ '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure')+
-    statBox('₹ '+avgMonth.toLocaleString('en-IN'),'Avg/Month')+
-        (netMonthlyCost<=0?statBox('<span style="color:var(--good)">Surplus ₹'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN')+'</span>','Net Cost'):statBox('₹ '+Math.round(netMonthlyCost).toLocaleString('en-IN'),'Net Cost'));
+    statBox('â‚¹ '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure')+
+    statBox('â‚¹ '+avgMonth.toLocaleString('en-IN'),'Avg/Month')+
+    '<div class="stat-box tappable" onclick="switchTab(\'carpool\')"><div class="stat-val" style="color:var(--good)">â‚¹ '+Math.round(cpThisMonthAmt).toLocaleString('en-IN')+'</div><div class="stat-label">Carpool</div></div>'+
+    (netMonthlyCost<=0?statBox('<span style="color:var(--good)">Surplus â‚¹'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN')+'</span>','Net Cost'):statBox('â‚¹ '+Math.round(netMonthlyCost).toLocaleString('en-IN'),'Net Cost'));
 
   
 
 
-  
-
-  // === SPLIT BARS ===
+    // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
   var sbEl=document.getElementById('splitBars');if(sbEl)sbEl.innerHTML=
-    makeSplitBar('Charge Split (sessions)',byTypeCount)+(hasCost?makeSplitBar('Spend Split (₹)',byTypeCost):'');
+    makeSplitBar('Charge Split (sessions)',byTypeCount)+(hasCost?makeSplitBar('Spend Split (â‚¹)',byTypeCost):'');
 
   // === RANGE CARD ===
   document.getElementById('rangeCard').innerHTML=avgEff
@@ -1222,23 +1263,96 @@ function getLastEff(){
   return null;
 }
 
+// â”€â”€ TYPED EFFICIENCY (City/Highway) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function computeTypedEfficiency(type){
+  // Pool 1: Charge-to-charge segments where the CLOSING charge has drivingType === type
+  var odoMap={};
+  sessions.forEach(function(s){ if(s.odo>0){ var key=s.odo+'_'+s.date; odoMap[key]={odo:s.odo,s:s.s,e:s.e,date:s.date,drivingType:s.drivingType||null}; }});
+  var chargePoints=Object.keys(odoMap).map(function(k){return odoMap[k];}).sort(function(a,b){return a.odo-b.odo;});
+  var totalKm=0, totalKwh=0, count=0;
+  for(var i=1;i<chargePoints.length;i++){
+    var prev=chargePoints[i-1], curr=chargePoints[i];
+    if(curr.drivingType===type){
+      var km=curr.odo-prev.odo;
+      var kwh=(prev.e-curr.s)/100*settings.battery;
+      if(km>0&&kwh>0&&km<500){ totalKm+=km; totalKwh+=kwh; count++; }
+    }
+  }
+  // Pool 2: Trip entries where tripType === type (exclude if covered by charge segments)
+  var tripSpans=trips.filter(function(t){return t.tripType===type&&t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&t.startPct>t.endPct;});
+  tripSpans.forEach(function(t){
+    var covered=false;
+    for(var i=1;i<chargePoints.length;i++){
+      if(chargePoints[i-1].odo<=t.startOdo&&chargePoints[i].odo>=t.endOdo&&chargePoints[i].drivingType===type){covered=true;break;}
+    }
+    if(!covered){
+      var km=t.endOdo-t.startOdo;
+      var kwh=(t.startPct-t.endPct)/100*settings.battery;
+      if(km>0&&kwh>0){ totalKm+=km; totalKwh+=kwh; count++; }
+    }
+  });
+  if(count<3)return null;
+  return totalKwh>0?totalKm/totalKwh:null;
+}
+
+function getCityEff(){
+  var typed=computeTypedEfficiency('city');
+  if(typed)return typed;
+  return getAvgEff(); // fallback to overall average
+}
+function getCityEffSource(){ return computeTypedEfficiency('city')?'data':'fallback'; }
+
+function getHighwayEff(){
+  var typed=computeTypedEfficiency('highway');
+  if(typed)return typed;
+  var city=getCityEff();
+  if(city)return city*(1-settings.highwayPenalty/100);
+  var avg=getAvgEff();
+  if(avg)return avg*(1-settings.highwayPenalty/100);
+  return null;
+}
+function getHighwayEffSource(){ return computeTypedEfficiency('highway')?'data':'fallback'; }
+
+function getMixedEff(){
+  var typed=computeTypedEfficiency('mixed');
+  if(typed)return typed;
+  return getAvgEff(); // fallback to overall average
+}
+function getMixedEffSource(){ return computeTypedEfficiency('mixed')?'data':'fallback'; }
+
+// â”€â”€ DRIVING TYPE / TRIP TYPE PICKERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function pickDrivingType(val){
+  document.getElementById('drivingType').value=val;
+  ['city','mixed','highway'].forEach(function(m){document.getElementById('dt-'+m).classList.toggle('active',m===val);});
+}
+function pickTripType(val){
+  document.getElementById('tripType').value=val;
+  ['city','mixed','highway'].forEach(function(m){document.getElementById('tt-'+m).classList.toggle('active',m===val);});
+}
+function setDrivingTypeDefault(){
+  var type=document.getElementById('type').value;
+  if(type==='public'){pickDrivingType('highway');}
+  else{pickDrivingType('mixed');}
+}
+
 function getActiveEff(){
-  if(planEffMode==='avg') return getAvgEff();
-  if(planEffMode==='last'){ const l=getLastEff(); return l?l.eff:null; }
-  if(planEffMode==='live'){
-    const whkm=+document.getElementById('planLiveEff').value;
-    return whkm>0?1000/whkm:null;
+  if(planEffMode==='city') return getCityEff();
+  if(planEffMode==='highway') return getHighwayEff();
+  if(planEffMode==='mixed') return getMixedEff();
+  if(planEffMode==='custom'){
+    const v=+document.getElementById('planCustomEff').value;
+    return v>0?v:null;
   }
   return null;
 }
 
-// ── EFF MODE UI ────────────────────────────────────────────────────────────
+// â”€â”€ EFF MODE UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function setEffMode(mode){
   planEffMode=mode;
-  ['avg','last','live'].forEach(m=>{
+  ['city','highway','mixed','custom'].forEach(m=>{
     document.getElementById('eff-tab-'+m).classList.toggle('active',m===mode);
   });
-  document.getElementById('liveEffBlock').style.display=mode==='live'?'block':'none';
+  document.getElementById('customEffBlock').style.display=mode==='custom'?'block':'none';
   updateEffModeDisplay();
   runPlan();
 }
@@ -1248,22 +1362,38 @@ function updateEffModeDisplay(){
   const labelEl=document.getElementById('effModeLabel');
   const valEl  =document.getElementById('effModeVal');
 
-  if(planEffMode==='live'){ display.style.display='none'; return; }
+  if(planEffMode==='custom'){ display.style.display='none'; return; }
 
-  if(planEffMode==='avg'){
-    const e=getAvgEff();
-    if(e){ labelEl.textContent='Overall average'; valEl.textContent=(1000/e).toFixed(0)+' Wh/km  ·  '+e.toFixed(2)+' km/kWh'; display.style.display='flex'; }
-    else { display.style.display='none'; }
-  } else if(planEffMode==='last'){
-    const l=getLastEff();
-    if(l){ labelEl.textContent='Last trip ('+fmtDateShort(l.date)+')'; valEl.textContent=(1000/l.eff).toFixed(0)+' Wh/km  ·  '+l.eff.toFixed(2)+' km/kWh'; display.style.display='flex'; }
-    else { display.style.display='none'; }
+  if(planEffMode==='city'){
+    const e=getCityEff();
+    if(e){ 
+      const src=getCityEffSource();
+      labelEl.textContent=src==='data'?'City (from tagged data)':'City (overall avg)'; 
+      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      display.style.display='flex'; 
+    } else { display.style.display='none'; }
+  } else if(planEffMode==='highway'){
+    const e=getHighwayEff();
+    if(e){ 
+      const src=getHighwayEffSource();
+      labelEl.textContent=src==='data'?'Highway (from tagged data)':'Highway (~est.)'; 
+      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      display.style.display='flex'; 
+    } else { display.style.display='none'; }
+  } else if(planEffMode==='mixed'){
+    const e=getMixedEff();
+    if(e){ 
+      const src=getMixedEffSource();
+      labelEl.textContent=src==='data'?'Mixed (from tagged data)':'Mixed (overall avg)'; 
+      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      display.style.display='flex'; 
+    } else { display.style.display='none'; }
   }
 }
 
-// ── PLAN / TRIP ESTIMATOR ──────────────────────────────────────────────────
+// â”€â”€ PLAN / TRIP ESTIMATOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── MULTI-STOP PLANNER ───────────────────────────────────────────────────
+// â”€â”€ MULTI-STOP PLANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let planStops = [];
 
 function addPlanStop(){
@@ -1290,9 +1420,18 @@ function renderPlanStops(){
     <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px">
       <div><label>At km</label><input type="number" value="${s.km||''}" placeholder="e.g. 200" oninput="updatePlanStop(${i},'km',this.value)" style="font-size:12px"></div>
       <div><label>Charge to %</label><input type="number" value="${s.chargeTo||''}" placeholder="e.g. 80" min="0" max="100" oninput="updatePlanStop(${i},'chargeTo',this.value)" style="font-size:12px"></div>
-      <div style="display:flex;align-items:flex-end;padding-bottom:4px"><button class="btn-sm btn-del" onclick="removePlanStop(${i})">✕</button></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:4px"><button class="btn-sm btn-del" onclick="removePlanStop(${i})">âœ•</button></div>
     </div>
   `).join('');
+}
+
+function clearPlanForm(){
+  document.getElementById('planCurrent').value='';
+  document.getElementById('planDist').value='';
+  planStops=[];
+  renderPlanStops();
+  document.getElementById('planResult').innerHTML='';
+  setEffMode('city');
 }
 
 function calcWithStops(current, totalDist, kmPerPct, stops){
@@ -1343,7 +1482,7 @@ function runPlan(){
   if(!eff){
   
     resultEl.innerHTML=`<div class="card"><div class="empty" style="padding:12px 0">
-      ${planEffMode==='live'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
+      ${planEffMode==='custom'?'Enter your efficiency above to plan.':'Log sessions with odometer data to enable planning.'}
     </div></div>`;
     return;
   }
@@ -1375,7 +1514,7 @@ function runPlan(){
   const worstLegArrive = hasStops && stopsResult ? Math.min(...stopsResult.legs.map(l=>l.arriveBatt)) : pctAtDest;
   const kmOfBuffer  = pctAtDest*kmPerPct; // positive = headroom, negative = shortfall
 
-  // Status — three-zone model
+  // Status â€” three-zone model
   let status, statusSub;
   if(anyLegUnreachable){
     status='critical';
@@ -1388,19 +1527,19 @@ function runPlan(){
     statusSub=`A leg arrives in reserve zone (${worstLegArrive.toFixed(0)}%). Consider charging more at a previous stop.`;
   } else if(pctAtDest>=reserve){
     status='safe';
-    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — ${(pctAtDest-reserve).toFixed(0)}% above reserve. No action needed.`;
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% â€” ${(pctAtDest-reserve).toFixed(0)}% above reserve. No action needed.`;
   } else if(pctAtDest>=critical){
     status='reserve';
-    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — entering reserve zone but above critical (${critical}%).`;
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% â€” entering reserve zone but above critical (${critical}%).`;
   } else if(pctAtDest>=0){
     status='critical';
-    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% — below critical (${critical}%). Must charge en-route.`;
+    statusSub=`You'll arrive with ${pctAtDest.toFixed(0)}% â€” below critical (${critical}%). Must charge en-route.`;
   } else {
     status='impossible';
-    statusSub=`${Math.abs(pctAtDest).toFixed(0)}% short — you won't make it. Plan a charging stop.`;
+    statusSub=`${Math.abs(pctAtDest).toFixed(0)}% short â€” you won't make it. Plan a charging stop.`;
   }
 
-  const statusTitle={safe:'✓ Good to go',reserve:'⚠ Entering reserve',critical:'✗ Critical — charge needed',impossible:'✗ Won\'t make it'}[status];
+  const statusTitle={safe:'âœ“ Good to go',reserve:'âš  Entering reserve',critical:'âœ— Critical â€” charge needed',impossible:'âœ— Won\'t make it'}[status];
 
   // Key distances
   const kmToReserve   = safeRangeKm;               // how far before hitting buffer%
@@ -1413,7 +1552,7 @@ function runPlan(){
   const topUpKwh  = topUpFromCurrent>0 ? (topUpFromCurrent/100*settings.battery) : 0;
   const topUpCost = topUpKwh>0 ? (topUpKwh*settings.homeRate).toFixed(0) : 0;
 
-  // Range bar data — show up to totalRangeKm, mark zones
+  // Range bar data â€” show up to totalRangeKm, mark zones
   const maxBar = Math.max(totalRangeKm, dist*1.05);
   const pComfort  = Math.min(100,(comfortRangeKm/maxBar*100)).toFixed(1);
   const pSafe     = Math.min(100,((safeRangeKm-comfortRangeKm)/maxBar*100)).toFixed(1);
@@ -1444,7 +1583,7 @@ function runPlan(){
           var tip=(minNeeded&&minNeeded<leg.chargeTo&&minNeeded<=100)?'<div style="font-size:10px;color:var(--muted);margin-top:2px">Tip: '+minNeeded+'% is enough for the next '+(nextLeg.chargeTo?'stop':'destination')+'</div>':'';
           return '<div style="font-size:11px;color:var(--accent);margin-top:3px">\u26a1 Charge to '+leg.chargeTo+'%</div>'+tip;
         })():'<div style="font-size:11px;color:var(--good);margin-top:3px">\ud83c\udfc1 Destination</div>'}
-          ${!leg.reachable?`<div style="font-size:11px;color:var(--danger);margin-top:3px">⚠ Won’t reach! ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at the previous stop to complete this leg.':'Add a charging stop around '+leg.safeReachKm+' km into this leg. Charge to '+Math.ceil((leg.dist-leg.safeReachKm)/kmPerPct+20)+'% to continue safely.'}</div>`:''}
+          ${!leg.reachable?`<div style="font-size:11px;color:var(--danger);margin-top:3px">âš  Wonâ€™t reach! ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at the previous stop to complete this leg.':'Add a charging stop around '+leg.safeReachKm+' km into this leg. Charge to '+Math.ceil((leg.dist-leg.safeReachKm)/kmPerPct+20)+'% to continue safely.'}</div>`:''}
           ${leg.reachable&&leg.arriveBatt<10?`<div style="font-size:11px;color:var(--danger);margin-top:3px">\u26a0 Critical (${leg.arriveBatt.toFixed(0)}%). ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
           ${leg.reachable&&leg.arriveBatt>=10&&leg.arriveBatt<20?`<div style="font-size:11px;color:var(--warn);margin-top:3px">\u26a0 Reserve zone. ${leg.needForComfort<=100?'Charge to '+leg.needForComfort+'% at previous stop, or l':'L'}imit leg to ${leg.safeReachKm} km.</div>`:''}
         </div>
@@ -1454,7 +1593,7 @@ function runPlan(){
 
   resultEl.innerHTML=`
     <div class="card">
-      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(one way · ${dist} km) · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
+      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(${dist} km) Â· ${(1000/eff).toFixed(0)} Wh/km Â· ${eff.toFixed(2)} km/kWh</span></h3>
 
       
 
@@ -1473,7 +1612,7 @@ function runPlan(){
           <div class="rbar-trip-line" style="left:${tripLineX}%" title="Trip end"></div>
         </div>
         <div class="rbar-markers">
-          <div class="rbar-marker" style="left:${tripLineX}%">▲ dest</div>
+          <div class="rbar-marker" style="left:${tripLineX}%">â–² dest</div>
           ${+pComfort>5?`<div class="rbar-marker" style="left:0">0 km</div>`:''}
           <div class="rbar-marker" style="left:${Math.min(95,+pComfort+ +pSafe)}%">${safeRangeKm.toFixed(0)} km</div>
         </div>
@@ -1509,11 +1648,11 @@ function runPlan(){
 
       ${(status==='reserve'||status==='critical'||status==='impossible')&&neededToLeave>current&&neededToLeave<=100?`
       <div class="charge-advice">
-        <div class="charge-advice-title">⚡ Charge Advice</div>
+        <div class="charge-advice-title">âš¡ Charge Advice</div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Charge to at least</span><span class="advice-val">${neededToLeave}% before leaving</span></div>
         <div class="advice-row"><span style="color:var(--muted);font-size:11px">Energy to add</span><span class="advice-val">${topUpKwh.toFixed(1)} kWh</span></div>
-        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (home rate)</span><span class="advice-val">₹${topUpCost}</span></div>
-        ${settings.lastPublicRate?`<div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (public ~₹${settings.lastPublicRate}/unit)</span><span class="advice-val">₹${(topUpKwh*settings.lastPublicRate).toFixed(0)}</span></div>`:''}
+        <div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (home rate)</span><span class="advice-val">â‚¹${topUpCost}</span></div>
+        ${settings.lastPublicRate?`<div class="advice-row"><span style="color:var(--muted);font-size:11px">Top-up cost (public ~â‚¹${settings.lastPublicRate}/unit)</span><span class="advice-val">â‚¹${(topUpKwh*settings.lastPublicRate).toFixed(0)}</span></div>`:''}
       </div>`:status==='impossible'?(function(){
         var dcChargeTo=80,buffer=20;
         var leg1Range=Math.max(0,(current-buffer))*kmPerPct;
@@ -1530,9 +1669,9 @@ function runPlan(){
         if(lastStopCharge>dcChargeTo)lastStopCharge=dcChargeTo;
         var stopsHtml=stops.map(function(s,i){
           var chgTo=(i===stops.length-1)?lastStopCharge:dcChargeTo;
-          return '<div class="advice-row"><span style="color:var(--text);font-size:11px">Stop '+(i+1)+' at ~'+s.km+' km — charge to '+chgTo+'%</span></div>';
+          return '<div class="advice-row"><span style="color:var(--text);font-size:11px">Stop '+(i+1)+' at ~'+s.km+' km â€” charge to '+chgTo+'%</span></div>';
         }).join('');
-        return '<div class="charge-advice"><div class="charge-advice-title">⚡ Charge Advice</div>'+
+        return '<div class="charge-advice"><div class="charge-advice-title">âš¡ Charge Advice</div>'+
           '<div class="advice-row"><span style="color:var(--muted);font-size:11px">This trip exceeds your safe range ('+safeRangeKm.toFixed(0)+' km). You need '+numStops+' charging stop'+(numStops>1?'s':'')+'.</span></div>'+
           stopsHtml+
           '<div class="advice-row"><span style="color:var(--good);font-size:11px">Arrive with ~'+buffer+'% battery</span></div>'+
@@ -1547,7 +1686,7 @@ function runPlan(){
 }
 
 
-// ── CHARGER FINDER (Open Charge Map) ─────────────────────────────────────
+// â”€â”€ CHARGER FINDER (Open Charge Map) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let savedChargers = [];try{savedChargers=JSON.parse(safeLS.get('cm-chargers')||'[]');}catch(e){}
 
 function renderSavedChargers(){
@@ -1628,7 +1767,7 @@ function openChargerPicker(){
 
 function updatePreview(){
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
-  document.getElementById('kwhPreview').textContent=(e>s&&s>=0)?'⚡ '+calcKwh(s,e).toFixed(2)+' kWh':'';
+  document.getElementById('kwhPreview').textContent=(e>s&&s>=0)?'âš¡ '+calcKwh(s,e).toFixed(2)+' kWh':'';
   updateDurationPreview();
   if(document.getElementById('type').value==='public') autoCalcPublic('pct');
   updateAutoDuration();
@@ -1640,8 +1779,8 @@ function updateDurationPreview(){
   const mins=calcDuration(st,et);
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
   const kwh=(isFinite(s)&&isFinite(e)&&e>s)?calcKwh(s,e):0;
-  if(mins&&kwh>0&&isFinite(kwh/(mins/60))) document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)} · avg ${(kwh/(mins/60)).toFixed(1)} kW`;
-  else if(mins)   document.getElementById('durationPreview').textContent=`⏱ ${fmtDuration(mins)}`;
+  if(mins&&kwh>0&&isFinite(kwh/(mins/60))) document.getElementById('durationPreview').textContent=`â± ${fmtDuration(mins)} Â· avg ${(kwh/(mins/60)).toFixed(1)} kW`;
+  else if(mins)   document.getElementById('durationPreview').textContent=`â± ${fmtDuration(mins)}`;
   else            document.getElementById('durationPreview').textContent='';
 }
 
@@ -1652,13 +1791,13 @@ function updateAutoDuration(){
   var s=+document.getElementById('start').value,e=+document.getElementById('end').value;
   if(isFinite(s)&&isFinite(e)&&e>s&&s>=0){
     var mins=Math.round((e-s)/5.5*60);
-    if(isFinite(mins)&&mins>0){el.textContent='⏱ ~'+fmtDuration(mins)+' (at 5.5 %/hr)';el.style.display='block';}
+    if(isFinite(mins)&&mins>0){el.textContent='â± ~'+fmtDuration(mins)+' (at 5.5 %/hr)';el.style.display='block';}
     else{el.style.display='none';}
   } else { el.style.display='none'; }
 }
 
 
-// ── PUBLIC COST AUTO-CALC ──────────────────────────────────────────────────
+// â”€â”€ PUBLIC COST AUTO-CALC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function autoCalcPublic(changed){
   const rEl=document.getElementById('pubRate');
   const uEl=document.getElementById('pubUnits');
@@ -1714,7 +1853,6 @@ function pickConn(val){
   document.getElementById('connDisplay').textContent=val;
   document.getElementById('connDropdown').style.display='none';
 }
-
 function pickScType(val){
   document.getElementById('scType').value=val;
   document.getElementById('scTypeDisplay').textContent=val;
@@ -1726,6 +1864,8 @@ function onTypeChange(){
   document.getElementById('publicBlock').style.display=isPub?'block':'none';
   document.getElementById('notesBlock').style.display=isPub?'block':'none';
   document.getElementById('timeRow').style.display=isPub?'grid':'none';
+  // Smart default for driving type
+  setDrivingTypeDefault();
   // Show auto-duration for office/home
   updateAutoDuration();
   // Auto-fill from last public charge if fields are empty
@@ -1742,7 +1882,7 @@ function onTypeChange(){
   }
 }
 
-// ── ODO VALIDATION ─────────────────────────────────────────────────────────
+// â”€â”€ ODO VALIDATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateOdoPlaceholder(){
   const odoInput=document.getElementById('odo');
   if(odoInput.value) return; // don't override if user typed
@@ -1764,19 +1904,19 @@ function validateOdo(){
   const sorted=others.filter(s=>s.odo&&s.odo>0).sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);return d!==0?d:a.odo-b.odo;});
   const lastOdo=sorted.length?sorted[sorted.length-1].odo:null;
   if(lastOdo){
-    if(odo<lastOdo){warnEl.textContent=`⚠ Lower than last recorded odo (${lastOdo.toLocaleString()} km)`;odoEl.classList.add('warn-input');return;}
-    if(odo-lastOdo>500){warnEl.textContent=`⚠ Large jump: +${(odo-lastOdo).toLocaleString()} km since last entry`;odoEl.classList.add('warn-input');return;}
+    if(odo<lastOdo){warnEl.textContent=`âš  Lower than last recorded odo (${lastOdo.toLocaleString()} km)`;odoEl.classList.add('warn-input');return;}
+    if(odo-lastOdo>500){warnEl.textContent=`âš  Large jump: +${(odo-lastOdo).toLocaleString()} km since last entry`;odoEl.classList.add('warn-input');return;}
   }
   warnEl.textContent='';odoEl.classList.remove('warn-input');
 }
 
-// ── SAVE CHARGE ────────────────────────────────────────────────────────────
+// â”€â”€ SAVE CHARGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function saveCharge(){
   const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
   const errEl=document.getElementById('formError');
   if(!document.getElementById('date').value){errEl.textContent='Please set a date.';return;}
-  if(s<0||s>100){errEl.textContent='Start % must be 0–100.';return;}
-  if(e<0||e>100){errEl.textContent='End % must be 0–100.';return;}
+  if(s<0||s>100){errEl.textContent='Start % must be 0â€“100.';return;}
+  if(e<0||e>100){errEl.textContent='End % must be 0â€“100.';return;}
   if(isNaN(s)||isNaN(e)||e<=s){errEl.textContent='End % must be greater than Start %.';return;}
   errEl.textContent='';
 
@@ -1807,8 +1947,9 @@ function saveCharge(){
 
   const notes=document.getElementById('chargeNotes').value.trim()||null;
   const chargedSince=document.getElementById('chargeChargedSince').checked;
+  const drivingType=document.getElementById('drivingType').value||null;
   const obj={id:editIndex!==null?sessions[editIndex].id:(Date.now()+Math.random()),date:document.getElementById('date').value,
-    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince};
+    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince,drivingType:drivingType};
 
   const wasEditing=editIndex!==null;
   if(wasEditing){sessions[editIndex]=obj;editIndex=null;
@@ -1818,7 +1959,7 @@ function saveCharge(){
 
   recomputeAllKm();safeLS.set('cm-lastType',type);persist();clearChargeForm();render();
   document.getElementById('list').scrollIntoView({behavior:'smooth',block:'start'});
-  toast(wasEditing?'Session updated ✓':'Session saved ✓');
+  toast(wasEditing?'Session updated âœ“':'Session saved âœ“');
 }
 
 function cancelChargeEdit(){
@@ -1839,12 +1980,14 @@ function clearChargeForm(){
   document.getElementById('formError').textContent='';
   document.getElementById('odoWarn').textContent='';
   document.getElementById('odo').classList.remove('warn-input');
+  // Reset driving type to smart default based on current charge type
+  setDrivingTypeDefault();
   // Native time inputs clear themselves via value=''
   document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
   document.getElementById('autoDuration').style.display='none';
 }
 
-// ── RECOMPUTE KM ───────────────────────────────────────────────────────────
+// â”€â”€ RECOMPUTE KM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function recomputeAllKm(){
   sessions.forEach(s=>{s.km=null;});
   const w=sessions.filter(s=>s.odo>0).sort((a,b)=>{
@@ -1854,7 +1997,7 @@ function recomputeAllKm(){
 }
 
 
-// ── ENTRY MODE ─────────────────────────────────────────────────────────────
+// â”€â”€ ENTRY MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function setEntryMode(mode){
   entryMode=mode;
   document.getElementById('mode-charge').classList.toggle('active',mode==='charge');
@@ -1864,7 +2007,7 @@ function setEntryMode(mode){
   renderCharges();
 }
 
-// ── TRIP MANAGEMENT ────────────────────────────────────────────────────────
+// â”€â”€ TRIP MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function updateTripPreview(){
   var so=+document.getElementById('tripStartOdo').value;
   var eo=+document.getElementById('tripEndOdo').value;
@@ -1877,7 +2020,7 @@ function updateTripPreview(){
     if(drop>0){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
-      el.textContent='📊 '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
+      el.textContent='ðŸ“Š '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh Â· '+(km/drop).toFixed(1)+' km/%';
     } else {
       var gained=Math.abs(drop);
       el.textContent='\u26a1 '+km+' km \u00b7 +'+gained+'% regen \u00b7 '+(gained*settings.battery/100).toFixed(1)+' kWh recovered';
@@ -1903,9 +2046,10 @@ function saveTrip(){
   var consumption=(sp-ep)*settings.battery/100;
   var isRegen=sp<=ep;
   var eff=isRegen?null:km/consumption;
+  var tripTypeVal=document.getElementById('tripType').value||null;
   var obj={id:tripEditIndex!==null?trips[tripEditIndex].id:(Date.now()+Math.random()),
     date:date,startOdo:so,endOdo:eo,startPct:sp,endPct:ep,km:km,
-    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince};
+    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal};
   var wasEditing=tripEditIndex!==null;
   if(wasEditing){trips[tripEditIndex]=obj;tripEditIndex=null;
     document.getElementById('tripFormTitle').textContent='New Trip';
@@ -1922,6 +2066,7 @@ function clearTripForm(){
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
+  pickTripType('mixed');
 }
 
 function cancelTripEdit(){
@@ -1943,6 +2088,7 @@ function editTrip(i){
   document.getElementById('tripEndPct').value=x.endPct;
   document.getElementById('tripNote').value=x.note||'';
   document.getElementById('tripChargedSince').checked=x.chargedSince||false;
+  pickTripType(x.tripType||'mixed');
   updateTripPreview();
 }
 
@@ -1950,7 +2096,7 @@ function delTrip(i){
   undoableDelete('trip',i,'Trip');
 }
 
-// ── UNIFIED TIMELINE EFFICIENCY ────────────────────────────────────────────
+// â”€â”€ UNIFIED TIMELINE EFFICIENCY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function computeUnifiedEfficiency(){
   // === STEP 1: Charge-to-charge segments (primary, longest by nature) ===
   var odoMap={};
@@ -1999,7 +2145,7 @@ function computeUnifiedEfficiency(){
     if(!merged.length){merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince});return;}
     var last=merged[merged.length-1];
     if(t.fromOdo<=last.toOdo){
-      // Overlapping or chaining — extend
+      // Overlapping or chaining â€” extend
       if(t.toOdo>last.toOdo){last.toOdo=t.toOdo;last.endPct=t.endPct;last.date=t.date;}
     } else {
       merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince});
@@ -2046,7 +2192,7 @@ function computeUnifiedEfficiency(){
   return segments;
 }
 
-// ── PERSIST ────────────────────────────────────────────────────────────────
+// â”€â”€ PERSIST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function persist(){
   var ok=true;
   ok=safeLS.set('cm-data',JSON.stringify(sessions))&&ok;
@@ -2057,7 +2203,7 @@ function persist(){
 }
 var _chartDataHash='';
 
-// ── RENDER ─────────────────────────────────────────────────────────────────
+// â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function render(){
   // Only render visible tab + dashboard summary
   var activeTab='dash';
@@ -2066,6 +2212,7 @@ function render(){
   });
   if(activeTab==='dash'){renderDash();drawAllCharts();renderBreakevenSummary();}
   else if(activeTab==='charges')renderCharges();
+  else if(activeTab==='carpool')
   else if(activeTab==='expenses')renderExpenses();
   updateOdoPlaceholder();
 }
@@ -2137,6 +2284,8 @@ function editCharge(i){
   }
   updatePreview();
   document.getElementById('chargeNotes').value=x.notes||'';
+  // Restore driving type
+  pickDrivingType(x.drivingType||'mixed');
   document.getElementById('chargeFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -2146,7 +2295,7 @@ function delCharge(i){
 
 
 
-// ── MONTH GROUP STATE PRESERVATION ─────────────────────────────────────────
+// â”€â”€ MONTH GROUP STATE PRESERVATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getExpandedGroups(){
   var expanded={};
   ['mgrp-','cpgrp-','tgrp-','egrp-'].forEach(function(prefix){
@@ -2219,7 +2368,7 @@ function renderList(){
               const km=x.odo-prevDiffOdo.odo;
               const drop=prevDiffOdo.e-x.s;
             if(km>0&&drop<0&&!x.chargedSince){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+x.s+'% but left prev at '+prevDiffOdo.e+'%</span>';}
-            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
+            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh Â· '+(km/drop).toFixed(1)+' km/%';
             if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
             }
           }
@@ -2254,7 +2403,7 @@ function renderList(){
           <div style="font-size:12px;margin-top:4px;color:var(--text)">${line1}</div>
           ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
           ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
-          ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
+          ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">ðŸ“ '+escapeHtml(x.notes)+'</div>':''}
         </div>`;
     });
     out+='</div>';
@@ -2315,7 +2464,7 @@ function closeQuickAdd(){
 
 function renderQuickPills(){
   var el=document.getElementById('quickPills');
-  // Charge patterns — exact (type, start%, end%) triple
+  // Charge patterns â€” exact (type, start%, end%) triple
   var chargePatterns={};
   sessions.forEach(function(s){
     var key=s.t+'|'+s.s+'|'+s.e;
@@ -2325,15 +2474,7 @@ function renderQuickPills(){
   var chargeSorted=Object.values(chargePatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
   if(!chargeSorted.length)chargeSorted=[{t:'office',s:20,e:100}];
   
-  var typeLabels={office:'Office',home:'Home',public:'Public'};
-  var html='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">\u26a1 Charge</div>';
-  html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
-  chargeSorted.forEach(function(p,i){
-    html+='<div class="quick-pill" onclick="selectQuickCharge('+i+')">'+typeLabels[p.t]+' '+p.s+'% \u2192 '+p.e+'%</div>';
-  });
-  html+='</div>';
-  
-  el.innerHTML=html;
+    el.innerHTML=html;
   window._qcChargePatterns=chargeSorted;
 }
 
@@ -2353,7 +2494,7 @@ function selectQuickCharge(idx){
     '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qcStart" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
     '<div><label style="margin:0 0 3px">Odo</label><input type="text" id="qcOdo" inputmode="numeric" placeholder="'+(lastOdo?lastOdo.toLocaleString('en-IN'):'odo')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
     '</div>'+
-    '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">⚡ Save</button>';
+    '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">âš¡ Save</button>';
   setTimeout(function(){document.getElementById('qcOdo').focus();},100);
 }
 
@@ -2377,17 +2518,13 @@ function saveQuickCharge(idx){
   sessions.unshift(obj);
   recomputeAllKm();persist();render();
   closeQuickAdd();
-  toast((type==='office'?'Office':'Home')+' charge saved ✓');
+  toast((type==='office'?'Office':'Home')+' charge saved âœ“');
 }
 
-
-
-
-
-// ── MONTHLY COST BAR CHART ─────────────────────────────────────────────────
+// â”€â”€ MONTHLY COST BAR CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function drawCostChart(){
   var canvas=document.getElementById('costChart');if(!canvas)return;
-  // v5.6.0: Monthly Expenditures with net markers
+  // v5.6.0: Monthly Expenditures with net markers + net markers
   var months={};
   sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].charge+=s.cost}});
   (expenses||[]).forEach(function(e){if(e.date&&e.amount>0&&e.category!=='purchase'){var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].expense+=e.amount}});
@@ -2438,7 +2575,7 @@ function drawCostChart(){
     var exH=(d.expense/totalRange)*ch;
     ctx.fillStyle='#ff6b6b';
     ctx.fillRect(x,zeroY-chH-exH,barW,exH);
-
+    // Carpool bar (down)
     // Net marker position
     var netY=zeroY-(d.net/totalRange)*ch;
     netPts.push({x:cx,y:netY,net:d.net});
@@ -2479,21 +2616,38 @@ function evalExpr(str){
   if(!/^[\d+\-*/().\s]+$/.test(s))return null;
   try{const r=Function('"use strict";return ('+s+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(e){return null;}
 }
+var _selectedFares=[];
+function renderFarePills(){
+  var el=document.getElementById('farePills');if(!el)return;
+  // Extract individual amounts from all carpool amountExpr fields
+  var freq={};
+  // Sort by frequency desc, take top 8
+  var sorted=Object.keys(freq).map(function(k){return{amt:+k,count:freq[k]};})
+    .sort(function(a,b){return b.count-a.count;}).slice(0,6);
+  if(!sorted.length){el.innerHTML='';return;}
+  var html='';
+  html+='<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;gap:8px 0">';
+  sorted.forEach(function(p){
+    var isActive=_selectedFares.indexOf(p.amt)>=0;
+    html+='<div class="quick-pill'+(isActive?' active':'')+'" onclick="toggleFare('+p.amt+')" style="padding:6px 12px;font-size:11px;'+(isActive?'background:var(--accent);color:#000;border-color:var(--accent)':'')+'">\u20b9'+p.amt+'</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+function toggleFare(amt){
+  var idx=_selectedFares.indexOf(amt);
+  if(idx>=0)_selectedFares.splice(idx,1);else _selectedFares.push(amt);
+  // Update amount field
+  var field=document.getElementById('cpAmount');
+  field.value=_selectedFares.join('+');
+  previewCpAmount();
+  // Update pax
+  var paxEl=document.getElementById('cpPax');
+  if(paxEl&&_selectedFares.length>0)paxEl.value=_selectedFares.length;
+  renderFarePills();
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ── EXPENSES ──────────────────────────────────────────────────────────────────────
+// â”€â”€ EXPENSES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var expEditIndex=null;
 
 
@@ -2564,7 +2718,7 @@ function getPetrolEquivalentCost(totalKm){
   trips.forEach(function(t){if(t.endOdo&&t.date)waypoints.push({date:t.date,odo:t.endOdo});});
   waypoints.sort(function(a,b){return a.date.localeCompare(b.date)||a.odo-b.odo;});
   if(waypoints.length<2){
-    // Not enough data for period-based calc — use simple weighted avg
+    // Not enough data for period-based calc â€” use simple weighted avg
     var today=new Date().toISOString().slice(0,10);
     var totalCost=0,totalDays=0;
     for(var i=0;i<petrolLog.length;i++){
@@ -2627,6 +2781,8 @@ function renderExpenses(){
     var evCostPerKm=costPerKm;
     var savingPerKm=iceTotalPerKm-evCostPerKm;
 
+    // With carpool
+    var carpoolInc=0;
     var savingPerKmWithCp=savingPerKm;
 
     if(savingPerKm>0||savingPerKmWithCp>0){
@@ -2664,7 +2820,8 @@ function renderExpenses(){
         '<div class="plan-row"><span class="plan-row-label">ICE equivalent</span><span class="plan-row-val" style="color:var(--warn)">\u20b9'+iceTotalPerKm.toFixed(1)+'/km</span></div>'+
         '<div class="plan-row"><span class="plan-row-label">Total saved so far</span><span class="plan-row-val" style="color:var(--good)">\u20b9'+Math.round(savingPerKm*totalKm).toLocaleString('en-IN')+'</span></div>'+
         '</div>'+
-        '<div class="range-meter" style="margin-top:12px"><div class="range-track"><div class="range-fill" style="width:'+pctDone+'%"></div></div></div>';
+        '<div class="range-meter" style="margin-top:12px"><div class="range-track"><div class="range-fill" style="width:'+pctDone+'%"></div></div></div>'+
+        (carpoolIncome>0?'<div style="margin-top:12px;padding:10px;border-radius:8px;background:var(--card);border:1px solid var(--border)"><div style="font-size:11px;font-weight:600;color:var(--text)">With carpool income (\u20b9'+Math.round(carpoolIncome).toLocaleString('en-IN')+')</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+(reachedCp?'\u2713 Already broken even!':pctDoneCp+'% \u00b7 '+kmLeftCp.toLocaleString('en-IN')+' km left'+(beDateCpStr?' \u00b7 est. '+beDateCpStr:''))+'</div><div class="range-meter" style="margin-top:6px"><div class="range-track"><div class="range-fill" style="width:'+pctDoneCp+'%"></div></div></div></div>':'');
     } else {
       bEl.innerHTML='<div style="font-size:12px;color:var(--warn)">EV running cost is currently higher than ICE equivalent \u2014 charge at home/office more to improve this.</div>';
     }
@@ -2674,7 +2831,7 @@ function renderExpenses(){
     bEl.innerHTML='<div style="font-size:11px;color:var(--muted)">'+(premium<=0?'Set EV Premium in Settings':'Log some charges')+' to see breakeven projection.'+(purchDate?'':'<br>Add a \u201cCar Purchase\u201d expense to set ownership start date.')+'</div>';
   }
 
-  // Expense list — monthly collapsible groups
+  // Expense list â€” monthly collapsible groups
   var el=document.getElementById('expList');
   if(!expenses.length){el.innerHTML='<div class="empty">No expenses logged yet.</div>';return;}
   var catLabels={service:'\ud83d\udd27 Service',insurance:'\ud83d\udee1\ufe0f Insurance',accessories:'\ud83d\udd0c Accessories',tyres:'\ud83d\udd04 Tyres',repair:'\u2699\ufe0f Repair',tolls:'\ud83d\udee3\ufe0f Tolls',purchase:'\ud83d\ude97 Purchase',other:'\ud83d\udcdd Other'};
@@ -2701,7 +2858,7 @@ function renderExpenses(){
 
 
 
-// ── HAMBURGER DRAWER ────────────────────────────────────────────────────────
+// â”€â”€ HAMBURGER DRAWER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderBreakevenSummary(){
   var el=document.getElementById('breakevenSummary');
   if(!el)return;
@@ -2748,7 +2905,7 @@ function renderBreakevenSummary(){
 }
 
 
-// ── BOTTOM SHEET ───────────────────────────────────────────────────────────
+// â”€â”€ BOTTOM SHEET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openSheet(){
   document.getElementById('sheetOverlay').classList.add('visible');
   document.getElementById('bottomSheet').classList.add('visible');
@@ -2793,7 +2950,7 @@ function closePlanOverlay(){
   switchTab('dash');
 }
 
-// ── CHARTS ─────────────────────────────────────────────────────────────────
+// â”€â”€ CHARTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function drawChart(id,pts,dates,color){
   const canvas=document.getElementById(id);if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -2880,28 +3037,29 @@ function drawAllCharts(retryCount){
   drawChart('effChart',effPts,effDates,'#00e5ff');
 }
 
-// ── COPY MONTHLY SUMMARY ──────────────────────────────────────────────────
+// â”€â”€ COPY MONTHLY SUMMARY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function copyMonthlySummary(){
   var now=new Date();var mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   var moSessions=sessions.filter(function(s){return s.date.startsWith(mo);});
   var moTrips=trips.filter(function(t){return t.date&&t.date.startsWith(mo);});
-  
   var totalKwh=moSessions.reduce(function(a,s){return a+s.kwh;},0);
   var totalCost=moSessions.filter(function(s){return s.cost!=null;}).reduce(function(a,s){return a+s.cost;},0);
   var totalKm=moSessions.reduce(function(a,s){return a+(s.km||0);},0)+moTrips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
   var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]+' '+now.getFullYear();
   var txt=label+' - ChargeMate Summary\n';
-  txt+='─────────────────────────\n';
+  txt+='â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n';
   txt+='Charges: '+moSessions.length+' sessions\n';
   txt+='Energy: '+totalKwh.toFixed(1)+' kWh\n';
-  txt+='Cost: ₹'+totalCost.toFixed(0)+'\n';
+  txt+='Cost: â‚¹'+totalCost.toFixed(0)+'\n';
   txt+='Distance: '+totalKm+' km\n';
-  if(totalKm>0&&totalCost>0)txt+='Cost/km: ₹'+(totalCost/totalKm).toFixed(1)+'\n';
-  navigator.clipboard.writeText(txt).then(function(){toast('Summary copied ✓');}).catch(function(){toast('Copy failed');});
+  if(totalKm>0&&totalCost>0)txt+='Cost/km: â‚¹'+(totalCost/totalKm).toFixed(1)+'\n';
+  if(moCarpools.length)txt+='Carpool: '+moCarpools.length+' trips Â· â‚¹'.toFixed(0)+' earned\n';
+  if(totalCost>0&&cpIncome>0)txt+='Net cost: â‚¹'+(totalCost).toFixed(0)+'\n';
+  navigator.clipboard.writeText(txt).then(function(){toast('Summary copied âœ“');}).catch(function(){toast('Copy failed');});
 }
 
 function exportJSON(){
-  var p={version:31,sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:32,sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   // v5.6.0: Include sync credentials if checkbox checked
   var credCb=document.getElementById('credExport');
   if(credCb&&credCb.checked&&settings.gistId&&settings.gistToken){
@@ -2925,7 +3083,7 @@ function dl(blob,name){
       }).then(function(r){
         toast('Saved to Documents/ChargeMate/ \u2713');
       }).catch(function(e){
-        // Permission denied or unavailable — try share
+        // Permission denied or unavailable â€” try share
         dlShare(blob,name,text);
       });
       return;
@@ -2955,12 +3113,12 @@ function dlShare(blob,name,text){
 }
 
 
-// ── SETTINGS ───────────────────────────────────────────────────────────────
+// â”€â”€ SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function saveSettings(){
-  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium'};
+  const fields={battery:'battery',homeRate:'homeRate',officeRate:'defaultOfficeRate',petrolMileage:'petrolMileage',petrolPrice:'petrolPrice',evPremium:'evPremium',highwayPenalty:'highwayPenalty'};
   Object.entries(fields).forEach(([k,id])=>{const v=stripCommas(document.getElementById(id).value);if(v!=='')settings[k]=+v;});
   // Validate battery range
-  if(settings.battery<1||settings.battery>200){toast('Battery must be 1–200 kWh');settings.battery=Math.max(1,Math.min(200,settings.battery));}
+  if(settings.battery<1||settings.battery>200){toast('Battery must be 1â€“200 kWh');settings.battery=Math.max(1,Math.min(200,settings.battery));}
   safeLS.set('cm-settings',JSON.stringify(settings));render();// Auto-log petrol price change
   var newPrice=+settings.petrolPrice;
   var lastLog=petrolLog.length>0?petrolLog[petrolLog.length-1]:null;
@@ -2968,11 +3126,12 @@ function saveSettings(){
     petrolLog.push({date:new Date().toISOString().slice(0,10),price:newPrice});
     safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));
   }
-  toast('Settings saved ✓');
+  toast('Settings saved âœ“');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();safeLS.set('cm-chargers','[]');toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();
+safeLS.set('cm-chargers','[]');toast('All data cleared');}
 
-// ── INIT ───────────────────────────────────────────────────────────────────
+// â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateSettingsInputs(){
   document.getElementById('battery').value           = settings.battery;
   document.getElementById('homeRate').value          = settings.homeRate;
@@ -2980,9 +3139,10 @@ function populateSettingsInputs(){
   document.getElementById('petrolMileage').value     = settings.petrolMileage??15;
   document.getElementById('petrolPrice').value       = settings.petrolPrice??103;
   document.getElementById('evPremium').value          = settings.evPremium||'';
+  document.getElementById('highwayPenalty').value     = settings.highwayPenalty||25;
   // Last saved timestamp
   var ls=safeLS.get('cm-lastSaved');var lsEl=document.getElementById('lastSavedInfo');
-  if(ls&&lsEl){var ago=Math.floor((Date.now()-Number(ls))/60000);lsEl.textContent='Data last saved: '+(ago<1?'just now':ago<60?ago+' min ago':Math.floor(ago/60)+'h ago')+' · '+sessions.length+' charges · '+trips.length+' trips';}
+  if(ls&&lsEl){var ago=Math.floor((Date.now()-Number(ls))/60000);lsEl.textContent='Data last saved: '+(ago<1?'just now':ago<60?ago+' min ago':Math.floor(ago/60)+'h ago')+' Â· '+sessions.length+' charges Â· '+trips.length+' trips';}
 }
 populateSettingsInputs();
 document.getElementById('date').value              = new Date().toISOString().slice(0,10);
@@ -2990,9 +3150,10 @@ document.getElementById('tripDate').value          = new Date().toISOString().sl
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
-try{render();}catch(e){console.error('Init error:',e);}
+try{render();
+}catch(e){console.error('Init error:',e);}
 
-// — Theme Toggle —
+// â€” Theme Toggle â€”
 function setTheme(mode){
   safeLS.set('cm-theme',mode);
   var isLight=false;
@@ -3023,13 +3184,13 @@ function updateThemePills(mode){
   });}
 })();
 
-// — Swipe Navigation —
+// â€” Swipe Navigation â€”
 (function(){var sx=0,sy=0,st=null,tabs=['dash','charges','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;st=e.target;},{passive:true});document.addEventListener('touchend',function(e){if(st&&st.closest&&st.closest('.bottom-nav,.bottom-sheet,.sheet-overlay'))return;var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
-// — Android Back Button (navigate tabs instead of exit) —
+// â€” Android Back Button (navigate tabs instead of exit) â€”
 (function(){var tabs=['dash','charges','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
 
-// — Undo Delete —
+// â€” Undo Delete â€”
 var _undoTimer=null,_undoData=null;
 function undoableDelete(type,index,label){
   var item;
@@ -3053,16 +3214,16 @@ function undoLast(){
   else if(d.type==='trip'){trips.splice(d.index,0,d.item);safeLS.set('cm-trips',JSON.stringify(trips));render();}
   else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   document.getElementById('toast').classList.remove('show');
-  toast('Restored ✓');
+  toast('Restored âœ“');
 }
 
-// — Backup Reminder (7 days) —
-(function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=7&&sessions.length>5)setTimeout(function(){toast('💾 Backup reminder — last export was '+Math.floor(d)+' days ago');},15000);})();
+// â€” Backup Reminder (7 days) â€”
+(function(){var le=safeLS.get('cm-lastExport');if(!le){safeLS.set('cm-lastExport',''+Date.now());return;}var d=(Date.now()-Number(le))/86400000;if(d>=7&&sessions.length>5)setTimeout(function(){toast('ðŸ’¾ Backup reminder â€” last export was '+Math.floor(d)+' days ago');},15000);})();
 
-// — Offline Detection —
+// â€” Offline Detection â€”
 (function(){var badge=document.getElementById('offlineBadge');function upd(){badge.style.display=navigator.onLine?'none':'block';}window.addEventListener('online',upd);window.addEventListener('offline',upd);upd();})();
 
-// ── CLOUD SYNC (GitHub Gist) ──────────────────────────────────────────────
+// â”€â”€ CLOUD SYNC (GitHub Gist) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 var _syncSettings=JSON.parse(safeLS.get('cm-sync')||'{"token":"","gistId":"","auto":false}');
 function saveSyncSettings(){
   _syncSettings.token=document.getElementById('syncToken').value.trim();
@@ -3089,7 +3250,7 @@ function cloudPush(){
     .then(function(r){if(!r.ok)throw new Error(r.status+' '+r.statusText);return r.json();})
     .then(function(d){
       if(!_syncSettings.gistId){_syncSettings.gistId=d.id;document.getElementById('syncGistId').value=d.id;safeLS.set('cm-sync',JSON.stringify(_syncSettings));}
-      syncStatus('Pushed ✓ — '+new Date().toLocaleTimeString());
+      syncStatus('Pushed âœ“ â€” '+new Date().toLocaleTimeString());
     }).catch(function(e){syncStatus('Push failed: '+e.message,'err');});
 }
 
@@ -3108,8 +3269,8 @@ function cloudPull(){
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
       recomputeAllKm();render();
-      syncStatus('Pulled ✓ — '+sessions.length+' charges, '+trips.length+' trips');
-      toast('Cloud data loaded ✓');
+      syncStatus('Pulled âœ“ â€” '+sessions.length+' charges, '+trips.length+' trips');
+      toast('Cloud data loaded âœ“');
     }).catch(function(e){syncStatus('Pull failed: '+e.message,'err');});
 }
 
@@ -3147,7 +3308,7 @@ function importData(event){
         }
       }
       toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
-    }catch(e){toast('⚠️ Import failed: '+e.message);}finally{event.target.value='';}
+    }catch(e){toast('âš ï¸ Import failed: '+e.message);}finally{event.target.value='';}
   };r.readAsText(file);
 }
 
