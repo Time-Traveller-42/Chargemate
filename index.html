@@ -769,6 +769,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.9.0 <span class="cl-date">13 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>FAB quick-add: trip patterns (tap frequent trips to quick-log)</li>
+      <li>FAB quick-add: driving/trip type auto-selected from pattern history</li>
+    </ul>
     <div class="cl-ver">v5.8.2 <span class="cl-date">12 Jul 2026</span></div>
     <ul class="cl-list">
       <li>FAB quick-add: added driving type selector (City/Highway/Mixed) with visible pills</li>
@@ -2567,8 +2572,31 @@ function renderQuickPills(){
     html+='</div>';
   }
   
+  // Trip patterns — (km rounded to nearest 5, start%, end%)
+  var tripPatterns={};
+  trips.forEach(function(t){
+    if(!t.startOdo||!t.endOdo||!t.startPct||!t.endPct)return;
+    var km=Math.round(((t.endOdo||0)-(t.startOdo||0))/5)*5;
+    if(km<=0)return;
+    var key=km+'|'+t.startPct+'|'+t.endPct;
+    if(!tripPatterns[key])tripPatterns[key]={km:km,s:t.startPct,e:t.endPct,count:0,types:[]};
+    tripPatterns[key].count++;
+    if(t.tripType)tripPatterns[key].types.push(t.tripType);
+  });
+  var tripSorted=Object.values(tripPatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
+  
+  if(tripSorted.length){
+    html+='<div style="font-size:10px;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em">🛣️ Trip</div>';
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    tripSorted.forEach(function(p,i){
+      html+='<div class="quick-pill" onclick="selectQuickTrip('+i+')">'+p.km+' km · '+p.s+'%→'+p.e+'%</div>';
+    });
+    html+='</div>';
+  }
+  
   el.innerHTML=html;
   window._qcChargePatterns=chargeSorted;
+  window._qcTripPatterns=tripSorted;
 }
 
 function selectQuickCharge(idx){
@@ -2581,6 +2609,20 @@ function selectQuickCharge(idx){
   document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
   document.querySelectorAll('#quickPills .quick-pill')[idx].classList.add('selected');
   
+  // Auto-detect driving type from history for this pattern
+  var dtCounts={};
+  sessions.forEach(function(x){
+    if(x.t===pattern.t&&x.s===pattern.s&&x.e===pattern.e&&x.drivingType){
+      dtCounts[x.drivingType]=(dtCounts[x.drivingType]||0)+1;
+    }
+  });
+  var dtAuto='mixed';
+  if(Object.keys(dtCounts).length){
+    dtAuto=Object.entries(dtCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
+  } else if(pattern.t==='public'){
+    dtAuto='highway';
+  }
+  
   var fields=document.getElementById('quickFields');
   fields.classList.add('visible');
   fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
@@ -2589,11 +2631,11 @@ function selectQuickCharge(idx){
     '</div>'+
     '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Driving type</label>'+
     '<div class="eff-tabs" style="margin:6px 0">'+
-      '<div class="eff-tab" onclick="pickQcDrivingType(\'city\',this)">City</div>'+
-      '<div class="eff-tab" onclick="pickQcDrivingType(\'highway\',this)">Highway</div>'+
-      '<div class="eff-tab active" onclick="pickQcDrivingType(\'mixed\',this)">Mixed</div>'+
+      '<div class="eff-tab'+(dtAuto==='city'?' active':'')+'" onclick="pickQcDrivingType(\'city\',this)">City</div>'+
+      '<div class="eff-tab'+(dtAuto==='highway'?' active':'')+'" onclick="pickQcDrivingType(\'highway\',this)">Highway</div>'+
+      '<div class="eff-tab'+(dtAuto==='mixed'?' active':'')+'" onclick="pickQcDrivingType(\'mixed\',this)">Mixed</div>'+
     '</div>'+
-    '<input type="hidden" id="qcDrivingType" value="mixed">'+
+    '<input type="hidden" id="qcDrivingType" value="'+dtAuto+'">'+
     '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">⚡ Save</button>';
   setTimeout(function(){document.getElementById('qcOdo').focus();},100);
 }
@@ -2605,6 +2647,83 @@ function pickQcDrivingType(val,el){
   if(inp)inp.value=val;
 }
 
+
+function pickQcTripType(val,el){
+  var tabs=el.parentNode.querySelectorAll('.eff-tab');
+  tabs.forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  var inp=document.getElementById('qcTripType');
+  if(inp)inp.value=val;
+}
+
+function selectQuickTrip(idx){
+  var pattern=window._qcTripPatterns[idx];
+  var lastOdo=0;
+  sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});
+  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
+  
+  // Highlight selected pill
+  document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
+  var allPills=document.querySelectorAll('#quickPills .quick-pill');
+  var chargeCount=(window._qcChargePatterns||[]).length;
+  var cpCount=document.querySelectorAll('#quickPills .quick-pill[onclick^="quickCarpool"]').length;
+  var tripPillIdx=chargeCount+cpCount+idx;
+  if(allPills[tripPillIdx])allPills[tripPillIdx].classList.add('selected');
+  
+  // Auto-detect trip type from history
+  var ttCounts={};
+  if(pattern.types&&pattern.types.length){
+    pattern.types.forEach(function(t){ttCounts[t]=(ttCounts[t]||0)+1;});
+  }
+  var ttAuto='mixed';
+  if(Object.keys(ttCounts).length){
+    ttAuto=Object.entries(ttCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
+  }
+  
+  var suggestStart=lastOdo||0;
+  var suggestEnd=suggestStart+pattern.km;
+  
+  var fields=document.getElementById('quickFields');
+  fields.classList.add('visible');
+  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+    '<div><label style="margin:0 0 3px">Start Odo</label><input type="text" id="qtStartOdo" inputmode="numeric" placeholder="'+(suggestStart?suggestStart.toLocaleString('en-IN'):'start')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
+    '<div><label style="margin:0 0 3px">End Odo</label><input type="text" id="qtEndOdo" inputmode="numeric" placeholder="'+(suggestEnd?suggestEnd.toLocaleString('en-IN'):'end')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+    '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qtStartPct" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
+    '<div><label style="margin:0 0 3px">End %</label><input type="number" id="qtEndPct" min="0" max="100" value="'+pattern.e+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
+    '</div>'+
+    '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Trip type</label>'+
+    '<div class="eff-tabs" style="margin:6px 0">'+
+      '<div class="eff-tab'+(ttAuto==='city'?' active':'')+'" onclick="pickQcTripType(\'city\',this)">City</div>'+
+      '<div class="eff-tab'+(ttAuto==='highway'?' active':'')+'" onclick="pickQcTripType(\'highway\',this)">Highway</div>'+
+      '<div class="eff-tab'+(ttAuto==='mixed'?' active':'')+'" onclick="pickQcTripType(\'mixed\',this)">Mixed</div>'+
+    '</div>'+
+    '<input type="hidden" id="qcTripType" value="'+ttAuto+'">'+
+    '<button class="primary" onclick="saveQuickTrip('+idx+')" style="margin-top:10px">🛣️ Save Trip</button>';
+  setTimeout(function(){document.getElementById('qtStartOdo').focus();},100);
+}
+
+function saveQuickTrip(idx){
+  if(navigator.vibrate)navigator.vibrate(10);
+  var pattern=window._qcTripPatterns[idx];
+  var startOdoRaw=stripCommas(document.getElementById('qtStartOdo').value);
+  var endOdoRaw=stripCommas(document.getElementById('qtEndOdo').value);
+  var startOdo=+startOdoRaw;
+  var endOdo=+endOdoRaw;
+  var startPct=+document.getElementById('qtStartPct').value;
+  var endPct=+document.getElementById('qtEndPct').value;
+  if(!startOdo||startOdo<=0){toast('Enter start odometer');return;}
+  if(!endOdo||endOdo<=startOdo){toast('End odo must be greater than start');return;}
+  if(isNaN(startPct)||startPct<0||startPct>100){toast('Enter valid start %');return;}
+  if(isNaN(endPct)||endPct<0||endPct>100){toast('Enter valid end %');return;}
+  var tripType=document.getElementById('qcTripType')?document.getElementById('qcTripType').value:'mixed';
+  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),startOdo:startOdo,endOdo:endOdo,startPct:startPct,endPct:endPct,tripType:tripType};
+  trips.unshift(obj);
+  recomputeAllKm();persist();render();
+  closeQuickAdd();
+  toast('Trip saved ✓');
+}
 
 function saveQuickCharge(idx){
   if(navigator.vibrate)navigator.vibrate(10);
