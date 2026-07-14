@@ -746,6 +746,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.10.3 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: saveTrip now calls persist() (triggers auto-sync)</li>
+      <li>Fix: trip undo/redo also triggers auto-sync</li>
+    </ul>
     <div class="cl-ver">v5.10.2 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
       <li>At a Glance: "km this month" now computed from odo range (sessions+trips), shows projected total</li>
@@ -2093,7 +2098,7 @@ function saveTrip(){
     document.getElementById('tripFormTitle').textContent='New Trip';
     document.getElementById('cancelTripEdit').style.display='none';
   } else trips.unshift(obj);
-  safeLS.set('cm-trips',JSON.stringify(trips));
+  persist();
   clearTripForm();render();
   toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
 }
@@ -3399,7 +3404,7 @@ var _undoTimer=null,_undoData=null;
 function undoableDelete(type,index,label){
   var item;
   if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
-  else if(type==='trip'){item=trips.splice(index,1)[0];safeLS.set('cm-trips',JSON.stringify(trips));render();}
+  else if(type==='trip'){item=trips.splice(index,1)[0];persist();render();}
   else if(type==='expense'){item=expenses.splice(index,1)[0];safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   if(!item)return;
   _undoData={type:type,index:index,item:item};
@@ -3415,7 +3420,7 @@ function undoLast(){
   var d=_undoData;_undoData=null;
   if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
   if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
-  else if(d.type==='trip'){trips.splice(d.index,0,d.item);safeLS.set('cm-trips',JSON.stringify(trips));render();}
+  else if(d.type==='trip'){trips.splice(d.index,0,d.item);persist();render();}
   else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   document.getElementById('toast').classList.remove('show');
   toast('Restored ✓');

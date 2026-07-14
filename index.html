@@ -607,7 +607,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
         <input type="hidden" id="cpDir" value="to_office">
         <div style="display:flex;gap:8px">
           <div id="dirPill_office" onclick="selectDir('to_office')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#000;font-size:13px;cursor:pointer">🏢</div>
-          <div id="dirPill_home" onclick="selectDir('to_home')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--border);background:#0d1525;color:var(--text);font-size:13px;cursor:pointer">🏠</div>
+          <div id="dirPill_home" onclick="selectDir('to_home')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;cursor:pointer">🏠</div>
         </div>
       </div>
     </div>
@@ -778,6 +778,12 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.10.3 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: saveTrip now calls persist() (triggers auto-sync, was bypassing it)</li>
+      <li>Fix: trip undo/redo also triggers auto-sync</li>
+      <li>Fix: light mode direction pill background uses var(--card) instead of hardcoded dark</li>
+    </ul>
     <div class="cl-ver">v5.10.2 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
       <li>At a Glance: "km this month" now computed from odo range (sessions+trips), shows projected total</li>
@@ -1950,10 +1956,10 @@ function selectDir(val){
   var hEl=document.getElementById('dirPill_home');
   if(val==='to_office'){
     oEl.style.background='var(--accent)';oEl.style.color='#000';oEl.style.borderColor='var(--accent)';
-    hEl.style.background='#0d1525';hEl.style.color='var(--text)';hEl.style.borderColor='var(--border)';
+    hEl.style.background='var(--card)';hEl.style.color='var(--text)';hEl.style.borderColor='var(--border)';
   } else {
     hEl.style.background='var(--accent)';hEl.style.color='#000';hEl.style.borderColor='var(--accent)';
-    oEl.style.background='#0d1525';oEl.style.color='var(--text)';oEl.style.borderColor='var(--border)';
+    oEl.style.background='var(--card)';oEl.style.color='var(--text)';oEl.style.borderColor='var(--border)';
   }
 }
 function pickScType(val){
@@ -2158,7 +2164,7 @@ function saveTrip(){
     document.getElementById('tripFormTitle').textContent='New Trip';
     document.getElementById('cancelTripEdit').style.display='none';
   } else trips.unshift(obj);
-  safeLS.set('cm-trips',JSON.stringify(trips));
+  persist();
   clearTripForm();render();
   toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
 }
@@ -3621,7 +3627,7 @@ var _undoTimer=null,_undoData=null;
 function undoableDelete(type,index,label){
   var item;
   if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
-  else if(type==='trip'){item=trips.splice(index,1)[0];safeLS.set('cm-trips',JSON.stringify(trips));render();}
+  else if(type==='trip'){item=trips.splice(index,1)[0];persist();render();}
   else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));renderCarpool();}
   else if(type==='expense'){item=expenses.splice(index,1)[0];safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   if(!item)return;
@@ -3638,7 +3644,7 @@ function undoLast(){
   var d=_undoData;_undoData=null;
   if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
   if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
-  else if(d.type==='trip'){trips.splice(d.index,0,d.item);safeLS.set('cm-trips',JSON.stringify(trips));render();}
+  else if(d.type==='trip'){trips.splice(d.index,0,d.item);persist();render();}
   else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));renderCarpool();}
   else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   document.getElementById('toast').classList.remove('show');
