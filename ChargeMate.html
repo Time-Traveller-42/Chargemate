@@ -408,6 +408,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 .op-btn:active{opacity:0.7;transform:scale(0.95)}
 /* Tappable cards */
 .tappable{cursor:pointer}.tappable:active{opacity:0.7;transition:opacity .1s}
+
+.toast-undo{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;
+  display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .3s,transform .3s;z-index:9999;
+  font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.toast-undo.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-undo button{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;
+  color:var(--accent);font-size:11px;cursor:pointer;font-weight:600}
+.toast-undo button:active{opacity:0.7}
 </style>
 
 </head>
@@ -737,6 +746,25 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.10.2 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>At a Glance: "km this month" now computed from odo range (sessions+trips), shows projected total</li>
+    </ul>
+    <div class="cl-ver">v5.10.1 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: trips with different types no longer merge into one efficiency segment</li>
+      <li>Fix: tripType now flows through unified efficiency (was lost during .map)</li>
+    </ul>
+    <div class="cl-ver">v5.10.0 <span class="cl-date">13 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>FAB quick-add: Undo + Edit toast (5-sec window to undo or edit quick-added entries)</li>
+      <li>Verified: trip type priority in efficiency (trips with different type than overlapping charge already win)</li>
+    </ul>
+    <div class="cl-ver">v5.9.0 <span class="cl-date">13 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>FAB quick-add: trip patterns (tap frequent trips to quick-log)</li>
+      <li>FAB quick-add: driving/trip type auto-selected from pattern history</li>
+    </ul>
     <div class="cl-ver">v5.8.2 <span class="cl-date">12 Jul 2026</span></div>
     <ul class="cl-list">
       <li>FAB quick-add: added driving type selector (City/Highway/Mixed) with visible pills</li>
@@ -801,7 +829,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     </ul>
     <div class="cl-ver">v5.3 <span class="cl-date">2 Jul 2026</span></div>
     <ul class="cl-list">
-      <li><b>FAB Quick Add</b>: Floating + button — tap to quick-log charges or carpools from any screen.</li>
+      <li><b>FAB Quick Add</b>: Floating + button — tap to quick-log charges or trips from any screen.</li>
       <li><b>Pattern detection</b>: Learns your common charge types and carpool routes, shows them as one-tap pills.</li>
       <li><b>Charge</b>: Select pattern → enter start% + odo → save. Two fields.</li>
       <li><b>Carpool</b>: One tap saves frequent routes instantly.</li>
@@ -1171,13 +1199,25 @@ function renderDash(){
   }
 
   const thisMonth=new Date().toISOString().slice(0,7);
-  const monthKm=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.km!=null).reduce((a,x)=>a+x.km,0);
+  const monthKm=(function(){
+    var odos=[];
+    sessions.forEach(function(s){if(s.date&&s.date.startsWith(thisMonth)&&s.odo)odos.push(s.odo);});
+    trips.forEach(function(t){if(t.date&&t.date.startsWith(thisMonth)){if(t.startOdo)odos.push(t.startOdo);if(t.endOdo)odos.push(t.endOdo);}});
+    if(odos.length<2)return 0;
+    return Math.max.apply(null,odos)-Math.min.apply(null,odos);
+  })();
+  var projectedKm=(function(){
+    var today=new Date().getDate();
+    if(today<3||monthKm<=0)return null;
+    var daysInMonth=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+    return Math.round(monthKm/today*daysInMonth);
+  })();
 
   // === AT A GLANCE ===
   const lastSess=sorted.length>0?sorted[sorted.length-1]:null;
   const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
   document.getElementById('stats').innerHTML=
-    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm+' km this month':null)+
+    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm.toLocaleString('en-IN')+' km this month'+(projectedKm?' (~'+projectedKm.toLocaleString('en-IN')+' projected)':''):null)+
     statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km`:null)+
     statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'charging only':null)+
     (function(){
@@ -2135,18 +2175,18 @@ function computeUnifiedEfficiency(){
 
   // === STEP 2: Merge overlapping/chaining trips into longest spans ===
   var tripSpans=trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo;})
-    .map(function(t){return {fromOdo:t.startOdo,toOdo:t.endOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:!!t.chargedSince};})
+    .map(function(t){return {fromOdo:t.startOdo,toOdo:t.endOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:!!t.chargedSince,tripType:t.tripType||null};})
     .sort(function(a,b){return a.fromOdo-b.fromOdo;});
   // Merge overlapping spans
   var merged=[];
   tripSpans.forEach(function(t){
-    if(!merged.length){merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince});return;}
+    if(!merged.length){merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince,tripType:t.tripType});return;}
     var last=merged[merged.length-1];
-    if(t.fromOdo<=last.toOdo){
+    if(t.fromOdo<=last.toOdo&&t.tripType===last.tripType){
       // Overlapping or chaining — extend
       if(t.toOdo>last.toOdo){last.toOdo=t.toOdo;last.endPct=t.endPct;last.date=t.date;}
     } else {
-      merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince});
+      merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince,tripType:t.tripType});
     }
   });
 
@@ -2163,10 +2203,10 @@ function computeUnifiedEfficiency(){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
       tripSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:false,flag:null,source:'trip'});
+        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType});
     } else if(km>0&&drop<0){
       tripSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
-        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:true,flag:null,source:'trip'});
+        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType});
     }
   });
 
@@ -2472,8 +2512,31 @@ function renderQuickPills(){
   var chargeSorted=Object.values(chargePatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
   if(!chargeSorted.length)chargeSorted=[{t:'office',s:20,e:100}];
   
+  // Trip patterns — (km rounded to nearest 5, start%, end%)
+  var tripPatterns={};
+  trips.forEach(function(t){
+    if(!t.startOdo||!t.endOdo||!t.startPct||!t.endPct)return;
+    var km=Math.round(((t.endOdo||0)-(t.startOdo||0))/5)*5;
+    if(km<=0)return;
+    var key=km+'|'+t.startPct+'|'+t.endPct;
+    if(!tripPatterns[key])tripPatterns[key]={km:km,s:t.startPct,e:t.endPct,count:0,types:[]};
+    tripPatterns[key].count++;
+    if(t.tripType)tripPatterns[key].types.push(t.tripType);
+  });
+  var tripSorted=Object.values(tripPatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
+  
+  if(tripSorted.length){
+    html+='<div style="font-size:10px;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em">🛣️ Trip</div>';
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    tripSorted.forEach(function(p,i){
+      html+='<div class="quick-pill" onclick="selectQuickTrip('+i+')">'+p.km+' km · '+p.s+'%→'+p.e+'%</div>';
+    });
+    html+='</div>';
+  }
+  
   el.innerHTML=html;
   window._qcChargePatterns=chargeSorted;
+  window._qcTripPatterns=tripSorted;
 }
 
 function selectQuickCharge(idx){
@@ -2486,6 +2549,20 @@ function selectQuickCharge(idx){
   document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
   document.querySelectorAll('#quickPills .quick-pill')[idx].classList.add('selected');
   
+  // Auto-detect driving type from history for this pattern
+  var dtCounts={};
+  sessions.forEach(function(x){
+    if(x.t===pattern.t&&x.s===pattern.s&&x.e===pattern.e&&x.drivingType){
+      dtCounts[x.drivingType]=(dtCounts[x.drivingType]||0)+1;
+    }
+  });
+  var dtAuto='mixed';
+  if(Object.keys(dtCounts).length){
+    dtAuto=Object.entries(dtCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
+  } else if(pattern.t==='public'){
+    dtAuto='highway';
+  }
+  
   var fields=document.getElementById('quickFields');
   fields.classList.add('visible');
   fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
@@ -2494,11 +2571,11 @@ function selectQuickCharge(idx){
     '</div>'+
     '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Driving type</label>'+
     '<div class="eff-tabs" style="margin:6px 0">'+
-      '<div class="eff-tab" onclick="pickQcDrivingType(\'city\',this)">City</div>'+
-      '<div class="eff-tab" onclick="pickQcDrivingType(\'highway\',this)">Highway</div>'+
-      '<div class="eff-tab active" onclick="pickQcDrivingType(\'mixed\',this)">Mixed</div>'+
+      '<div class="eff-tab'+(dtAuto==='city'?' active':'')+'" onclick="pickQcDrivingType(\'city\',this)">City</div>'+
+      '<div class="eff-tab'+(dtAuto==='highway'?' active':'')+'" onclick="pickQcDrivingType(\'highway\',this)">Highway</div>'+
+      '<div class="eff-tab'+(dtAuto==='mixed'?' active':'')+'" onclick="pickQcDrivingType(\'mixed\',this)">Mixed</div>'+
     '</div>'+
-    '<input type="hidden" id="qcDrivingType" value="mixed">'+
+    '<input type="hidden" id="qcDrivingType" value="'+dtAuto+'">'+
     '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">⚡ Save</button>';
   setTimeout(function(){document.getElementById('qcOdo').focus();},100);
 }
@@ -2510,6 +2587,118 @@ function pickQcDrivingType(val,el){
   if(inp)inp.value=val;
 }
 
+
+function pickQcTripType(val,el){
+  var tabs=el.parentNode.querySelectorAll('.eff-tab');
+  tabs.forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  var inp=document.getElementById('qcTripType');
+  if(inp)inp.value=val;
+}
+
+function selectQuickTrip(idx){
+  var pattern=window._qcTripPatterns[idx];
+  var lastOdo=0;
+  sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});
+  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
+  
+  // Highlight selected pill
+  document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
+  var allPills=document.querySelectorAll('#quickPills .quick-pill');
+  var chargeCount=(window._qcChargePatterns||[]).length;
+  var cpCount=document.querySelectorAll('#quickPills .quick-pill[onclick^="quickCarpool"]').length;
+  var tripPillIdx=chargeCount+cpCount+idx;
+  if(allPills[tripPillIdx])allPills[tripPillIdx].classList.add('selected');
+  
+  // Auto-detect trip type from history
+  var ttCounts={};
+  if(pattern.types&&pattern.types.length){
+    pattern.types.forEach(function(t){ttCounts[t]=(ttCounts[t]||0)+1;});
+  }
+  var ttAuto='mixed';
+  if(Object.keys(ttCounts).length){
+    ttAuto=Object.entries(ttCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
+  }
+  
+  var suggestStart=lastOdo||0;
+  var suggestEnd=suggestStart+pattern.km;
+  
+  var fields=document.getElementById('quickFields');
+  fields.classList.add('visible');
+  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+    '<div><label style="margin:0 0 3px">Start Odo</label><input type="text" id="qtStartOdo" inputmode="numeric" placeholder="'+(suggestStart?suggestStart.toLocaleString('en-IN'):'start')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
+    '<div><label style="margin:0 0 3px">End Odo</label><input type="text" id="qtEndOdo" inputmode="numeric" placeholder="'+(suggestEnd?suggestEnd.toLocaleString('en-IN'):'end')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+    '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qtStartPct" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
+    '<div><label style="margin:0 0 3px">End %</label><input type="number" id="qtEndPct" min="0" max="100" value="'+pattern.e+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
+    '</div>'+
+    '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Trip type</label>'+
+    '<div class="eff-tabs" style="margin:6px 0">'+
+      '<div class="eff-tab'+(ttAuto==='city'?' active':'')+'" onclick="pickQcTripType(\'city\',this)">City</div>'+
+      '<div class="eff-tab'+(ttAuto==='highway'?' active':'')+'" onclick="pickQcTripType(\'highway\',this)">Highway</div>'+
+      '<div class="eff-tab'+(ttAuto==='mixed'?' active':'')+'" onclick="pickQcTripType(\'mixed\',this)">Mixed</div>'+
+    '</div>'+
+    '<input type="hidden" id="qcTripType" value="'+ttAuto+'">'+
+    '<button class="primary" onclick="saveQuickTrip('+idx+')" style="margin-top:10px">🛣️ Save Trip</button>';
+  setTimeout(function(){document.getElementById('qtStartOdo').focus();},100);
+}
+
+function saveQuickTrip(idx){
+  if(navigator.vibrate)navigator.vibrate(10);
+  var pattern=window._qcTripPatterns[idx];
+  var startOdoRaw=stripCommas(document.getElementById('qtStartOdo').value);
+  var endOdoRaw=stripCommas(document.getElementById('qtEndOdo').value);
+  var startOdo=+startOdoRaw;
+  var endOdo=+endOdoRaw;
+  var startPct=+document.getElementById('qtStartPct').value;
+  var endPct=+document.getElementById('qtEndPct').value;
+  if(!startOdo||startOdo<=0){toast('Enter start odometer');return;}
+  if(!endOdo||endOdo<=startOdo){toast('End odo must be greater than start');return;}
+  if(isNaN(startPct)||startPct<0||startPct>100){toast('Enter valid start %');return;}
+  if(isNaN(endPct)||endPct<0||endPct>100){toast('Enter valid end %');return;}
+  var tripType=document.getElementById('qcTripType')?document.getElementById('qcTripType').value:'mixed';
+  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),startOdo:startOdo,endOdo:endOdo,startPct:startPct,endPct:endPct,tripType:tripType};
+  trips.unshift(obj);
+  recomputeAllKm();persist();render();
+  closeQuickAdd();
+  toast('Trip saved ✓');
+}
+
+function quickAddToast(entryType,chargeType){
+  var label=entryType==='charge'?((chargeType==='office'?'Office':'Home')+' charge'):'Trip';
+  var toastEl=document.createElement('div');
+  toastEl.className='toast-undo';
+  toastEl.innerHTML='<span>'+label+' saved</span><button onclick="quickAddEdit(\''+entryType+'\')">Edit</button><button onclick="quickAddUndo(\''+entryType+'\')">Undo</button>';
+  document.body.appendChild(toastEl);
+  setTimeout(function(){toastEl.classList.add('show');},10);
+  window._qaToast=toastEl;
+  window._qaTimeout=setTimeout(function(){toastEl.classList.remove('show');setTimeout(function(){if(toastEl.parentNode)toastEl.parentNode.removeChild(toastEl);},300);},5000);
+}
+function quickAddUndo(entryType){
+  if(window._qaTimeout)clearTimeout(window._qaTimeout);
+  if(entryType==='charge'){sessions.shift();}
+  else{trips.shift();}
+  recomputeAllKm();persist();render();
+  var t=window._qaToast;if(t&&t.parentNode)t.parentNode.removeChild(t);
+  toast('Undone');
+}
+function quickAddEdit(entryType){
+  if(window._qaTimeout)clearTimeout(window._qaTimeout);
+  var t=window._qaToast;if(t&&t.parentNode)t.parentNode.removeChild(t);
+  if(entryType==='charge'){
+    switchTab('charges');
+    setTimeout(function(){editCharge(0);},200);
+  } else {
+    switchTab('charges');
+    setTimeout(function(){
+      // Switch to trip mode and edit
+      var tripBtn=document.querySelector('.entry-mode-btn:last-child');
+      if(tripBtn)tripBtn.click();
+      setTimeout(function(){editTrip(0);},200);
+    },200);
+  }
+}
 
 function saveQuickCharge(idx){
   if(navigator.vibrate)navigator.vibrate(10);
