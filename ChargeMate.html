@@ -746,18 +746,31 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.12.1 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Charges tab entry mode only auto-sets on first visit (respects manual mode switch)</li>
+    </ul>
+    <div class="cl-ver">v5.12.0 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>UX: Charges tab defaults to Charge or Trip mode based on last logged entry type</li>
+    </ul>
+    <div class="cl-ver">v5.11.0 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>UX: Start odo/% pre-filled from last logged end values (charge + trip forms)</li>
+    </ul>
     <div class="cl-ver">v5.10.5 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
-      <li>Carpool: auto-populates pax from amount expression (full version only)</li>
+      <li>Carpool: auto-populates passenger count from amount expression (e.g. 100+150 sets pax=2)</li>
     </ul>
     <div class="cl-ver">v5.10.4 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
-      <li>Fix: editCarpool direction pill (full version only)</li>
+      <li>Fix: editCarpool now properly highlights direction pill (was referencing removed cpDirDisplay element)</li>
     </ul>
     <div class="cl-ver">v5.10.3 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
-      <li>Fix: saveTrip now calls persist() (triggers auto-sync)</li>
+      <li>Fix: saveTrip now calls persist() (triggers auto-sync, was bypassing it)</li>
       <li>Fix: trip undo/redo also triggers auto-sync</li>
+      <li>Fix: light mode direction pill background uses var(--card) instead of hardcoded dark</li>
     </ul>
     <div class="cl-ver">v5.10.2 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
@@ -1087,6 +1100,7 @@ let petrolLog=[];try{petrolLog=JSON.parse(safeLS.get('cm-petrol-log')||'[]');}ca
 let tripEditIndex = null;
 let planEffMode = 'city';
 let entryMode = 'charge'; // 'charge' or 'trip'
+var _chargesTabVisited = false;
 let editIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
 
@@ -1114,7 +1128,7 @@ function switchTab(tab) {
   var tEl=document.getElementById('t-'+tab);if(tEl)tEl.classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(function(){renderDash();drawAllCharts();renderBreakevenSummary();},30);
-  if (tab==='charges') { renderCharges(); restoreDraft(); updateOdoPlaceholder(); }
+  if (tab==='charges') { renderCharges(); restoreDraft(); updateOdoPlaceholder(); if(!_chargesTabVisited){_chargesTabVisited=true;var _ls=getLastKnownState();if(_ls&&_ls.source==='trip')setEntryMode('trip');else setEntryMode('charge');} }
   if (tab==='expenses') renderExpenses();
   if (tab==='planner') runPlan();
 }
@@ -2036,6 +2050,8 @@ function clearChargeForm(){
   // Native time inputs clear themselves via value=''
   document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
   document.getElementById('autoDuration').style.display='none';
+  // Pre-fill start % from last known state
+  prefillChargeFromLastState();
 }
 
 // ── RECOMPUTE KM ───────────────────────────────────────────────────────────
@@ -2048,6 +2064,49 @@ function recomputeAllKm(){
 }
 
 
+// ── LAST KNOWN STATE (for pre-filling forms) ──────────────────────────────
+function getLastKnownState(){
+  // Find most recent entry across sessions and trips by highest odo
+  var lastSession=null, lastTrip=null;
+  sessions.forEach(function(s){if(s.odo&&s.odo>0){if(!lastSession||s.odo>lastSession.odo)lastSession=s;}});
+  trips.forEach(function(t){if(t.endOdo&&t.endOdo>0){if(!lastTrip||t.endOdo>lastTrip.endOdo)lastTrip=t;}});
+  var sessionOdo=lastSession?lastSession.odo:0;
+  var tripOdo=lastTrip?lastTrip.endOdo:0;
+  if(sessionOdo===0&&tripOdo===0)return null;
+  if(sessionOdo>=tripOdo&&lastSession){
+    return {odo:lastSession.odo, endPct:lastSession.e, source:'charge'};
+  } else if(lastTrip){
+    return {odo:lastTrip.endOdo, endPct:lastTrip.endPct, source:'trip'};
+  }
+  return null;
+}
+
+function prefillChargeFromLastState(){
+  if(editIndex!==null)return; // don't prefill when editing
+  var state=getLastKnownState();
+  if(!state)return;
+  var startEl=document.getElementById('start');
+  if(startEl&&!startEl.value&&state.endPct!=null){
+    startEl.value=state.endPct;
+    updatePreview();
+  }
+}
+
+function prefillTripFromLastState(){
+  if(tripEditIndex!==null)return; // don't prefill when editing
+  var state=getLastKnownState();
+  if(!state)return;
+  var startOdoEl=document.getElementById('tripStartOdo');
+  var startPctEl=document.getElementById('tripStartPct');
+  if(startOdoEl&&!startOdoEl.value&&state.odo){
+    startOdoEl.value=state.odo;
+  }
+  if(startPctEl&&!startPctEl.value&&state.endPct!=null){
+    startPctEl.value=state.endPct;
+  }
+  updateTripPreview();
+}
+
 // ── ENTRY MODE ─────────────────────────────────────────────────────────────
 function setEntryMode(mode){
   entryMode=mode;
@@ -2055,6 +2114,9 @@ function setEntryMode(mode){
   document.getElementById('mode-trip').classList.toggle('active',mode==='trip');
   document.getElementById('chargeFormWrap').style.display=mode==='charge'?'block':'none';
   document.getElementById('tripForm').style.display=mode==='trip'?'block':'none';
+  // Pre-fill from last known state when opening fresh (not editing)
+  if(mode==='charge') prefillChargeFromLastState();
+  if(mode==='trip') prefillTripFromLastState();
   renderCharges();
 }
 
@@ -2118,6 +2180,8 @@ function clearTripForm(){
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
   pickTripType('mixed');
+  // Pre-fill start odo/% from last known state
+  prefillTripFromLastState();
 }
 
 function cancelTripEdit(){
@@ -3257,7 +3321,6 @@ function copyMonthlySummary(){
   var now=new Date();var mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   var moSessions=sessions.filter(function(s){return s.date.startsWith(mo);});
   var moTrips=trips.filter(function(t){return t.date&&t.date.startsWith(mo);});
-  var moCarpools=carpools.filter(function(c){return c.date&&c.date.startsWith(mo);});
   var totalKwh=moSessions.reduce(function(a,s){return a+s.kwh;},0);
   var totalCost=moSessions.filter(function(s){return s.cost!=null;}).reduce(function(a,s){return a+s.cost;},0);
   var totalKm=moSessions.reduce(function(a,s){return a+(s.km||0);},0)+moTrips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
@@ -3367,6 +3430,8 @@ document.getElementById('tripDate').value          = new Date().toISOString().sl
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
+// Pre-fill charge form start % from last known state on initial load
+prefillChargeFromLastState();
 try{render();
 }catch(e){console.error('Init error:',e);}
 
