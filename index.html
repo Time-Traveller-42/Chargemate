@@ -2951,6 +2951,9 @@ function previewCpAmount(){
   const r=evalExpr(v);
   if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= ₹'+r.toLocaleString('en-IN');el.style.color='var(--good)';}
   else{el.textContent='';el.style.color='';}
+  // Auto-populate pax from + segments
+  var parts=v.split('+').filter(function(p){return parseFloat(p.trim())>0;});
+  if(parts.length>1){document.getElementById('cpPax').value=parts.length;}
 }
 
 var _selectedFares=[];
