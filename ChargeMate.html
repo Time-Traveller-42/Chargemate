@@ -164,7 +164,7 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 .stat-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--accent);line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
 .stat-label{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
 
 .session-row{padding:6px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
@@ -726,9 +726,9 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <span class="eff-display-val" id="effModeVal">—</span>
     </div>
     <div id="customEffBlock" style="display:none;margin-top:8px">
-      <label>Your Efficiency (km/kWh)</label>
-      <input type="number" id="planCustomEff" placeholder="e.g. 7.5" step="0.1" oninput="_debouncedRunPlan()">
-      <div style="font-size:10px;color:var(--muted);margin-top:4px">Enter any km/kWh value for planning. Typical: 5–9 km/kWh</div>
+      <label>Your Efficiency (Wh/km)</label>
+      <input type="number" id="planCustomEff" placeholder="e.g. 130" step="1" oninput="_debouncedRunPlan()">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Enter Wh/km value for planning. Typical: 110–200 Wh/km</div>
     </div>
   </div>
   <div class="card" id="planStopsCard">
@@ -746,6 +746,16 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.13.0 <span class="cl-date">16 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Efficiency chart — trips no longer merge (each trip is independent data point)</li>
+      <li>Fix: Stat boxes equal width, subtitle text wraps naturally</li>
+      <li>Fix: Total Distance now shows odometer reading (highest odo from sessions+trips)</li>
+      <li>UX: Last used driving/trip type remembered</li>
+      <li>UX: Plan tab shows Wh/km (matches car dashboard)</li>
+      <li>Dashboard: At a Glance = lifetime stats. Monthly card = distance + expenditure (with savings)</li>
+      <li>Cost/km uses paid charges only, shows home rate in subtitle</li>
+    </ul>
     <div class="cl-ver">v5.12.4 <span class="cl-date">16 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: At a Glance stat boxes now equal width (min-width:0 prevents long text from stretching grid columns)</li>
@@ -1221,8 +1231,12 @@ function getAvgEff(){
 function renderDash(){
   const sorted=[...sessions].sort((a,b)=>new Date(a.date)-new Date(b.date));
   const n=sessions.length;
-  let totalCost=0,hasCost=false,totalKwhCharged=0,totalKm=0;
-  sessions.forEach(x=>{if(x.cost!=null){totalCost+=x.cost;hasCost=true;}totalKwhCharged+=x.kwh||0;totalKm+=x.km||0;});
+  let totalCost=0,hasCost=false,totalKwhCharged=0;
+  sessions.forEach(x=>{if(x.cost!=null){totalCost+=x.cost;hasCost=true;}totalKwhCharged+=x.kwh||0;});
+  var allOdos=[];
+  sessions.forEach(function(s){if(s.odo&&s.odo>0)allOdos.push(s.odo);});
+  trips.forEach(function(t){if(t.startOdo)allOdos.push(t.startOdo);if(t.endOdo)allOdos.push(t.endOdo);});
+  var totalKm=allOdos.length>0?Math.max.apply(null,allOdos):0;
 
   const avgEffVal=getWeightedRecentEff();
   const avgEff=avgEffVal?avgEffVal.toFixed(1):null;
@@ -1255,35 +1269,24 @@ function renderDash(){
   // === AT A GLANCE ===
   const lastSess=sorted.length>0?sorted[sorted.length-1]:null;
   const lastDateStr=lastSess?new Date(lastSess.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
+  // === AT A GLANCE (lifetime stats) ===
+  var avgMonthSpend=(function(){var allM=new Set();sessions.forEach(function(s){if(s.date&&s.cost>0)allM.add(s.date.slice(0,7))});(expenses||[]).forEach(function(e){if(e.date&&e.category!=='purchase')allM.add(e.date.slice(0,7))});var n=Math.max(1,allM.size);var tot=sessions.filter(function(s){return s.cost>0}).reduce(function(a,s){return a+s.cost},0)+(expenses||[]).filter(function(e){return e.category!=='purchase'}).reduce(function(a,e){return a+(e.amount||0)},0);return Math.round(tot/n);})();
   document.getElementById('stats').innerHTML=
-    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'—','Total Distance',monthKm>0?monthKm.toLocaleString('en-IN')+' km this month'+(projectedKm?' (~'+projectedKm.toLocaleString('en-IN')+' projected)':''):null)+
-    statBox(avgEff?`${avgEff} km/kWh`:'—','Efficiency',avgEff?`${(+avgEff*settings.battery/100).toFixed(1)} km/% · ${(1000/+avgEff).toFixed(0)} Wh/km`:null)+
-    statBox(hasCost&&totalKm>0?'₹'+(totalCost/totalKm).toFixed(2):'—','Cost / km',hasCost&&totalKm>0?'charging only':null)+
-    (function(){
-    var now=new Date();var thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-    return statBox('<span style="color:var(--good)">₹ '+Math.round(moCarpool).toLocaleString('en-IN')+'</span>','Carpool','this month');
-  })();
-  // v5.6.0: Make efficiency stat tappable -> Charges tab
-  (function(){var grid=document.getElementById('stats');if(grid&&grid.children.length>1){var effBox=grid.children[1];effBox.classList.add('tappable');effBox.onclick=function(){switchTab('charges')};}})();
+    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'\u2014','Total Distance',avgEff?avgEff+' km/kWh \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
+    statBox(avgEff?avgEff+' km/kWh':'\u2014','Efficiency',avgEff?(+avgEff*settings.battery/100).toFixed(1)+' km/% \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
+    statBox((function(){var paidKm=sessions.filter(function(s){return s.cost>0&&s.km>0}).reduce(function(a,s){return a+s.km},0);return hasCost&&paidKm>0?'\u20b9'+(totalCost/paidKm).toFixed(2):'\u2014'})(),'Cost / km',settings.homeRate?'Home: \u20b9'+settings.homeRate+'/unit':'paid charges')+
+    statBox('\u20b9 '+avgMonthSpend.toLocaleString('en-IN'),'Avg / Month','lifetime spend');
+
 
 
   // === SPENDING (v5.6.1 redesign) ===
-  var spTitle=document.getElementById('spendingTitle');if(spTitle){var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];spTitle.textContent='Spending \u2014 '+mNames[new Date().getMonth()]+' '+new Date().getFullYear();}
-  const monthCharging=sessions.filter(x=>x.date.startsWith(thisMonth)&&x.cost!=null&&x.cost>0).reduce((a,x)=>a+x.cost,0);
-  const monthExpenses=(expenses||[]).filter(x=>x.date&&x.date.startsWith(thisMonth)&&x.category!=='purchase').reduce((a,x)=>a+(x.amount||0),0);
-  const monthExpenditure=monthCharging+monthExpenses;
-  const totalCharging=sessions.filter(x=>x.cost!=null&&x.cost>0).reduce((a,x)=>a+x.cost,0);
-  const totalExpenses=(expenses||[]).filter(x=>x.category!=='purchase').reduce((a,x)=>a+(x.amount||0),0);
-  const totalLifetime=totalCharging+totalExpenses;
-  const allMonths=new Set();sessions.forEach(function(s){if(s.date&&s.cost>0)allMonths.add(s.date.slice(0,7))});(expenses||[]).forEach(function(e){if(e.date&&e.category!=='purchase')allMonths.add(e.date.slice(0,7))});
-  const numMonths=Math.max(1,allMonths.size);
-  const avgMonth=Math.round(totalLifetime/numMonths);
-  const netMonthlyCost=monthExpenditure;
-
+  // === MONTHLY STATS ===
+  var spTitle=document.getElementById('spendingTitle');if(spTitle){var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];spTitle.textContent=mNames[new Date().getMonth()]+' '+new Date().getFullYear();}
+  var monthExpenditure=sessions.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.cost!=null&&x.cost>0}).reduce(function(a,x){return a+x.cost},0)+(expenses||[]).filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.category!=='purchase'}).reduce(function(a,x){return a+(x.amount||0)},0);
+    var monthSavings=(function(){if(!settings.petrolMileage||!settings.petrolPrice||monthKm<=0)return null;var petrolCost=monthKm/settings.petrolMileage*settings.petrolPrice;var evCost=sessions.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.cost>0}).reduce(function(a,x){return a+x.cost},0);return Math.round(petrolCost-evCost);})();
   document.getElementById('paidStats').innerHTML=
-    statBox('₹ '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure')+
-    statBox('₹ '+avgMonth.toLocaleString('en-IN'),'Avg/Month')+
-        (netMonthlyCost<=0?statBox('<span style="color:var(--good)">Surplus ₹'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN')+'</span>','Net Cost'):statBox('₹ '+Math.round(netMonthlyCost).toLocaleString('en-IN'),'Net Cost'));
+    statBox(monthKm>0?monthKm.toLocaleString('en-IN')+' km':'\u2014','Distance',projectedKm?'~'+projectedKm.toLocaleString('en-IN')+' km projected':null)+
+    statBox('\u20b9 '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure',monthSavings!=null&&monthSavings>=0?'saved \u20b9'+monthSavings.toLocaleString('en-IN')+' vs petrol':'charging + expenses');
 
   
 
@@ -1418,7 +1421,7 @@ function getActiveEff(){
   if(planEffMode==='mixed') return getMixedEff();
   if(planEffMode==='custom'){
     const v=+document.getElementById('planCustomEff').value;
-    return v>0?v:null;
+    return v>0?1000/v:null;
   }
   return null;
 }
@@ -1446,7 +1449,7 @@ function updateEffModeDisplay(){
     if(e){ 
       const src=getCityEffSource();
       labelEl.textContent=src==='data'?'City (from tagged data)':'City (overall avg)'; 
-      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      valEl.textContent=(1000/e).toFixed(0)+' Wh/km'; 
       display.style.display='flex'; 
     } else { display.style.display='none'; }
   } else if(planEffMode==='highway'){
@@ -1454,7 +1457,7 @@ function updateEffModeDisplay(){
     if(e){ 
       const src=getHighwayEffSource();
       labelEl.textContent=src==='data'?'Highway (from tagged data)':'Highway (~est.)'; 
-      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      valEl.textContent=(1000/e).toFixed(0)+' Wh/km'; 
       display.style.display='flex'; 
     } else { display.style.display='none'; }
   } else if(planEffMode==='mixed'){
@@ -1462,7 +1465,7 @@ function updateEffModeDisplay(){
     if(e){ 
       const src=getMixedEffSource();
       labelEl.textContent=src==='data'?'Mixed (from tagged data)':'Mixed (overall avg)'; 
-      valEl.textContent=e.toFixed(2)+' km/kWh'; 
+      valEl.textContent=(1000/e).toFixed(0)+' Wh/km'; 
       display.style.display='flex'; 
     } else { display.style.display='none'; }
   }
@@ -2322,7 +2325,7 @@ function render(){
   });
   if(activeTab==='dash'){renderDash();drawAllCharts();renderBreakevenSummary();}
   else if(activeTab==='charges')renderCharges();
-  else if(activeTab==='carpool')
+
   else if(activeTab==='expenses')renderExpenses();
   updateOdoPlaceholder();
 }
@@ -2678,7 +2681,7 @@ function selectQuickTrip(idx){
   document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
   var allPills=document.querySelectorAll('#quickPills .quick-pill');
   var chargeCount=(window._qcChargePatterns||[]).length;
-  var cpCount=document.querySelectorAll('#quickPills .quick-pill[onclick^="quickCarpool"]').length;
+  var cpCount=0;
   var tripPillIdx=chargeCount+cpCount+idx;
   if(allPills[tripPillIdx])allPills[tripPillIdx].classList.add('selected');
   
@@ -2891,7 +2894,7 @@ function evalExpr(str){
   if(!/^[\d+\-*/().\s]+$/.test(s))return null;
   try{const r=Function('"use strict";return ('+s+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(e){return null;}
 }
-var _selectedFares=[];
+
 function renderFarePills(){
   var el=document.getElementById('farePills');if(!el)return;
   // Extract individual amounts from all carpool amountExpr fields
@@ -2909,19 +2912,6 @@ function renderFarePills(){
   html+='</div>';
   el.innerHTML=html;
 }
-function toggleFare(amt){
-  var idx=_selectedFares.indexOf(amt);
-  if(idx>=0)_selectedFares.splice(idx,1);else _selectedFares.push(amt);
-  // Update amount field
-  var field=document.getElementById('cpAmount');
-  field.value=_selectedFares.join('+');
-  previewCpAmount();
-  // Update pax
-  var paxEl=document.getElementById('cpPax');
-  if(paxEl&&_selectedFares.length>0)paxEl.value=_selectedFares.length;
-  renderFarePills();
-}
-
 // ── EXPENSES ──────────────────────────────────────────────────────────────────────
 var expEditIndex=null;
 
@@ -3319,7 +3309,7 @@ function copyMonthlySummary(){
   var totalKwh=moSessions.reduce(function(a,s){return a+s.kwh;},0);
   var totalCost=moSessions.filter(function(s){return s.cost!=null;}).reduce(function(a,s){return a+s.cost;},0);
   var totalKm=moSessions.reduce(function(a,s){return a+(s.km||0);},0)+moTrips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
-  var cpIncome=moCarpools.reduce(function(a,c){return a+(c.amount||0);},0);
+  var moCarpools=[];var cpIncome=0;
   var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]+' '+now.getFullYear();
   var txt=label+' - ChargeMate Summary\n';
   txt+='─────────────────────────\n';
@@ -3328,7 +3318,7 @@ function copyMonthlySummary(){
   txt+='Cost: ₹'+totalCost.toFixed(0)+'\n';
   txt+='Distance: '+totalKm+' km\n';
   if(totalKm>0&&totalCost>0)txt+='Cost/km: ₹'+(totalCost/totalKm).toFixed(1)+'\n';
-  if(moCarpools.length)txt+='Carpool: '+moCarpools.length+' trips · ₹'+cpIncome.toFixed(0)+' earned\n';
+  
   if(totalCost>0&&cpIncome>0)txt+='Net cost: ₹'+(totalCost-cpIncome).toFixed(0)+'\n';
   navigator.clipboard.writeText(txt).then(function(){toast('Summary copied ✓');}).catch(function(){toast('Copy failed');});
 }
