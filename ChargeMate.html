@@ -160,7 +160,7 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 
 
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
-.stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border)}
+.stat-box{background:#0d1525;border-radius:10px;padding:12px;border:1px solid var(--border);min-width:0}
 .stat-val{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--accent);line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
 .stat-label{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
@@ -746,6 +746,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.12.4 <span class="cl-date">16 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: At a Glance stat boxes now equal width (min-width:0 prevents long text from stretching grid columns)</li>
+    </ul>
     <div class="cl-ver">v5.12.3 <span class="cl-date">16 Jul 2026</span></div>
     <ul class="cl-list">
       <li>UX: Driving type / trip type remembered across sessions (last used value pre-selected)</li>
