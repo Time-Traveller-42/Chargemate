@@ -778,6 +778,16 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.12.3 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>UX: Last used driving type (charge) and trip type are remembered and defaulted on form reset, FAB quick-add, and initial load</li>
+    </ul>
+    <div class="cl-ver">v5.12.2 <span class="cl-date">14 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Trips are now independent efficiency data points (no merging). chargedSince on trips means mid-trip charge (excludes unreliable data). Charge-to-charge priority preserved.</li>
+      <li>Fix: Efficiency chart hash only set after successful draw (prevents stale chart when FAB overlay blocks canvas)</li>
+      <li>Fix: drawAllCharts returns early after retry exhaustion instead of drawing on zero-width canvas</li>
+    </ul>
     <div class="cl-ver">v5.12.1 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Charges tab entry mode only auto-sets on first visit (respects manual mode switch)</li>
@@ -2087,7 +2097,7 @@ function saveCharge(){
     document.getElementById('cancelChargeEdit').style.display='none';
   } else sessions.unshift(obj);
 
-  recomputeAllKm();safeLS.set('cm-lastType',type);persist();clearChargeForm();render();
+  recomputeAllKm();safeLS.set('cm-lastType',type);safeLS.set('cm-lastDrivingType',drivingType||'mixed');persist();clearChargeForm();render();
   document.getElementById('list').scrollIntoView({behavior:'smooth',block:'start'});
   toast(wasEditing?'Session updated ✓':'Session saved ✓');
 }
@@ -2110,8 +2120,9 @@ function clearChargeForm(){
   document.getElementById('formError').textContent='';
   document.getElementById('odoWarn').textContent='';
   document.getElementById('odo').classList.remove('warn-input');
-  // Reset driving type to smart default based on current charge type
-  setDrivingTypeDefault();
+  // Default driving type to last used (fallback to smart default)
+  var _lastDT=safeLS.get('cm-lastDrivingType');
+  if(_lastDT)pickDrivingType(_lastDT); else setDrivingTypeDefault();
   // Native time inputs clear themselves via value=''
   document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
   document.getElementById('autoDuration').style.display='none';
@@ -2233,6 +2244,7 @@ function saveTrip(){
     document.getElementById('tripFormTitle').textContent='New Trip';
     document.getElementById('cancelTripEdit').style.display='none';
   } else trips.unshift(obj);
+  safeLS.set('cm-lastTripType',tripTypeVal||'mixed');
   persist();
   clearTripForm();render();
   toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
@@ -2244,7 +2256,7 @@ function clearTripForm(){
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
-  pickTripType('mixed');
+  pickTripType(safeLS.get('cm-lastTripType')||'mixed');
   // Pre-fill start odo/% from last known state
   prefillTripFromLastState();
 }
@@ -2315,48 +2327,31 @@ function computeUnifiedEfficiency(){
     }
   }
 
-  // === STEP 2: Merge overlapping/chaining trips into longest spans ===
-  var tripSpans=trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo;})
-    .map(function(t){return {fromOdo:t.startOdo,toOdo:t.endOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:!!t.chargedSince,tripType:t.tripType||null};})
-    .sort(function(a,b){return a.fromOdo-b.fromOdo;});
-  // Merge overlapping spans
-  var merged=[];
-  tripSpans.forEach(function(t){
-    if(!merged.length){merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince,tripType:t.tripType});return;}
-    var last=merged[merged.length-1];
-    if(t.fromOdo<=last.toOdo&&t.tripType===last.tripType){
-      // Overlapping or chaining — extend
-      if(t.toOdo>last.toOdo){last.toOdo=t.toOdo;last.endPct=t.endPct;last.date=t.date;}
-    } else {
-      merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince,tripType:t.tripType});
-    }
-  });
-
-  // === STEP 3: Only use trip spans where no charge segment covers them ===
+  // === STEP 2: Trip segments (each trip is self-contained — no merging needed) ===
+  // Exclude trips with chargedSince=true (mid-trip charge makes % drop unreliable)
   var tripSegs=[];
-  merged.forEach(function(t){
-    if(t.chargedSince) return;
-    // Check if any charge segment fully covers this trip
-    var covered=chargeSegs.some(function(c){return c.fromOdo<=t.fromOdo&&c.toOdo>=t.toOdo;});
+  trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&!t.chargedSince;}).forEach(function(t){
+    // Check if any charge-to-charge segment fully covers this trip (charge priority)
+    var covered=chargeSegs.some(function(c){return c.fromOdo<=t.startOdo&&c.toOdo>=t.endOdo;});
     if(covered) return;
-    var km=t.toOdo-t.fromOdo;
+    var km=t.endOdo-t.startOdo;
     var drop=t.startPct-t.endPct;
     if(km>0&&drop>0){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
       tripSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType||null});
     } else if(km>0&&drop<0){
       tripSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
-        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType||null});
     }
   });
 
-  // === STEP 4: Combine and sort by date ===
+  // === STEP 3: Combine and sort by date ===
   var segments=chargeSegs.concat(tripSegs);
   segments.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.fromOdo-b.fromOdo;});
 
-  // === STEP 5: Flag outliers ===
+  // === STEP 4: Flag outliers ===
   var validEffs=segments.filter(function(s){return !s.regen&&s.efficiency&&isFinite(s.efficiency);});
   if(validEffs.length>=5){
     var sumEff=validEffs.reduce(function(a,s){return a+s.efficiency;},0);
@@ -2728,7 +2723,7 @@ function selectQuickCharge(idx){
       dtCounts[x.drivingType]=(dtCounts[x.drivingType]||0)+1;
     }
   });
-  var dtAuto='mixed';
+  var dtAuto=safeLS.get('cm-lastDrivingType')||'mixed';
   if(Object.keys(dtCounts).length){
     dtAuto=Object.entries(dtCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
   } else if(pattern.t==='public'){
@@ -2787,7 +2782,7 @@ function selectQuickTrip(idx){
   if(pattern.types&&pattern.types.length){
     pattern.types.forEach(function(t){ttCounts[t]=(ttCounts[t]||0)+1;});
   }
-  var ttAuto='mixed';
+  var ttAuto=safeLS.get('cm-lastTripType')||'mixed';
   if(Object.keys(ttCounts).length){
     ttAuto=Object.entries(ttCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
   }
@@ -2832,6 +2827,7 @@ function saveQuickTrip(idx){
   var tripType=document.getElementById('qcTripType')?document.getElementById('qcTripType').value:'mixed';
   var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),startOdo:startOdo,endOdo:endOdo,startPct:startPct,endPct:endPct,tripType:tripType};
   trips.unshift(obj);
+  safeLS.set('cm-lastTripType',tripType);
   recomputeAllKm();persist();render();
   closeQuickAdd();
   toast('Trip saved ✓');
@@ -2891,6 +2887,7 @@ function saveQuickCharge(idx){
   var drivingType=document.getElementById('qcDrivingType')?document.getElementById('qcDrivingType').value:'mixed';
   var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false,drivingType:drivingType};
   sessions.unshift(obj);
+  safeLS.set('cm-lastDrivingType',drivingType);
   recomputeAllKm();persist();render();
   closeQuickAdd();
   toast((type==='office'?'Office':'Home')+' charge saved ✓');
@@ -3515,11 +3512,11 @@ function drawAllCharts(retryCount){
   // Lazy: skip redraw if data unchanged
   var newHash=sessions.length+'-'+trips.length+'-'+(sessions.length?sessions[0].id:'')+(trips.length?trips[0].startOdo:'');
   if(newHash===_chartDataHash&&!retryCount)return;
-  _chartDataHash=newHash;
   var canvas=document.getElementById('effChart');
   if(canvas&&canvas.offsetWidth===0){
     // Canvas not visible yet - retry with requestAnimationFrame
     if((retryCount||0)<3){requestAnimationFrame(function(){drawAllCharts((retryCount||0)+1);});return;}
+    return; // Give up — hash NOT set, so next call will retry
   }
   const sorted=[...sessions].sort((a,b)=>{const d=new Date(a.date)-new Date(b.date);if(d!==0)return d;if(a.startTime&&b.startTime&&a.startTime!==b.startTime)return a.startTime<b.startTime?-1:1;return (a.odo||0)-(b.odo||0);});
   // Compute efficiency from unified timeline if available
@@ -3543,6 +3540,7 @@ function drawAllCharts(retryCount){
   const effPts=chartData.map(p=>p.v);
   const effDates=chartData.map(p=>p.d);
   drawChart('effChart',effPts,effDates,'#00e5ff');
+  _chartDataHash=newHash; // Set hash only after successful draw
 }
 
 // ── COPY MONTHLY SUMMARY ──────────────────────────────────────────────────
@@ -3659,6 +3657,7 @@ document.getElementById('tripDate').value          = new Date().toISOString().sl
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
+(function(){var ldt=safeLS.get('cm-lastDrivingType');if(ldt)pickDrivingType(ldt);})();
 // Pre-fill charge form start % from last known state on initial load
 prefillChargeFromLastState();
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
