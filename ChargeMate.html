@@ -1274,7 +1274,7 @@ function renderDash(){
   document.getElementById('stats').innerHTML=
     statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'\u2014','Total Distance',avgEff?avgEff+' km/kWh \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
     statBox(avgEff?avgEff+' km/kWh':'\u2014','Efficiency',avgEff?(+avgEff*settings.battery/100).toFixed(1)+' km/% \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
-    statBox((function(){var paidKm=sessions.filter(function(s){return s.cost>0&&s.km>0}).reduce(function(a,s){return a+s.km},0);return hasCost&&paidKm>0?'\u20b9'+(totalCost/paidKm).toFixed(2):'\u2014'})(),'Cost / km',settings.homeRate?'Home: \u20b9'+settings.homeRate+'/unit':'paid charges')+
+    statBox((function(){var paidKm=sessions.filter(function(s){return s.cost>0&&s.km>0}).reduce(function(a,s){return a+s.km},0);return hasCost&&paidKm>0?'\u20b9'+(totalCost/paidKm).toFixed(2):'\u2014'})(),'Cost / km',settings.homeRate&&avgEff?'\u20b9'+(settings.homeRate/+avgEff).toFixed(2)+'/km at home':'paid charges')+
     statBox('\u20b9 '+avgMonthSpend.toLocaleString('en-IN'),'Avg / Month','lifetime spend');
 
 
