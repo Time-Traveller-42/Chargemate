@@ -746,6 +746,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.12.3 <span class="cl-date">16 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>UX: Driving type / trip type remembered across sessions (last used value pre-selected)</li>
+    </ul>
+    <div class="cl-ver">v5.12.2 <span class="cl-date">16 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Efficiency treats each trip as self-contained segment (no merging); excludes chargedSince trips</li>
+    </ul>
     <div class="cl-ver">v5.12.1 <span class="cl-date">14 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Charges tab entry mode only auto-sets on first visit (respects manual mode switch)</li>
@@ -1397,7 +1405,7 @@ function pickTripType(val){
 function setDrivingTypeDefault(){
   var type=document.getElementById('type').value;
   if(type==='public'){pickDrivingType('highway');}
-  else{pickDrivingType('mixed');}
+  else{pickDrivingType(safeLS.get('cm-lastDrivingType')||'mixed');}
 }
 
 function getActiveEff(){
@@ -2022,7 +2030,7 @@ function saveCharge(){
     document.getElementById('cancelChargeEdit').style.display='none';
   } else sessions.unshift(obj);
 
-  recomputeAllKm();safeLS.set('cm-lastType',type);persist();clearChargeForm();render();
+  recomputeAllKm();safeLS.set('cm-lastType',type);persist();safeLS.set('cm-lastDrivingType',drivingType||'mixed');clearChargeForm();render();
   document.getElementById('list').scrollIntoView({behavior:'smooth',block:'start'});
   toast(wasEditing?'Session updated ✓':'Session saved ✓');
 }
@@ -2168,7 +2176,7 @@ function saveTrip(){
     document.getElementById('tripFormTitle').textContent='New Trip';
     document.getElementById('cancelTripEdit').style.display='none';
   } else trips.unshift(obj);
-  persist();
+  persist();safeLS.set('cm-lastTripType',tripTypeVal||'mixed');
   clearTripForm();render();
   toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
 }
@@ -2179,7 +2187,7 @@ function clearTripForm(){
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
-  pickTripType('mixed');
+  pickTripType(safeLS.get('cm-lastTripType')||'mixed');
   // Pre-fill start odo/% from last known state
   prefillTripFromLastState();
 }
@@ -2250,48 +2258,31 @@ function computeUnifiedEfficiency(){
     }
   }
 
-  // === STEP 2: Merge overlapping/chaining trips into longest spans ===
-  var tripSpans=trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo;})
-    .map(function(t){return {fromOdo:t.startOdo,toOdo:t.endOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:!!t.chargedSince,tripType:t.tripType||null};})
-    .sort(function(a,b){return a.fromOdo-b.fromOdo;});
-  // Merge overlapping spans
-  var merged=[];
-  tripSpans.forEach(function(t){
-    if(!merged.length){merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince,tripType:t.tripType});return;}
-    var last=merged[merged.length-1];
-    if(t.fromOdo<=last.toOdo&&t.tripType===last.tripType){
-      // Overlapping or chaining — extend
-      if(t.toOdo>last.toOdo){last.toOdo=t.toOdo;last.endPct=t.endPct;last.date=t.date;}
-    } else {
-      merged.push({fromOdo:t.fromOdo,toOdo:t.toOdo,startPct:t.startPct,endPct:t.endPct,date:t.date,chargedSince:t.chargedSince,tripType:t.tripType});
-    }
-  });
-
-  // === STEP 3: Only use trip spans where no charge segment covers them ===
+  // === STEP 2: Trip segments (each trip is self-contained — no merging needed) ===
+  // Exclude trips with chargedSince=true (mid-trip charge makes % drop unreliable)
   var tripSegs=[];
-  merged.forEach(function(t){
-    if(t.chargedSince) return;
-    // Check if any charge segment fully covers this trip
-    var covered=chargeSegs.some(function(c){return c.fromOdo<=t.fromOdo&&c.toOdo>=t.toOdo;});
+  trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&!t.chargedSince;}).forEach(function(t){
+    // Check if any charge-to-charge segment fully covers this trip (charge priority)
+    var covered=chargeSegs.some(function(c){return c.fromOdo<=t.startOdo&&c.toOdo>=t.endOdo;});
     if(covered) return;
-    var km=t.toOdo-t.fromOdo;
+    var km=t.endOdo-t.startOdo;
     var drop=t.startPct-t.endPct;
     if(km>0&&drop>0){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
       tripSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType||null});
     } else if(km>0&&drop<0){
       tripSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
-        fromOdo:t.fromOdo,toOdo:t.toOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType||null});
     }
   });
 
-  // === STEP 4: Combine and sort by date ===
+  // === STEP 3: Combine and sort by date ===
   var segments=chargeSegs.concat(tripSegs);
   segments.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.fromOdo-b.fromOdo;});
 
-  // === STEP 5: Flag outliers ===
+  // === STEP 4: Flag outliers ===
   var validEffs=segments.filter(function(s){return !s.regen&&s.efficiency&&isFinite(s.efficiency);});
   if(validEffs.length>=5){
     var sumEff=validEffs.reduce(function(a,s){return a+s.efficiency;},0);
@@ -2633,7 +2624,7 @@ function selectQuickCharge(idx){
       dtCounts[x.drivingType]=(dtCounts[x.drivingType]||0)+1;
     }
   });
-  var dtAuto='mixed';
+  var dtAuto=safeLS.get('cm-lastDrivingType')||'mixed';
   if(Object.keys(dtCounts).length){
     dtAuto=Object.entries(dtCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
   } else if(pattern.t==='public'){
@@ -2692,7 +2683,7 @@ function selectQuickTrip(idx){
   if(pattern.types&&pattern.types.length){
     pattern.types.forEach(function(t){ttCounts[t]=(ttCounts[t]||0)+1;});
   }
-  var ttAuto='mixed';
+  var ttAuto=safeLS.get('cm-lastTripType')||'mixed';
   if(Object.keys(ttCounts).length){
     ttAuto=Object.entries(ttCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
   }
@@ -2737,7 +2728,7 @@ function saveQuickTrip(idx){
   var tripType=document.getElementById('qcTripType')?document.getElementById('qcTripType').value:'mixed';
   var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),startOdo:startOdo,endOdo:endOdo,startPct:startPct,endPct:endPct,tripType:tripType};
   trips.unshift(obj);
-  recomputeAllKm();persist();render();
+  recomputeAllKm();persist();safeLS.set('cm-lastTripType',tripType||'mixed');render();
   closeQuickAdd();
   toast('Trip saved ✓');
 }
@@ -2796,7 +2787,7 @@ function saveQuickCharge(idx){
   var drivingType=document.getElementById('qcDrivingType')?document.getElementById('qcDrivingType').value:'mixed';
   var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false,drivingType:drivingType};
   sessions.unshift(obj);
-  recomputeAllKm();persist();render();
+  recomputeAllKm();persist();safeLS.set('cm-lastDrivingType',drivingType||'mixed');render();
   closeQuickAdd();
   toast((type==='office'?'Office':'Home')+' charge saved ✓');
 }
