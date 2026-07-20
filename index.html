@@ -463,13 +463,29 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
         </div>
         <input type="hidden" id="tripType" value="mixed">
       </div>
-      <div class="form-row" style="margin-top:10px">
+      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);margin-right:4px">Dist:</span>
+        <div class="eff-tab active" id="tim-odo" onclick="setTripDistMode('odo')">Odo</div>
+        <div class="eff-tab" id="tim-km" onclick="setTripDistMode('km')">km</div>
+      </div>
+      <div id="tripOdoFields" class="form-row" style="margin-top:10px">
         <div><label>Start Odo</label><input type="number" id="tripStartOdo" placeholder="e.g. 4000" oninput="updateTripPreview()"></div>
         <div><label>End Odo</label><input type="number" id="tripEndOdo" placeholder="e.g. 4070" oninput="updateTripPreview()"></div>
       </div>
-      <div class="form-row" style="margin-top:10px">
+      <div id="tripDistField" style="margin-top:10px;display:none">
+        <label>Distance (km)</label><input type="number" id="tripDistance" placeholder="e.g. 70" oninput="updateTripPreview()">
+      </div>
+      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);margin-right:4px">Battery:</span>
+        <div class="eff-tab active" id="tim-pct" onclick="setTripBatMode('pct')">Start/End</div>
+        <div class="eff-tab" id="tim-con" onclick="setTripBatMode('consumed')">Consumed</div>
+      </div>
+      <div id="tripPctFields" class="form-row" style="margin-top:10px">
         <div><label>Start %</label><input type="number" id="tripStartPct" min="0" max="100" placeholder="e.g. 90" oninput="updateTripPreview()"></div>
         <div><label>End %</label><input type="number" id="tripEndPct" min="0" max="100" placeholder="e.g. 67" oninput="updateTripPreview()"></div>
+      </div>
+      <div id="tripConsumedField" style="margin-top:10px;display:none">
+        <label>% consumed</label><input type="number" id="tripConsumed" min="0" max="100" placeholder="e.g. 23" oninput="updateTripPreview()">
       </div>
       <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
       <input type="text" id="tripNote" placeholder="e.g. highway, rain, AC on">
@@ -481,7 +497,6 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <div id="tripError" class="error-msg"></div>
       <button class="primary" onclick="saveTrip()" style="margin-top:10px">Save Trip</button>
           <button class="ghost" onclick="clearTripForm()" style="margin-top:8px">Reset</button>
-      <button class="ghost" onclick="clearTripForm()" style="margin-top:8px">Reset</button>
       <button class="secondary" id="cancelTripEdit" style="display:none" onclick="cancelTripEdit()">Cancel Edit</button>
     </div>
     <div id="chargeFormWrap">
@@ -510,10 +525,16 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       </div>
       <input type="hidden" id="drivingType" value="mixed">
     </div>
+    <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+      <span style="font-size:10px;color:var(--muted);margin-right:4px">Input:</span>
+      <div class="eff-tab active" id="cim-odo" onclick="setChargeInputMode('odo')">Odo</div>
+      <div class="eff-tab" id="cim-dist" onclick="setChargeInputMode('dist')">Distance</div>
+    </div>
     <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
       <div><label>Start %</label><input type="number" id="start" min="0" max="100" placeholder="e.g. 20" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='Start % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
       <div><label>End %</label><input type="number" id="end" min="0" max="100" placeholder="e.g. 100" oninput="updatePreview();if(+this.value>100){this.classList.add('warn-input');document.getElementById('formError').textContent='End % cannot exceed 100'}else{this.classList.remove('warn-input');document.getElementById('formError').textContent=''}"></div>
-      <div><label>Odo (km)</label><input type="text" id="odo" inputmode="numeric" placeholder="" oninput="validateOdo();formatNumericInput(this)"></div>
+      <div id="chargeOdoCol"><label>Odo (km)</label><input type="text" id="odo" inputmode="numeric" placeholder="" oninput="validateOdo();formatNumericInput(this)"></div>
+      <div id="chargeDistCol" style="display:none"><label>Dist (km)</label><input type="number" id="chargeDistance" placeholder="e.g. 35"></div>
     </div>
     <div id="timeRow" class="time-row" style="display:none">
       <div><label>Start Time</label><input type="time" id="startTime" oninput="updateDurationPreview()"></div>
@@ -774,6 +795,12 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v5.14.0 <span class="cl-date">20 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Feature: Odo/Distance input mode toggle on both charge and trip forms</li>
+      <li>Distance mode: enter km + % consumed (auto-computes odo/% from last known state)</li>
+      <li>Last used input mode remembered per form</li>
+    </ul>
     <div class="cl-ver">v5.13.0 <span class="cl-date">16 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Efficiency chart — trips no longer merge (each trip is independent data point)</li>
@@ -1171,6 +1198,34 @@ function saveDraft(){try{var d={};_draftFields.forEach(function(f){var el=docume
 function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')||'null');if(!d)return;_draftFields.forEach(function(f){var el=document.getElementById(f);if(el&&d[f])el.value=d[f];});sessionStorage.removeItem('cm-draft');if(d.type)onTypeChange();if(d.drivingType)pickDrivingType(d.drivingType);updatePreview();}catch(e){}}
 
 // ── TABS ───────────────────────────────────────────────────────────────────
+// ── INPUT MODE (Odo vs Distance) ─────────────────────────────────────────────
+var _tripInputMode=safeLS.get('cm-tripInputMode')||'odo';
+var _chargeInputMode=safeLS.get('cm-chargeInputMode')||'odo';
+var _tripBatMode=safeLS.get('cm-tripBatMode')||'pct';
+function setTripDistMode(mode){
+  _tripInputMode=mode;safeLS.set('cm-tripInputMode',mode);
+  document.getElementById('tim-odo').classList.toggle('active',mode==='odo');
+  document.getElementById('tim-km').classList.toggle('active',mode==='km');
+  document.getElementById('tripOdoFields').style.display=mode==='odo'?'grid':'none';
+  document.getElementById('tripDistField').style.display=mode==='km'?'block':'none';
+}
+function setTripBatMode(mode){
+  _tripBatMode=mode;safeLS.set('cm-tripBatMode',mode);
+  document.getElementById('tim-pct').classList.toggle('active',mode==='pct');
+  document.getElementById('tim-con').classList.toggle('active',mode==='consumed');
+  document.getElementById('tripPctFields').style.display=mode==='pct'?'grid':'none';
+  document.getElementById('tripConsumedField').style.display=mode==='consumed'?'block':'none';
+}
+function setChargeInputMode(mode){
+  _chargeInputMode=mode;safeLS.set('cm-chargeInputMode',mode);
+  document.getElementById('cim-odo').classList.toggle('active',mode==='odo');
+  document.getElementById('cim-dist').classList.toggle('active',mode==='dist');
+  document.getElementById('chargeOdoCol').style.display=mode==='odo'?'block':'none';
+  document.getElementById('chargeDistCol').style.display=mode==='dist'?'block':'none';
+}
+(function(){if(_tripInputMode==='km')setTripDistMode('km');if(_tripBatMode==='consumed')setTripBatMode('consumed');if(_chargeInputMode==='dist')setChargeInputMode('dist');})();
+
+
 function switchTab(tab) {
   // Haptic feedback
   if(navigator.vibrate)navigator.vibrate(10);
@@ -1998,8 +2053,10 @@ function onTypeChange(){
   document.getElementById('publicBlock').style.display=isPub?'block':'none';
   document.getElementById('notesBlock').style.display=isPub?'block':'none';
   document.getElementById('timeRow').style.display=isPub?'grid':'none';
-  // Smart default for driving type
-  setDrivingTypeDefault();
+  // Smart default for driving type — use last saved, except public defaults to highway
+  var isPubType=document.getElementById('type').value==='public';
+  if(isPubType){pickDrivingType('highway');}
+  else{var _ldt='mixed';for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){_ldt=sessions[i].drivingType;break;}}pickDrivingType(_ldt);}
   // Show auto-duration for office/home
   updateAutoDuration();
   // Auto-fill from last public charge if fields are empty
@@ -2064,7 +2121,14 @@ function saveCharge(){
     if(pr!==''){settings.lastPublicRate=+pr;safeLS.set('cm-settings',JSON.stringify(settings));}
   }
 
-  const odoVal=stripCommas(document.getElementById('odo').value);
+  var odoVal;
+  if(_chargeInputMode==='dist'){
+    var _chDist=+(document.getElementById('chargeDistance').value||0);
+    var _chLast=getLastKnownState();
+    odoVal=_chLast&&_chDist>0?String((_chLast.odo||0)+_chDist):'';
+  } else {
+    odoVal=stripCommas(document.getElementById('odo').value);
+  }
   if(!odoVal||isNaN(+odoVal)||+odoVal<=0){errEl.textContent='Odometer reading is required.';return;}
   const odo=+odoVal;
   const startTime=document.getElementById('startTime').value||null;
@@ -2091,7 +2155,7 @@ function saveCharge(){
     document.getElementById('cancelChargeEdit').style.display='none';
   } else sessions.unshift(obj);
 
-  recomputeAllKm();safeLS.set('cm-lastType',type);safeLS.set('cm-lastDrivingType',drivingType||'mixed');persist();clearChargeForm();render();
+  recomputeAllKm();safeLS.set('cm-lastType',type);persist();clearChargeForm();render();
   document.getElementById('list').scrollIntoView({behavior:'smooth',block:'start'});
   toast(wasEditing?'Session updated ✓':'Session saved ✓');
 }
@@ -2115,7 +2179,7 @@ function clearChargeForm(){
   document.getElementById('odoWarn').textContent='';
   document.getElementById('odo').classList.remove('warn-input');
   // Default driving type to last used (fallback to smart default)
-  var _lastDT=safeLS.get('cm-lastDrivingType');
+  var _lastDT=null;for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){_lastDT=sessions[i].drivingType;break;}}
   if(_lastDT)pickDrivingType(_lastDT); else setDrivingTypeDefault();
   // Native time inputs clear themselves via value=''
   document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
@@ -2213,10 +2277,25 @@ function updateTripPreview(){
 
 function saveTrip(){
   var date=document.getElementById('tripDate').value;
-  var so=+document.getElementById('tripStartOdo').value;
-  var eo=+document.getElementById('tripEndOdo').value;
-  var sp=+document.getElementById('tripStartPct').value;
-  var ep=+document.getElementById('tripEndPct').value;
+  var so,eo,sp,ep;
+  if(_tripInputMode==='km'){
+    var _dist=+document.getElementById('tripDistance').value;
+    if(!_dist||_dist<=0){document.getElementById('tripError').textContent='Enter distance.';return;}
+    var _last=getLastKnownState();
+    so=_last?_last.odo:0;eo=so+_dist;
+  } else {
+    so=+document.getElementById('tripStartOdo').value;
+    eo=+document.getElementById('tripEndOdo').value;
+  }
+  if(_tripBatMode==='consumed'){
+    var _consumed=+document.getElementById('tripConsumed').value;
+    if(isNaN(_consumed)||_consumed<=0){document.getElementById('tripError').textContent='Enter % consumed.';return;}
+    var _lastB=getLastKnownState();
+    sp=_lastB?_lastB.endPct:100;ep=sp-_consumed;
+  } else {
+    sp=+document.getElementById('tripStartPct').value;
+    ep=+document.getElementById('tripEndPct').value;
+  }
   var note=document.getElementById('tripNote').value.trim()||null;
   var chargedSince=document.getElementById('tripChargedSince').checked;
   var errEl=document.getElementById('tripError');
@@ -2238,7 +2317,7 @@ function saveTrip(){
     document.getElementById('tripFormTitle').textContent='New Trip';
     document.getElementById('cancelTripEdit').style.display='none';
   } else trips.unshift(obj);
-  safeLS.set('cm-lastTripType',tripTypeVal||'mixed');
+  
   persist();
   clearTripForm();render();
   toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
@@ -2250,7 +2329,7 @@ function clearTripForm(){
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
-  pickTripType(safeLS.get('cm-lastTripType')||'mixed');
+  (function(){var _ltt='mixed';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
   // Pre-fill start odo/% from last known state
   prefillTripFromLastState();
 }
@@ -2536,7 +2615,8 @@ function renderList(){
             if(prevDiffOdo){
               const km=x.odo-prevDiffOdo.odo;
               const drop=prevDiffOdo.e-x.s;
-            if(km>0&&drop<0&&!x.chargedSince){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+x.s+'% but left prev at '+prevDiffOdo.e+'%</span>';}
+            if(x.chargedSince){effStr='<span style="color:var(--muted)">\u26a1 chain break</span>';}
+            else if(km>0&&drop<0){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+x.s+'% but left prev at '+prevDiffOdo.e+'%</span>';}
             else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
             if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
             }
@@ -2716,7 +2796,7 @@ function selectQuickCharge(idx){
       dtCounts[x.drivingType]=(dtCounts[x.drivingType]||0)+1;
     }
   });
-  var dtAuto=safeLS.get('cm-lastDrivingType')||'mixed';
+  var dtAuto='mixed';for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){dtAuto=sessions[i].drivingType;break;}}
   if(Object.keys(dtCounts).length){
     dtAuto=Object.entries(dtCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
   } else if(pattern.t==='public'){
@@ -2775,7 +2855,7 @@ function selectQuickTrip(idx){
   if(pattern.types&&pattern.types.length){
     pattern.types.forEach(function(t){ttCounts[t]=(ttCounts[t]||0)+1;});
   }
-  var ttAuto=safeLS.get('cm-lastTripType')||'mixed';
+  var ttAuto='mixed';for(var i=0;i<trips.length;i++){if(trips[i].tripType){ttAuto=trips[i].tripType;break;}}
   if(Object.keys(ttCounts).length){
     ttAuto=Object.entries(ttCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
   }
@@ -2820,7 +2900,7 @@ function saveQuickTrip(idx){
   var tripType=document.getElementById('qcTripType')?document.getElementById('qcTripType').value:'mixed';
   var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),startOdo:startOdo,endOdo:endOdo,startPct:startPct,endPct:endPct,tripType:tripType};
   trips.unshift(obj);
-  safeLS.set('cm-lastTripType',tripType);
+  
   recomputeAllKm();persist();render();
   closeQuickAdd();
   toast('Trip saved ✓');
@@ -2880,7 +2960,7 @@ function saveQuickCharge(idx){
   var drivingType=document.getElementById('qcDrivingType')?document.getElementById('qcDrivingType').value:'mixed';
   var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false,drivingType:drivingType};
   sessions.unshift(obj);
-  safeLS.set('cm-lastDrivingType',drivingType);
+  
   recomputeAllKm();persist();render();
   closeQuickAdd();
   toast((type==='office'?'Office':'Home')+' charge saved ✓');
@@ -3648,7 +3728,7 @@ document.getElementById('tripDate').value          = new Date().toISOString().sl
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
 (function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
-(function(){var ldt=safeLS.get('cm-lastDrivingType');if(ldt)pickDrivingType(ldt);})();
+(function(){var ldt=null;for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){ldt=sessions[i].drivingType;break;}}if(ldt)pickDrivingType(ldt);})();
 // Pre-fill charge form start % from last known state on initial load
 prefillChargeFromLastState();
 document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
