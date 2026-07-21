@@ -489,6 +489,28 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       </div>
       <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
       <input type="text" id="tripNote" placeholder="e.g. highway, rain, AC on">
+      <div style="margin-top:10px">
+        <label>Passengers</label>
+        <div style="display:flex;gap:4px;align-items:center;margin-top:4px">
+          <div class="eff-tab active" id="tp-1" onclick="pickTripPax(1)">1</div>
+          <div class="eff-tab" id="tp-2" onclick="pickTripPax(2)">2</div>
+          <div class="eff-tab" id="tp-3" onclick="pickTripPax(3)">3</div>
+          <div class="eff-tab" id="tp-4" onclick="pickTripPax(4)">4</div>
+          <div class="eff-tab" id="tp-5" onclick="pickTripPax(5)">5</div>
+          <input type="number" id="tripPaxCustom" min="1" max="20" placeholder="6+" style="width:44px;padding:7px 4px;font-size:12px;text-align:center" oninput="pickTripPax(+this.value)">
+        </div>
+        <input type="hidden" id="tripPax" value="1">
+      </div>
+      <div style="margin-top:10px">
+        <label>Weather</label>
+        <div style="display:flex;gap:4px;margin-top:4px">
+          <div class="eff-tab" id="tw-hot" onclick="pickTripWeather('hot')">☀️ Hot</div>
+          <div class="eff-tab" id="tw-rain" onclick="pickTripWeather('rain')">🌧️ Rain</div>
+          <div class="eff-tab" id="tw-cold" onclick="pickTripWeather('cold')">❄️ Cold</div>
+          <div class="eff-tab" id="tw-mild" onclick="pickTripWeather('mild')">🌤️ Mild</div>
+        </div>
+        <input type="hidden" id="tripWeather" value="">
+      </div>
       <div class="charged-since-row">
         <input type="checkbox" id="tripChargedSince">
         <label for="tripChargedSince">Charged since last entry (breaks efficiency chain)</label>
@@ -582,6 +604,28 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="kwhPreview" class="small"></div>
     <div id="durationPreview" class="small"></div>
     <div id="odoWarn" class="warn-msg"></div>
+    <div style="margin-top:10px">
+      <label>Passengers</label>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:4px">
+        <div class="eff-tab active" id="cp-1" onclick="pickChargePax(1)">1</div>
+        <div class="eff-tab" id="cp-2" onclick="pickChargePax(2)">2</div>
+        <div class="eff-tab" id="cp-3" onclick="pickChargePax(3)">3</div>
+        <div class="eff-tab" id="cp-4" onclick="pickChargePax(4)">4</div>
+        <div class="eff-tab" id="cp-5" onclick="pickChargePax(5)">5</div>
+        <input type="number" id="chargePaxCustom" min="1" max="20" placeholder="6+" style="width:44px;padding:7px 4px;font-size:12px;text-align:center" oninput="pickChargePax(+this.value)">
+      </div>
+      <input type="hidden" id="chargePax" value="1">
+    </div>
+    <div style="margin-top:10px">
+      <label>Weather</label>
+      <div style="display:flex;gap:4px;margin-top:4px">
+        <div class="eff-tab" id="cw-hot" onclick="pickChargeWeather('hot')">☀️ Hot</div>
+        <div class="eff-tab" id="cw-rain" onclick="pickChargeWeather('rain')">🌧️ Rain</div>
+        <div class="eff-tab" id="cw-cold" onclick="pickChargeWeather('cold')">❄️ Cold</div>
+        <div class="eff-tab" id="cw-mild" onclick="pickChargeWeather('mild')">🌤️ Mild</div>
+      </div>
+      <input type="hidden" id="chargeWeather" value="">
+    </div>
     <div class="charged-since-row">
       <input type="checkbox" id="chargeChargedSince">
       <label for="chargeChargedSince">Missed a charge before this (breaks efficiency chain)</label>
@@ -795,6 +839,19 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v6.0.0 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Passengers</b>: Pax pills (1-5 + custom) on trip and charge forms. Stored per entry.</li>
+      <li><b>Weather</b>: Auto-detected from date (Hot/Rain/Cold/Mild), overridable via emoji pills.</li>
+      <li>Both fields default intelligently on form reset and restore on edit.</li>
+    </ul>
+    <div class="cl-ver">v5.14.2 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Floating point display in trip form, preview, and list (rounds odo/km/% on display)</li>
+      <li>Fix: Edit form rounds stored odo values to remove decimal noise</li>
+      <li>Fix: Trip preview works in Distance and Consumed modes (reads correct fields)</li>
+      <li>Fix: Stores raw distance/consumed entries for accurate edit restoration</li>
+    </ul>
     <div class="cl-ver">v5.14.0 <span class="cl-date">20 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Feature: Odo/Distance input mode toggle on both charge and trip forms</li>
@@ -1510,6 +1567,40 @@ function pickTripType(val){
   document.getElementById('tripType').value=val;
   ['city','mixed','highway'].forEach(function(m){document.getElementById('tt-'+m).classList.toggle('active',m===val);});
 }
+
+function pickTripPax(val){
+  if(!val||val<1)val=1;
+  document.getElementById('tripPax').value=val;
+  [1,2,3,4,5].forEach(function(n){var el=document.getElementById('tp-'+n);if(el)el.classList.toggle('active',n===val);});
+  if(val>5)document.getElementById('tripPaxCustom').value=val;
+  else document.getElementById('tripPaxCustom').value='';
+}
+
+function pickChargePax(val){
+  if(!val||val<1)val=1;
+  document.getElementById('chargePax').value=val;
+  [1,2,3,4,5].forEach(function(n){var el=document.getElementById('cp-'+n);if(el)el.classList.toggle('active',n===val);});
+  if(val>5)document.getElementById('chargePaxCustom').value=val;
+  else document.getElementById('chargePaxCustom').value='';
+}
+
+function getAutoWeather(){
+  var m=new Date().getMonth();// 0-indexed
+  if(m>=2&&m<=4)return 'hot';
+  if(m>=5&&m<=8)return 'rain';
+  if(m>=10||m<=1)return 'cold';
+  return 'mild';
+}
+
+function pickTripWeather(val){
+  document.getElementById('tripWeather').value=val;
+  ['hot','rain','cold','mild'].forEach(function(w){document.getElementById('tw-'+w).classList.toggle('active',w===val);});
+}
+
+function pickChargeWeather(val){
+  document.getElementById('chargeWeather').value=val;
+  ['hot','rain','cold','mild'].forEach(function(w){document.getElementById('cw-'+w).classList.toggle('active',w===val);});
+}
 function setDrivingTypeDefault(){
   var type=document.getElementById('type').value;
   if(type==='public'){pickDrivingType('highway');}
@@ -2125,7 +2216,7 @@ function saveCharge(){
   if(_chargeInputMode==='dist'){
     var _chDist=+(document.getElementById('chargeDistance').value||0);
     var _chLast=getLastKnownState();
-    odoVal=_chLast&&_chDist>0?String((_chLast.odo||0)+_chDist):'';
+    odoVal=_chLast&&_chDist>0?String(+((_chLast.odo||0)+_chDist).toFixed(1)):'';
   } else {
     odoVal=stripCommas(document.getElementById('odo').value);
   }
@@ -2147,7 +2238,7 @@ function saveCharge(){
   const chargedSince=document.getElementById('chargeChargedSince').checked;
   const drivingType=document.getElementById('drivingType').value||null;
   const obj={id:editIndex!==null?sessions[editIndex].id:(Date.now()+Math.random()),date:document.getElementById('date').value,
-    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince,drivingType:drivingType};
+    s,e,kwh,cost,t:type,odo,km:null,startTime,endTime,duration,charger,notes,chargedSince:chargedSince,drivingType:drivingType,pax:+(document.getElementById('chargePax').value)||1,weather:document.getElementById('chargeWeather').value||null};
 
   const wasEditing=editIndex!==null;
   if(wasEditing){sessions[editIndex]=obj;editIndex=null;
@@ -2181,6 +2272,8 @@ function clearChargeForm(){
   // Default driving type to last used (fallback to smart default)
   var _lastDT=null;for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){_lastDT=sessions[i].drivingType;break;}}
   if(_lastDT)pickDrivingType(_lastDT); else setDrivingTypeDefault();
+  pickChargePax(1);
+  pickChargeWeather(getAutoWeather());
   // Native time inputs clear themselves via value=''
   document.getElementById('timeRow').style.display=document.getElementById('type').value==='public'?'grid':'none';
   document.getElementById('autoDuration').style.display='none';
@@ -2256,13 +2349,26 @@ function setEntryMode(mode){
 
 // ── TRIP MANAGEMENT ────────────────────────────────────────────────────────
 function updateTripPreview(){
-  var so=+document.getElementById('tripStartOdo').value;
-  var eo=+document.getElementById('tripEndOdo').value;
-  var sp=+document.getElementById('tripStartPct').value;
-  var ep=+document.getElementById('tripEndPct').value;
+  var so,eo,sp,ep;
+  if(_tripInputMode==='km'){
+    var dist=+document.getElementById('tripDistance').value;
+    var last=getLastKnownState();
+    so=last?last.odo:0;eo=so+(dist||0);
+  } else {
+    so=+document.getElementById('tripStartOdo').value;
+    eo=+document.getElementById('tripEndOdo').value;
+  }
+  if(_tripBatMode==='consumed'){
+    var con=+document.getElementById('tripConsumed').value;
+    var lastB=getLastKnownState();
+    sp=lastB?lastB.endPct:100;ep=sp-(con||0);
+  } else {
+    sp=+document.getElementById('tripStartPct').value;
+    ep=+document.getElementById('tripEndPct').value;
+  }
   var el=document.getElementById('tripPreview');
   if(eo>so&&sp<=100&&ep>=0&&ep<=100){
-    var km=eo-so;
+    var km=parseFloat((eo-so).toFixed(1));
     var drop=sp-ep;
     if(drop>0){
       var consumption=drop*settings.battery/100;
@@ -2282,7 +2388,7 @@ function saveTrip(){
     var _dist=+document.getElementById('tripDistance').value;
     if(!_dist||_dist<=0){document.getElementById('tripError').textContent='Enter distance.';return;}
     var _last=getLastKnownState();
-    so=_last?_last.odo:0;eo=so+_dist;
+    so=_last?_last.odo:0;eo=+((so+_dist).toFixed(1));
   } else {
     so=+document.getElementById('tripStartOdo').value;
     eo=+document.getElementById('tripEndOdo').value;
@@ -2291,7 +2397,7 @@ function saveTrip(){
     var _consumed=+document.getElementById('tripConsumed').value;
     if(isNaN(_consumed)||_consumed<=0){document.getElementById('tripError').textContent='Enter % consumed.';return;}
     var _lastB=getLastKnownState();
-    sp=_lastB?_lastB.endPct:100;ep=sp-_consumed;
+    sp=_lastB?_lastB.endPct:100;ep=+((sp-_consumed).toFixed(1));
   } else {
     sp=+document.getElementById('tripStartPct').value;
     ep=+document.getElementById('tripEndPct').value;
@@ -2304,14 +2410,14 @@ function saveTrip(){
   if(isNaN(sp)||isNaN(ep)){errEl.textContent='Start and End % are required (0\u201399).';return;}
   if(sp>100||ep<0){errEl.textContent='% values must be 0-100.';return;}
   errEl.textContent='';
-  var km=eo-so;
+  var km=parseFloat((eo-so).toFixed(1));
   var consumption=(sp-ep)*settings.battery/100;
   var isRegen=sp<=ep;
   var eff=isRegen?null:km/consumption;
   var tripTypeVal=document.getElementById('tripType').value||null;
   var obj={id:tripEditIndex!==null?trips[tripEditIndex].id:(Date.now()+Math.random()),
-    date:date,startOdo:so,endOdo:eo,startPct:sp,endPct:ep,km:km,
-    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal};
+    date:date,startOdo:Math.round(so),endOdo:Math.round(eo),startPct:sp,endPct:ep,km:km,
+    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal,pax:+(document.getElementById('tripPax').value)||1,weather:document.getElementById('tripWeather').value||null,inputMode:_tripInputMode,batMode:_tripBatMode,enteredDist:(_tripInputMode==='km'&&_dist)?_dist:null,enteredConsumed:(_tripBatMode==='consumed'&&_consumed)?_consumed:null};
   var wasEditing=tripEditIndex!==null;
   if(wasEditing){trips[tripEditIndex]=obj;tripEditIndex=null;
     document.getElementById('tripFormTitle').textContent='New Trip';
@@ -2330,6 +2436,8 @@ function clearTripForm(){
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
   (function(){var _ltt='mixed';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
+  pickTripPax(1);
+  pickTripWeather(getAutoWeather());
   // Pre-fill start odo/% from last known state
   prefillTripFromLastState();
 }
@@ -2347,13 +2455,20 @@ function editTrip(i){
   document.getElementById('tripFormTitle').textContent='Edit Trip';
   document.getElementById('cancelTripEdit').style.display='block';
   document.getElementById('tripDate').value=x.date;
-  document.getElementById('tripStartOdo').value=x.startOdo;
-  document.getElementById('tripEndOdo').value=x.endOdo;
-  document.getElementById('tripStartPct').value=x.startPct;
-  document.getElementById('tripEndPct').value=x.endPct;
+  // Restore input mode
+  if(x.inputMode==='km'){setTripDistMode('km');document.getElementById('tripDistance').value=x.enteredDist||x.km||'';}
+  else{setTripDistMode('odo');}
+  if(x.batMode==='consumed'){setTripBatMode('consumed');document.getElementById('tripConsumed').value=x.enteredConsumed||((x.startPct||0)-(x.endPct||0))||'';}
+  else{setTripBatMode('pct');}
+  document.getElementById('tripStartOdo').value=Math.round(x.startOdo);
+  document.getElementById('tripEndOdo').value=Math.round(x.endOdo);
+  document.getElementById('tripStartPct').value=Math.round(x.startPct);
+  document.getElementById('tripEndPct').value=Math.round(x.endPct);
   document.getElementById('tripNote').value=x.note||'';
   document.getElementById('tripChargedSince').checked=x.chargedSince||false;
   pickTripType(x.tripType||'mixed');
+  pickTripPax(x.pax||1);
+  pickTripWeather(x.weather||getAutoWeather());
   updateTripPreview();
 }
 
@@ -2685,8 +2800,8 @@ function renderTripsOnly(){
       if(x.efficiency) effStr=x.efficiency.toFixed(1)+' km/kWh \u00b7 '+(x.km/(x.startPct-x.endPct)).toFixed(1)+' km/%';
       if(x.regen) effStr='+'+Math.abs(x.startPct-x.endPct)+'% regen \u26a1';
       if(x.efficiency&&x.effWarn) effStr='\u26a0\ufe0f '+effStr;
-      var line1=x.startPct+'% \u2192 '+x.endPct+'% \u00b7 '+x.km+' km';
-      var line2=x.startOdo.toLocaleString('en-IN')+' \u2192 '+x.endOdo.toLocaleString('en-IN');
+      var line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'% \u00b7 '+parseFloat((x.km||0).toFixed(1))+' km';
+      var line2=Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN');
       if(effStr) line2+=' \u00b7 '+effStr;
       out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div><div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>'+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
     });
@@ -2985,7 +3100,7 @@ function drawCostChart(){
   (expenses||[]).forEach(function(e){if(e.date&&e.amount>0&&e.category!=='purchase'){var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].expense+=e.amount}});
   carpools.forEach(function(c){if(c.date&&c.amount>0){var m=c.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].carpool+=c.amount}});
   var keys=Object.keys(months).sort();if(keys.length<1)return;
-  var data=keys.map(function(k){var d=months[k];return{month:k,charge:d.charge,expense:d.expense,carpool:d.carpool,net:d.charge+d.expense-d.carpool}});
+  var data=keys.map(function(k){var d=months[k];return{month:k,charge:d.charge,expense:d.expense,carpool:d.carpool}});
   var maxUp=Math.max.apply(null,data.map(function(d){return d.charge+d.expense}))||100;
   var maxDown=Math.max.apply(null,data.map(function(d){return d.carpool}))||0;
   var avgNet=data.reduce(function(a,d){return a+d.net},0)/data.length;
@@ -3000,7 +3115,7 @@ function drawCostChart(){
 
   var pad={t:14,b:44,l:40,r:10};
   var cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-  var totalRange=maxUp+(maxDown||1);
+  var totalRange=maxUp+(maxDown>0?maxDown:0)||1;
   var zeroY=pad.t+(maxUp/totalRange)*ch;
   var barW=Math.min(28,cw/data.length*0.6);
   var gap=(cw-barW*data.length)/(data.length+1);
@@ -3019,7 +3134,7 @@ function drawCostChart(){
   for(var ti=0;ti<=yTicks;ti++){var val=maxUp-ti*yStep;var y=pad.t+(ti/yTicks)*ch;ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillStyle='#64748b';ctx.fillText(fmtY(val),pad.l-4,y+3);}
 
   // Bars + markers
-  var netPts=[];
+  
   data.forEach(function(d,i){
     var x=pad.l+gap+(barW+gap)*i;
     var cx=x+barW/2;
@@ -3039,27 +3154,20 @@ function drawCostChart(){
     }
     // Net marker position
     var netY=zeroY-(d.net/totalRange)*ch;
-    netPts.push({x:cx,y:netY,net:d.net});
+
     // X label
     var mi=parseInt(d.month.slice(5,7))-1;
     ctx.fillStyle='#b4c0cc';ctx.font='10px Inter,sans-serif';ctx.textAlign='center';
     ctx.fillText(monNames[mi],cx,h-pad.b+14);
   });
 
-  // Net marker on each bar (dashed line at net level per month)
-  data.forEach(function(d,i){
-    var x=pad.l+gap+(barW+gap)*i;
-    var netY=zeroY-(d.net/totalRange)*ch;
-    ctx.setLineDash([3,2]);ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(x,netY);ctx.lineTo(x+barW,netY);ctx.stroke();
-    ctx.setLineDash([]);
-  });
+  
 
   
 
   // Legend (centered below chart)
   ctx.font='9px Inter,sans-serif';
-  var legY=h-4;var legItems=[{c:'#00e5ff',t:'Charging'},{c:'#ff6b6b',t:'Expenses'},{c:'#4ade80',t:'Carpool'},{c:'#fbbf24',t:'Net',dash:true}];
+  var legY=h-4;var legItems=[{c:'#00e5ff',t:'Charging'},{c:'#ff6b6b',t:'Expenses'},{c:'#4ade80',t:'Carpool'}];
   var legW=legItems.reduce(function(a,it){return a+ctx.measureText(it.t).width+16;},0);
   var legX=(w-legW)/2;
   legItems.forEach(function(it){
