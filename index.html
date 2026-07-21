@@ -372,30 +372,13 @@ body.light .sheet-item:hover{background:rgba(0,0,0,0.04)}
 
 /* v4.7 additions */
 .empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px;font-style:italic}
-/* FAB */
-.fab{position:fixed;bottom:72px;right:16px;width:52px;height:52px;border-radius:50%;
-  background:var(--accent);color:#000;border:none;box-shadow:0 4px 16px rgba(0,229,255,0.3);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:90;
-  transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}
-.fab:active{transform:scale(.92)}
-.fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-body.light .fab{box-shadow:0 4px 16px rgba(0,102,184,0.25)}
 
-/* Quick Add Overlay */
-.quick-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:400;display:flex;align-items:flex-end;justify-content:center}
-.quick-overlay.visible{opacity:1;pointer-events:all}
-.quick-panel{background:var(--card);border-top-left-radius:20px;border-top-right-radius:20px;
-  width:100%;max-width:500px;padding:20px 20px 28px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
-.quick-overlay.visible .quick-panel{transform:translateY(0)}
-.quick-panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+/* Pill buttons (fare pills, etc) */
 .quick-pill{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:20px;
   border:1px solid var(--border);font-size:13px;color:var(--text);cursor:pointer;
   transition:all .15s ease;-webkit-tap-highlight-color:transparent}
-.quick-pill:active,.quick-pill.selected{background:var(--accent);color:#000;border-color:var(--accent)}
-body.light .quick-pill:active,body.light .quick-pill.selected{color:#fff}
-.quick-fields{margin-top:14px;display:none}
-.quick-fields.visible{display:block}
+.quick-pill:active,.quick-pill.active{background:var(--accent);color:#000;border-color:var(--accent)}
+body.light .quick-pill:active,body.light .quick-pill.active{color:#fff}
 
 @media(max-width:380px){.stats-grid{grid-template-columns:1fr!important}.form-row{grid-template-columns:1fr!important}}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
@@ -454,66 +437,50 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="tripForm" style="display:none">
       <h3 id="tripFormTitle">New Trip</h3>
       <label>Date</label><input type="date" id="tripDate">
-      <div style="margin-top:10px">
-        <label>Trip Type</label>
-        <div class="eff-tabs" id="tripTypeTabs">
-          <div class="eff-tab" id="tt-city" onclick="pickTripType('city')">City</div>
-          <div class="eff-tab active" id="tt-mixed" onclick="pickTripType('mixed')">Mixed</div>
-          <div class="eff-tab" id="tt-highway" onclick="pickTripType('highway')">Highway</div>
-        </div>
+      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);margin-right:4px;white-space:nowrap">Type:</span>
+        <div class="eff-tab" id="tt-city" onclick="pickTripType('city')">City</div>
+        <div class="eff-tab active" id="tt-mixed" onclick="pickTripType('mixed')">Mixed</div>
+        <div class="eff-tab" id="tt-highway" onclick="pickTripType('highway')">Highway</div>
         <input type="hidden" id="tripType" value="mixed">
       </div>
-      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--muted);margin-right:4px">Dist:</span>
-        <div class="eff-tab active" id="tim-odo" onclick="setTripDistMode('odo')">Odo</div>
-        <div class="eff-tab" id="tim-km" onclick="setTripDistMode('km')">km</div>
-      </div>
-      <div id="tripOdoFields" class="form-row" style="margin-top:10px">
-        <div><label>Start Odo</label><input type="number" id="tripStartOdo" placeholder="e.g. 4000" oninput="updateTripPreview()"></div>
-        <div><label>End Odo</label><input type="number" id="tripEndOdo" placeholder="e.g. 4070" oninput="updateTripPreview()"></div>
-      </div>
-      <div id="tripDistField" style="margin-top:10px;display:none">
-        <label>Distance (km)</label><input type="number" id="tripDistance" placeholder="e.g. 70" oninput="updateTripPreview()">
-      </div>
-      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--muted);margin-right:4px">Battery:</span>
-        <div class="eff-tab active" id="tim-pct" onclick="setTripBatMode('pct')">Start/End</div>
-        <div class="eff-tab" id="tim-con" onclick="setTripBatMode('consumed')">Consumed</div>
-      </div>
-      <div id="tripPctFields" class="form-row" style="margin-top:10px">
-        <div><label>Start %</label><input type="number" id="tripStartPct" min="0" max="100" placeholder="e.g. 90" oninput="updateTripPreview()"></div>
-        <div><label>End %</label><input type="number" id="tripEndPct" min="0" max="100" placeholder="e.g. 67" oninput="updateTripPreview()"></div>
-      </div>
-      <div id="tripConsumedField" style="margin-top:10px;display:none">
-        <label>% consumed</label><input type="number" id="tripConsumed" min="0" max="100" placeholder="e.g. 23" oninput="updateTripPreview()">
-      </div>
-      <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
-      <input type="text" id="tripNote" placeholder="e.g. highway, rain, AC on">
       <div style="margin-top:10px">
-        <label>Passengers</label>
-        <div style="display:flex;gap:4px;align-items:center;margin-top:4px">
-          <div class="eff-tab active" id="tp-1" onclick="pickTripPax(1)">1</div>
-          <div class="eff-tab" id="tp-2" onclick="pickTripPax(2)">2</div>
-          <div class="eff-tab" id="tp-3" onclick="pickTripPax(3)">3</div>
-          <div class="eff-tab" id="tp-4" onclick="pickTripPax(4)">4</div>
-          <div class="eff-tab" id="tp-5" onclick="pickTripPax(5)">5</div>
-          <input type="number" id="tripPaxCustom" min="1" max="20" placeholder="6+" style="width:44px;padding:7px 4px;font-size:12px;text-align:center" oninput="pickTripPax(+this.value)">
+        <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
+          <div><label>Start Odo</label><input type="number" id="tripStartOdo" placeholder="e.g. 5000" oninput="autoCalcTrip('startOdo')"></div>
+          <div><label>End Odo</label><input type="number" id="tripEndOdo" placeholder="e.g. 5070" oninput="autoCalcTrip('endOdo')"></div>
+          <div><label>Distance (km)</label><input type="number" id="tripDistance" placeholder="e.g. 70" step="0.1" oninput="autoCalcTrip('dist')"></div>
         </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
+          <div><label>Start %</label><input type="number" id="tripStartPct" min="0" max="100" placeholder="e.g. 90" oninput="autoCalcTrip('startPct')"></div>
+          <div><label>End %</label><input type="number" id="tripEndPct" min="0" max="100" placeholder="e.g. 67" oninput="autoCalcTrip('endPct')"></div>
+          <div><label>Used %</label><input type="number" id="tripConsumed" min="0" max="100" placeholder="e.g. 23" oninput="autoCalcTrip('consumed')"></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);margin-right:4px">Pax:</span>
+        <div class="eff-tab active" id="tp-1" onclick="pickTripPax(1)">1</div>
+        <div class="eff-tab" id="tp-2" onclick="pickTripPax(2)">2</div>
+        <div class="eff-tab" id="tp-3" onclick="pickTripPax(3)">3</div>
+        <div class="eff-tab" id="tp-4" onclick="pickTripPax(4)">4</div>
+        <div class="eff-tab" id="tp-5" onclick="pickTripPax(5)">5</div>
+        <input type="number" id="tripPaxCustom" min="1" max="20" placeholder="6+" style="flex:1;min-width:0;padding:7px 4px;font-size:11px;font-weight:600;text-align:center;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)" oninput="pickTripPax(+this.value)">
         <input type="hidden" id="tripPax" value="1">
       </div>
-      <div style="margin-top:10px">
-        <label>Weather</label>
-        <div style="display:flex;gap:4px;margin-top:4px">
-          <div class="eff-tab" id="tw-hot" onclick="pickTripWeather('hot')">☀️ Hot</div>
-          <div class="eff-tab" id="tw-rain" onclick="pickTripWeather('rain')">🌧️ Rain</div>
-          <div class="eff-tab" id="tw-cold" onclick="pickTripWeather('cold')">❄️ Cold</div>
-          <div class="eff-tab" id="tw-mild" onclick="pickTripWeather('mild')">🌤️ Mild</div>
-        </div>
+      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);margin-right:4px">Weather:</span>
+        <div class="eff-tab" id="tw-hot" onclick="pickTripWeather('hot')">☀️</div>
+        <div class="eff-tab" id="tw-rain" onclick="pickTripWeather('rain')">🌧️</div>
+        <div class="eff-tab" id="tw-cold" onclick="pickTripWeather('cold')">❄️</div>
+        <div class="eff-tab" id="tw-mild" onclick="pickTripWeather('mild')">🌤️</div>
         <input type="hidden" id="tripWeather" value="">
       </div>
+      <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
+      <input type="text" id="tripNote" placeholder="e.g. AC on, heavy traffic">
       <div class="charged-since-row">
         <input type="checkbox" id="tripChargedSince">
-        <label for="tripChargedSince">Charged since last entry (breaks efficiency chain)</label>
+        <label for="tripChargedSince">Charged during this trip (breaks efficiency)</label>
       </div>
       <div id="tripPreview" class="small" style="margin-top:8px"></div>
       <div id="tripError" class="error-msg"></div>
@@ -612,7 +579,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
         <div class="eff-tab" id="cp-3" onclick="pickChargePax(3)">3</div>
         <div class="eff-tab" id="cp-4" onclick="pickChargePax(4)">4</div>
         <div class="eff-tab" id="cp-5" onclick="pickChargePax(5)">5</div>
-        <input type="number" id="chargePaxCustom" min="1" max="20" placeholder="6+" style="width:44px;padding:7px 4px;font-size:12px;text-align:center" oninput="pickChargePax(+this.value)">
+        <input type="number" id="chargePaxCustom" min="1" max="20" placeholder="6+" style="flex:1;min-width:0;padding:7px 4px;font-size:11px;font-weight:600;text-align:center;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)" oninput="pickChargePax(+this.value)">
       </div>
       <input type="hidden" id="chargePax" value="1">
     </div>
@@ -796,7 +763,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 <!-- ═══════════════════ PLANNER ═══════════════════ -->
 <div id="planner" class="view">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-    <button onclick="switchTab('dash')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer">← Back</button>
+    <button onclick="switchTab('dash')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back</button>
     <span style="font-size:13px;font-weight:600;color:var(--text)">Trip Planner</span>
   </div>
   <div class="card">
@@ -823,6 +790,26 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <input type="number" id="planCustomEff" placeholder="e.g. 130" step="1" oninput="_debouncedRunPlan()">
       <div style="font-size:10px;color:var(--muted);margin-top:4px">Enter Wh/km value for planning. Typical: 110–200 Wh/km</div>
     </div>
+    <hr class="divider">
+    <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+      <span style="font-size:10px;color:var(--muted);margin-right:4px">Pax:</span>
+      <div class="eff-tab active" id="pp-1" onclick="pickPlanPax(1)">1</div>
+      <div class="eff-tab" id="pp-2" onclick="pickPlanPax(2)">2</div>
+      <div class="eff-tab" id="pp-3" onclick="pickPlanPax(3)">3</div>
+      <div class="eff-tab" id="pp-4" onclick="pickPlanPax(4)">4</div>
+      <div class="eff-tab" id="pp-5" onclick="pickPlanPax(5)">5</div>
+      <input type="number" id="planPaxCustom" min="1" max="20" placeholder="6+" style="flex:1;min-width:0;padding:7px 4px;font-size:11px;font-weight:600;text-align:center;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)" oninput="pickPlanPax(+this.value)">
+      <input type="hidden" id="planPax" value="1">
+    </div>
+    <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
+      <span style="font-size:10px;color:var(--muted);margin-right:4px">Weather:</span>
+      <div class="eff-tab" id="pw-hot" onclick="pickPlanWeather('hot')">☀️</div>
+      <div class="eff-tab" id="pw-rain" onclick="pickPlanWeather('rain')">🌧️</div>
+      <div class="eff-tab" id="pw-cold" onclick="pickPlanWeather('cold')">❄️</div>
+      <div class="eff-tab active" id="pw-mild" onclick="pickPlanWeather('mild')">🌤️</div>
+      <input type="hidden" id="planWeather" value="mild">
+    </div>
+    <div id="planEffSource" style="font-size:10px;color:var(--muted);margin-top:6px"></div>
   </div>
   <div class="card" id="planStopsCard">
     <h3>Charging Stops <span style="font-size:10px;color:var(--muted);font-weight:400">(optional)</span></h3>
@@ -839,6 +826,23 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v6.1.1 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Pax custom input matches pill height/style</li>
+      <li>Fix: Fare pills restored (rounded capsule style)</li>
+    </ul>
+    <div class="cl-ver">v6.1.0 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Trip form</b>: Auto-calc fields � enter any 2 of Start Odo/End Odo/Distance and any 2 of Start%/End%/Consumed%. Third computes automatically.</li>
+      <li>Removed mode toggle pills (Odo|km, Start/End|Consumed) � all fields always visible.</li>
+    </ul>
+    <div class="cl-ver">v6.0.1 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Removed FAB quick-add (redundant with pre-filled forms)</li>
+      <li>Perf: cached getLastKnownState + computeUnifiedEfficiency (invalidated on data change)</li>
+      <li>Cleanup: removed dead CSS/JS from removed features</li>
+      <li>Trip planner conditions: inline layout matching trip form style</li>
+    </ul>
     <div class="cl-ver">v6.0.0 <span class="cl-date">21 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Passengers</b>: Pax pills (1-5 + custom) on trip and charge forms. Stored per entry.</li>
@@ -1122,21 +1126,6 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div style="color:var(--muted);font-size:11px;margin-top:12px;padding:10px;border-top:1px solid var(--border)">Older versions (v1.0–v4.1.1): See GitHub commit history</div>
   </div>
 </div>
-<!-- FAB -->
-<button class="fab" onclick="openQuickAdd()" aria-label="Quick add">
-  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-</button>
-
-<!-- Quick Add Overlay -->
-<div class="quick-overlay" id="quickOverlay" onclick="if(event.target===this)closeQuickAdd()">
-  <div class="quick-panel">
-    <div class="quick-panel-handle"></div>
-    <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Quick Add</div>
-    <div id="quickPills"></div>
-    <div class="quick-fields" id="quickFields"></div>
-  </div>
-</div>
-
 <!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
 <nav class="bottom-nav" id="bottomNav">
   <div class="nav-item active" id="t-dash" onclick="switchTab('dash')">
@@ -1256,23 +1245,7 @@ function restoreDraft(){try{var d=JSON.parse(sessionStorage.getItem('cm-draft')|
 
 // ── TABS ───────────────────────────────────────────────────────────────────
 // ── INPUT MODE (Odo vs Distance) ─────────────────────────────────────────────
-var _tripInputMode=safeLS.get('cm-tripInputMode')||'odo';
 var _chargeInputMode=safeLS.get('cm-chargeInputMode')||'odo';
-var _tripBatMode=safeLS.get('cm-tripBatMode')||'pct';
-function setTripDistMode(mode){
-  _tripInputMode=mode;safeLS.set('cm-tripInputMode',mode);
-  document.getElementById('tim-odo').classList.toggle('active',mode==='odo');
-  document.getElementById('tim-km').classList.toggle('active',mode==='km');
-  document.getElementById('tripOdoFields').style.display=mode==='odo'?'grid':'none';
-  document.getElementById('tripDistField').style.display=mode==='km'?'block':'none';
-}
-function setTripBatMode(mode){
-  _tripBatMode=mode;safeLS.set('cm-tripBatMode',mode);
-  document.getElementById('tim-pct').classList.toggle('active',mode==='pct');
-  document.getElementById('tim-con').classList.toggle('active',mode==='consumed');
-  document.getElementById('tripPctFields').style.display=mode==='pct'?'grid':'none';
-  document.getElementById('tripConsumedField').style.display=mode==='consumed'?'block':'none';
-}
 function setChargeInputMode(mode){
   _chargeInputMode=mode;safeLS.set('cm-chargeInputMode',mode);
   document.getElementById('cim-odo').classList.toggle('active',mode==='odo');
@@ -1280,7 +1253,7 @@ function setChargeInputMode(mode){
   document.getElementById('chargeOdoCol').style.display=mode==='odo'?'block':'none';
   document.getElementById('chargeDistCol').style.display=mode==='dist'?'block':'none';
 }
-(function(){if(_tripInputMode==='km')setTripDistMode('km');if(_tripBatMode==='consumed')setTripBatMode('consumed');if(_chargeInputMode==='dist')setChargeInputMode('dist');})();
+(function(){if(_chargeInputMode==='dist')setChargeInputMode('dist');})();
 
 
 function switchTab(tab) {
@@ -1502,22 +1475,33 @@ function getLastEff(){
 }
 
 // ── TYPED EFFICIENCY (City/Highway) ────────────────────────────────────────
-function computeTypedEfficiency(type){
+function computeTypedEfficiency(type, opts){
+  // opts: {pax: number|null, weather: string|null} — optional filters
+  var filterPax = opts && opts.pax ? opts.pax : null;
+  var filterWeather = opts && opts.weather ? opts.weather : null;
+  
   // Pool 1: Charge-to-charge segments where the CLOSING charge has drivingType === type
   var odoMap={};
-  sessions.forEach(function(s){ if(s.odo>0){ var key=s.odo+'_'+s.date; odoMap[key]={odo:s.odo,s:s.s,e:s.e,date:s.date,drivingType:s.drivingType||null}; }});
+  sessions.forEach(function(s){ if(s.odo>0){ var key=s.odo+'_'+s.date; odoMap[key]={odo:s.odo,s:s.s,e:s.e,date:s.date,drivingType:s.drivingType||null,pax:s.pax||1,weather:s.weather||null}; }});
   var chargePoints=Object.keys(odoMap).map(function(k){return odoMap[k];}).sort(function(a,b){return a.odo-b.odo;});
   var totalKm=0, totalKwh=0, count=0;
   for(var i=1;i<chargePoints.length;i++){
     var prev=chargePoints[i-1], curr=chargePoints[i];
     if(curr.drivingType===type){
+      if(filterPax && curr.pax !== filterPax) continue;
+      if(filterWeather && curr.weather !== filterWeather) continue;
       var km=curr.odo-prev.odo;
       var kwh=(prev.e-curr.s)/100*settings.battery;
       if(km>0&&kwh>0&&km<500){ totalKm+=km; totalKwh+=kwh; count++; }
     }
   }
   // Pool 2: Trip entries where tripType === type (exclude if covered by charge segments)
-  var tripSpans=trips.filter(function(t){return t.tripType===type&&t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&t.startPct>t.endPct;});
+  var tripSpans=trips.filter(function(t){
+    if(t.tripType!==type||!t.startOdo||!t.endOdo||t.startOdo>=t.endOdo||t.startPct<=t.endPct)return false;
+    if(filterPax && (t.pax||1) !== filterPax) return false;
+    if(filterWeather && t.weather !== filterWeather) return false;
+    return true;
+  });
   tripSpans.forEach(function(t){
     var covered=false;
     for(var i=1;i<chargePoints.length;i++){
@@ -1531,6 +1515,23 @@ function computeTypedEfficiency(type){
   });
   if(count<3)return null;
   return totalKwh>0?totalKm/totalKwh:null;
+}
+
+function getPlannerEfficiency(type){
+  // Try with pax+weather filter first, then degrade gracefully
+  var pax=+(document.getElementById('planPax')?document.getElementById('planPax').value:0)||null;
+  var weather=(document.getElementById('planWeather')?document.getElementById('planWeather').value:'')||null;
+  
+  // Try exact match (type + pax + weather)
+  if(pax&&weather){var eff=computeTypedEfficiency(type,{pax:pax,weather:weather});if(eff)return {eff:eff,source:'exact ('+pax+'pax, '+weather+')'};}
+  // Drop weather
+  if(pax){var eff=computeTypedEfficiency(type,{pax:pax});if(eff)return {eff:eff,source:pax+'pax, any weather'};}
+  // Drop pax
+  if(weather){var eff=computeTypedEfficiency(type,{weather:weather});if(eff)return {eff:eff,source:'any pax, '+weather};}
+  // Fall back to type only
+  var eff=computeTypedEfficiency(type);
+  if(eff)return {eff:eff,source:type+' avg'};
+  return null;
 }
 
 function getCityEff(){
@@ -1585,7 +1586,11 @@ function pickChargePax(val){
 }
 
 function getAutoWeather(){
-  var m=new Date().getMonth();// 0-indexed
+  return getAutoWeatherForDate(null);
+}
+
+function getAutoWeatherForDate(dateStr){
+  var m=dateStr?new Date(dateStr).getMonth():new Date().getMonth();
   if(m>=2&&m<=4)return 'hot';
   if(m>=5&&m<=8)return 'rain';
   if(m>=10||m<=1)return 'cold';
@@ -1601,6 +1606,20 @@ function pickChargeWeather(val){
   document.getElementById('chargeWeather').value=val;
   ['hot','rain','cold','mild'].forEach(function(w){document.getElementById('cw-'+w).classList.toggle('active',w===val);});
 }
+
+function pickPlanPax(val){
+  if(!val||val<1)val=1;
+  document.getElementById('planPax').value=val;
+  [1,2,3,4,5].forEach(function(n){var el=document.getElementById('pp-'+n);if(el)el.classList.toggle('active',n===val);});
+  if(val>5){document.getElementById('planPaxCustom').value=val;}else{var pc=document.getElementById('planPaxCustom');if(pc)pc.value='';}
+  _debouncedRunPlan();
+}
+
+function pickPlanWeather(val){
+  document.getElementById('planWeather').value=val;
+  ['hot','rain','cold','mild'].forEach(function(w){document.getElementById('pw-'+w).classList.toggle('active',w===val);});
+  _debouncedRunPlan();
+}
 function setDrivingTypeDefault(){
   var type=document.getElementById('type').value;
   if(type==='public'){pickDrivingType('highway');}
@@ -1608,14 +1627,21 @@ function setDrivingTypeDefault(){
 }
 
 function getActiveEff(){
-  if(planEffMode==='city') return getCityEff();
-  if(planEffMode==='highway') return getHighwayEff();
-  if(planEffMode==='mixed') return getMixedEff();
   if(planEffMode==='custom'){
     const v=+document.getElementById('planCustomEff').value;
     return v>0?1000/v:null;
   }
-  return null;
+  // Use pax/weather-aware filtering
+  var result=getPlannerEfficiency(planEffMode);
+  if(result){
+    var srcEl=document.getElementById('planEffSource');
+    if(srcEl)srcEl.textContent='Based on: '+result.source;
+    return result.eff;
+  }
+  // Final fallback
+  var srcEl=document.getElementById('planEffSource');
+  if(srcEl)srcEl.textContent='Insufficient data — using overall average';
+  return getAvgEff();
 }
 
 // ── EFF MODE UI ────────────────────────────────────────────────────────────
@@ -1704,6 +1730,8 @@ function clearPlanForm(){
   renderPlanStops();
   document.getElementById('planResult').innerHTML='';
   setEffMode('city');
+  pickPlanPax(1);
+  pickPlanWeather(getAutoWeather());
 }
 
 function calcWithStops(current, totalDist, kmPerPct, stops){
@@ -2292,20 +2320,23 @@ function recomputeAllKm(){
 
 
 // ── LAST KNOWN STATE (for pre-filling forms) ──────────────────────────────
+var _lksCache=null,_lksCacheKey='';
 function getLastKnownState(){
-  // Find most recent entry across sessions and trips by highest odo
+  var key=sessions.length+'-'+trips.length+'-'+(sessions.length?sessions[0].odo:'')+(trips.length?trips[0].endOdo:'');
+  if(key===_lksCacheKey)return _lksCache;
+  _lksCacheKey=key;
   var lastSession=null, lastTrip=null;
   sessions.forEach(function(s){if(s.odo&&s.odo>0){if(!lastSession||s.odo>lastSession.odo)lastSession=s;}});
   trips.forEach(function(t){if(t.endOdo&&t.endOdo>0){if(!lastTrip||t.endOdo>lastTrip.endOdo)lastTrip=t;}});
   var sessionOdo=lastSession?lastSession.odo:0;
   var tripOdo=lastTrip?lastTrip.endOdo:0;
-  if(sessionOdo===0&&tripOdo===0)return null;
+  if(sessionOdo===0&&tripOdo===0){_lksCache=null;return null;}
   if(sessionOdo>=tripOdo&&lastSession){
-    return {odo:lastSession.odo, endPct:lastSession.e, source:'charge'};
+    _lksCache={odo:lastSession.odo, endPct:lastSession.e, source:'charge'};
   } else if(lastTrip){
-    return {odo:lastTrip.endOdo, endPct:lastTrip.endPct, source:'trip'};
-  }
-  return null;
+    _lksCache={odo:lastTrip.endOdo, endPct:lastTrip.endPct, source:'trip'};
+  } else {_lksCache=null;}
+  return _lksCache;
 }
 
 function prefillChargeFromLastState(){
@@ -2348,66 +2379,70 @@ function setEntryMode(mode){
 }
 
 // ── TRIP MANAGEMENT ────────────────────────────────────────────────────────
+function autoCalcTrip(changed){
+  var soEl=document.getElementById('tripStartOdo');
+  var eoEl=document.getElementById('tripEndOdo');
+  var distEl=document.getElementById('tripDistance');
+  var spEl=document.getElementById('tripStartPct');
+  var epEl=document.getElementById('tripEndPct');
+  var conEl=document.getElementById('tripConsumed');
+  
+  var so=+soEl.value, eo=+eoEl.value, dist=+distEl.value;
+  var sp=+spEl.value, ep=+epEl.value, con=+conEl.value;
+  
+  // Distance auto-calc: any 2 of 3 computes the 3rd
+  if(changed==='startOdo'||changed==='endOdo'){
+    if(so>0&&eo>0&&eo>so) distEl.value=parseFloat((eo-so).toFixed(1));
+  } else if(changed==='dist'){
+    if(dist>0&&so>0&&!eo) eoEl.value=Math.round(so+dist);
+    else if(dist>0&&eo>0&&!so) soEl.value=Math.round(eo-dist);
+    else if(dist>0&&so>0) eoEl.value=Math.round(so+dist);
+  }
+  
+  // Battery auto-calc: any 2 of 3 computes the 3rd
+  if(changed==='startPct'||changed==='endPct'){
+    if(sp>=0&&ep>=0&&sp>ep) conEl.value=sp-ep;
+    else if(sp>=0&&ep>=0&&ep>sp) conEl.value=''; // regen
+  } else if(changed==='consumed'){
+    if(con>0&&sp>0&&!ep) epEl.value=sp-con;
+    else if(con>0&&ep>=0&&!sp) spEl.value=ep+con;
+    else if(con>0&&sp>0) epEl.value=Math.max(0,sp-con);
+  }
+  
+  updateTripPreview();
+}
+
 function updateTripPreview(){
-  var so,eo,sp,ep;
-  if(_tripInputMode==='km'){
-    var dist=+document.getElementById('tripDistance').value;
-    var last=getLastKnownState();
-    so=last?last.odo:0;eo=so+(dist||0);
-  } else {
-    so=+document.getElementById('tripStartOdo').value;
-    eo=+document.getElementById('tripEndOdo').value;
-  }
-  if(_tripBatMode==='consumed'){
-    var con=+document.getElementById('tripConsumed').value;
-    var lastB=getLastKnownState();
-    sp=lastB?lastB.endPct:100;ep=sp-(con||0);
-  } else {
-    sp=+document.getElementById('tripStartPct').value;
-    ep=+document.getElementById('tripEndPct').value;
-  }
+  var so=+document.getElementById('tripStartOdo').value;
+  var eo=+document.getElementById('tripEndOdo').value;
+  var sp=+document.getElementById('tripStartPct').value;
+  var ep=+document.getElementById('tripEndPct').value;
   var el=document.getElementById('tripPreview');
-  if(eo>so&&sp<=100&&ep>=0&&ep<=100){
+  if(eo>so&&sp<=100&&ep>=0&&ep<=100&&sp>ep){
     var km=parseFloat((eo-so).toFixed(1));
     var drop=sp-ep;
-    if(drop>0){
-      var consumption=drop*settings.battery/100;
-      var eff=km/consumption;
-      el.textContent='📊 '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
-    } else {
-      var gained=Math.abs(drop);
-      el.textContent='\u26a1 '+km+' km \u00b7 +'+gained+'% regen \u00b7 '+(gained*settings.battery/100).toFixed(1)+' kWh recovered';
-    }
+    var consumption=drop*settings.battery/100;
+    var eff=km/consumption;
+    el.textContent='📊 '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh \u00b7 '+(km/drop).toFixed(1)+' km/%';
+  } else if(eo>so&&sp<=100&&ep>=0&&ep>sp){
+    var km=parseFloat((eo-so).toFixed(1));
+    var gained=ep-sp;
+    el.textContent='\u26a1 '+km+' km \u00b7 +'+gained+'% regen \u00b7 '+(gained*settings.battery/100).toFixed(1)+' kWh recovered';
   } else { el.textContent=''; }
 }
 
 function saveTrip(){
   var date=document.getElementById('tripDate').value;
-  var so,eo,sp,ep;
-  if(_tripInputMode==='km'){
-    var _dist=+document.getElementById('tripDistance').value;
-    if(!_dist||_dist<=0){document.getElementById('tripError').textContent='Enter distance.';return;}
-    var _last=getLastKnownState();
-    so=_last?_last.odo:0;eo=+((so+_dist).toFixed(1));
-  } else {
-    so=+document.getElementById('tripStartOdo').value;
-    eo=+document.getElementById('tripEndOdo').value;
-  }
-  if(_tripBatMode==='consumed'){
-    var _consumed=+document.getElementById('tripConsumed').value;
-    if(isNaN(_consumed)||_consumed<=0){document.getElementById('tripError').textContent='Enter % consumed.';return;}
-    var _lastB=getLastKnownState();
-    sp=_lastB?_lastB.endPct:100;ep=+((sp-_consumed).toFixed(1));
-  } else {
-    sp=+document.getElementById('tripStartPct').value;
-    ep=+document.getElementById('tripEndPct').value;
-  }
+  var so=+document.getElementById('tripStartOdo').value;
+  var eo=+document.getElementById('tripEndOdo').value;
+  var sp=+document.getElementById('tripStartPct').value;
+  var ep=+document.getElementById('tripEndPct').value;
   var note=document.getElementById('tripNote').value.trim()||null;
   var chargedSince=document.getElementById('tripChargedSince').checked;
   var errEl=document.getElementById('tripError');
   if(!date){errEl.textContent='Please set a date.';return;}
-  if(!so||!eo||eo<=so){errEl.textContent='End Odo must be greater than Start Odo.';return;}
-  if(isNaN(sp)||isNaN(ep)){errEl.textContent='Start and End % are required (0\u201399).';return;}
+  if(!so||!eo||eo<=so){errEl.textContent='Need valid start and end odo (or enter distance).';return;}
+  if(isNaN(sp)||isNaN(ep)){errEl.textContent='Need valid start and end % (or enter consumed).';return;}
   if(sp>100||ep<0){errEl.textContent='% values must be 0-100.';return;}
   errEl.textContent='';
   var km=parseFloat((eo-so).toFixed(1));
@@ -2417,7 +2452,7 @@ function saveTrip(){
   var tripTypeVal=document.getElementById('tripType').value||null;
   var obj={id:tripEditIndex!==null?trips[tripEditIndex].id:(Date.now()+Math.random()),
     date:date,startOdo:Math.round(so),endOdo:Math.round(eo),startPct:sp,endPct:ep,km:km,
-    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal,pax:+(document.getElementById('tripPax').value)||1,weather:document.getElementById('tripWeather').value||null,inputMode:_tripInputMode,batMode:_tripBatMode,enteredDist:(_tripInputMode==='km'&&_dist)?_dist:null,enteredConsumed:(_tripBatMode==='consumed'&&_consumed)?_consumed:null};
+    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal,pax:+(document.getElementById('tripPax').value)||1,weather:document.getElementById('tripWeather').value||null};
   var wasEditing=tripEditIndex!==null;
   if(wasEditing){trips[tripEditIndex]=obj;tripEditIndex=null;
     document.getElementById('tripFormTitle').textContent='New Trip';
@@ -2430,7 +2465,7 @@ function saveTrip(){
 }
 
 function clearTripForm(){
-  ['tripStartOdo','tripEndOdo','tripStartPct','tripEndPct','tripNote'].forEach(function(id){document.getElementById(id).value='';});
+  ['tripStartOdo','tripEndOdo','tripDistance','tripStartPct','tripEndPct','tripConsumed','tripNote'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('tripDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
@@ -2455,15 +2490,12 @@ function editTrip(i){
   document.getElementById('tripFormTitle').textContent='Edit Trip';
   document.getElementById('cancelTripEdit').style.display='block';
   document.getElementById('tripDate').value=x.date;
-  // Restore input mode
-  if(x.inputMode==='km'){setTripDistMode('km');document.getElementById('tripDistance').value=x.enteredDist||x.km||'';}
-  else{setTripDistMode('odo');}
-  if(x.batMode==='consumed'){setTripBatMode('consumed');document.getElementById('tripConsumed').value=x.enteredConsumed||((x.startPct||0)-(x.endPct||0))||'';}
-  else{setTripBatMode('pct');}
   document.getElementById('tripStartOdo').value=Math.round(x.startOdo);
   document.getElementById('tripEndOdo').value=Math.round(x.endOdo);
+  document.getElementById('tripDistance').value=x.km||'';
   document.getElementById('tripStartPct').value=Math.round(x.startPct);
   document.getElementById('tripEndPct').value=Math.round(x.endPct);
+  document.getElementById('tripConsumed').value=(x.startPct>x.endPct)?Math.round(x.startPct-x.endPct):'';
   document.getElementById('tripNote').value=x.note||'';
   document.getElementById('tripChargedSince').checked=x.chargedSince||false;
   pickTripType(x.tripType||'mixed');
@@ -2477,7 +2509,11 @@ function delTrip(i){
 }
 
 // ── UNIFIED TIMELINE EFFICIENCY ────────────────────────────────────────────
+var _ueCache=null,_ueCacheKey='';
 function computeUnifiedEfficiency(){
+  var key=sessions.length+'-'+trips.length+'-'+(sessions.length?sessions[0].id:'')+(trips.length?trips[0].id:'');
+  if(key===_ueCacheKey&&_ueCache)return _ueCache;
+  _ueCacheKey=key;
   // === STEP 1: Charge-to-charge segments (primary, longest by nature) ===
   var odoMap={};
   sessions.forEach(function(s){
@@ -2552,11 +2588,13 @@ function computeUnifiedEfficiency(){
       else if(s.efficiency>warnThresh) s.flag='warn';
     });
   }
+  _ueCache=segments;
   return segments;
 }
 
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function persist(){
+  _lksCacheKey='';_ueCacheKey=''; // invalidate caches
   var ok=true;
   ok=safeLS.set('cm-data',JSON.stringify(sessions))&&ok;
   ok=safeLS.set('cm-carpool',JSON.stringify(carpools))&&ok;
@@ -2650,6 +2688,9 @@ function editCharge(i){
   document.getElementById('chargeNotes').value=x.notes||'';
   // Restore driving type
   pickDrivingType(x.drivingType||'mixed');
+  // Restore pax and weather
+  pickChargePax(x.pax||1);
+  pickChargeWeather(x.weather||getAutoWeatherForDate(x.date));
   document.getElementById('chargeFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -2768,6 +2809,7 @@ function renderList(){
           ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
           ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
           ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
+          ${(x.pax&&x.pax>1)||(x.weather&&x.weather!==getAutoWeatherForDate(x.date))?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax>1?x.pax+' pax':'')+(x.pax>1&&x.weather?' · ':'')+(x.weather?({'hot':'☀️','rain':'🌧️','cold':'❄️','mild':'🌤️'}[x.weather]||''):' ')+'</div>':''}
         </div>`;
     });
     out+='</div>';
@@ -2803,7 +2845,7 @@ function renderTripsOnly(){
       var line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'% \u00b7 '+parseFloat((x.km||0).toFixed(1))+' km';
       var line2=Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN');
       if(effStr) line2+=' \u00b7 '+effStr;
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div><div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>'+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div><div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>'+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+((x.pax&&x.pax>1)||(x.weather)?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax>1?x.pax+' pax':'')+(x.pax>1&&x.weather?' \u00b7 ':'')+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+'</div>':'')+'</div>';
     });
     out+='</div>';
     mIdx++;
@@ -2812,286 +2854,6 @@ function renderTripsOnly(){
   restoreExpandedGroups(_expandState);
 }
 
-function openQuickAdd(){
-  if(navigator.vibrate)navigator.vibrate(10);
-  var overlay=document.getElementById('quickOverlay');
-  overlay.classList.add('visible');
-  document.body.style.overflow='hidden';
-  renderQuickPills();
-}
-function closeQuickAdd(){
-  document.getElementById('quickOverlay').classList.remove('visible');
-  document.body.style.overflow='';
-  document.getElementById('quickFields').classList.remove('visible');
-  document.getElementById('quickFields').innerHTML='';
-}
-
-function renderQuickPills(){
-  var el=document.getElementById('quickPills');
-  // Charge patterns — exact (type, start%, end%) triple
-  var chargePatterns={};
-  sessions.forEach(function(s){
-    var key=s.t+'|'+s.s+'|'+s.e;
-    if(!chargePatterns[key])chargePatterns[key]={t:s.t,s:s.s,e:s.e,count:0};
-    chargePatterns[key].count++;
-  });
-  var chargeSorted=Object.values(chargePatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
-  if(!chargeSorted.length)chargeSorted=[{t:'office',s:20,e:100}];
-  
-  // Carpool patterns
-  var cpPatterns={};
-  carpools.forEach(function(c){
-    if(!c.amount)return;
-    var key=(c.dir||'to_office')+'|'+(c.pax||1)+'|'+c.amount;
-    if(!cpPatterns[key])cpPatterns[key]={dir:c.dir,pax:c.pax,amount:c.amount,count:0};
-    cpPatterns[key].count++;
-  });
-  var cpSorted=Object.values(cpPatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
-  
-  var typeLabels={office:'Office',home:'Home',public:'Public'};
-  var dirLabels={to_office:'→ Office',to_home:'← Home'};
-  
-  var html='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">⚡ Charge</div>';
-  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
-  chargeSorted.forEach(function(p,i){
-    html+='<div class="quick-pill" onclick="selectQuickCharge('+i+')">'+typeLabels[p.t]+' '+p.s+'% → '+p.e+'%</div>';
-  });
-  html+='</div>';
-  
-  if(cpSorted.length){
-    html+='<div style="font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">🚗 Carpool</div>';
-    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
-    cpSorted.forEach(function(p,i){
-      html+='<div class="quick-pill" onclick="quickCarpoolSave(\''+p.dir+'\','+p.pax+','+p.amount+')">'+(dirLabels[p.dir]||p.dir)+' · '+p.pax+' pax · ₹'+p.amount+'</div>';
-    });
-    html+='</div>';
-  }
-  
-  // Trip patterns — (km rounded to nearest 5, start%, end%)
-  var tripPatterns={};
-  trips.forEach(function(t){
-    if(!t.startOdo||!t.endOdo||!t.startPct||!t.endPct)return;
-    var km=Math.round(((t.endOdo||0)-(t.startOdo||0))/5)*5;
-    if(km<=0)return;
-    var key=km+'|'+t.startPct+'|'+t.endPct;
-    if(!tripPatterns[key])tripPatterns[key]={km:km,s:t.startPct,e:t.endPct,count:0,types:[]};
-    tripPatterns[key].count++;
-    if(t.tripType)tripPatterns[key].types.push(t.tripType);
-  });
-  var tripSorted=Object.values(tripPatterns).filter(function(p){return p.count>=2;}).sort(function(a,b){return b.count-a.count;}).slice(0,4);
-  
-  if(tripSorted.length){
-    html+='<div style="font-size:10px;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em">🛣️ Trip</div>';
-    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
-    tripSorted.forEach(function(p,i){
-      html+='<div class="quick-pill" onclick="selectQuickTrip('+i+')">'+p.km+' km · '+p.s+'%→'+p.e+'%</div>';
-    });
-    html+='</div>';
-  }
-  
-  el.innerHTML=html;
-  window._qcChargePatterns=chargeSorted;
-  window._qcTripPatterns=tripSorted;
-}
-
-function selectQuickCharge(idx){
-  var pattern=window._qcChargePatterns[idx];
-  var lastOdo=0;
-  sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});
-  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
-  
-  // Highlight selected pill
-  document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
-  document.querySelectorAll('#quickPills .quick-pill')[idx].classList.add('selected');
-  
-  // Auto-detect driving type from history for this pattern
-  var dtCounts={};
-  sessions.forEach(function(x){
-    if(x.t===pattern.t&&x.s===pattern.s&&x.e===pattern.e&&x.drivingType){
-      dtCounts[x.drivingType]=(dtCounts[x.drivingType]||0)+1;
-    }
-  });
-  var dtAuto='mixed';for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){dtAuto=sessions[i].drivingType;break;}}
-  if(Object.keys(dtCounts).length){
-    dtAuto=Object.entries(dtCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
-  } else if(pattern.t==='public'){
-    dtAuto='highway';
-  }
-  
-  var fields=document.getElementById('quickFields');
-  fields.classList.add('visible');
-  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-    '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qcStart" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
-    '<div><label style="margin:0 0 3px">Odo</label><input type="text" id="qcOdo" inputmode="numeric" placeholder="'+(lastOdo?lastOdo.toLocaleString('en-IN'):'odo')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
-    '</div>'+
-    '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Driving type</label>'+
-    '<div class="eff-tabs" style="margin:6px 0">'+
-      '<div class="eff-tab'+(dtAuto==='city'?' active':'')+'" onclick="pickQcDrivingType(\'city\',this)">City</div>'+
-      '<div class="eff-tab'+(dtAuto==='highway'?' active':'')+'" onclick="pickQcDrivingType(\'highway\',this)">Highway</div>'+
-      '<div class="eff-tab'+(dtAuto==='mixed'?' active':'')+'" onclick="pickQcDrivingType(\'mixed\',this)">Mixed</div>'+
-    '</div>'+
-    '<input type="hidden" id="qcDrivingType" value="'+dtAuto+'">'+
-    '<button class="primary" onclick="saveQuickCharge('+idx+')" style="margin-top:10px">⚡ Save</button>';
-  setTimeout(function(){document.getElementById('qcOdo').focus();},100);
-}
-function pickQcDrivingType(val,el){
-  var tabs=el.parentNode.querySelectorAll('.eff-tab');
-  tabs.forEach(function(t){t.classList.remove('active');});
-  el.classList.add('active');
-  var inp=document.getElementById('qcDrivingType');
-  if(inp)inp.value=val;
-}
-
-
-function pickQcTripType(val,el){
-  var tabs=el.parentNode.querySelectorAll('.eff-tab');
-  tabs.forEach(function(t){t.classList.remove('active');});
-  el.classList.add('active');
-  var inp=document.getElementById('qcTripType');
-  if(inp)inp.value=val;
-}
-
-function selectQuickTrip(idx){
-  var pattern=window._qcTripPatterns[idx];
-  var lastOdo=0;
-  sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});
-  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
-  
-  // Highlight selected pill
-  document.querySelectorAll('#quickPills .quick-pill').forEach(function(p){p.classList.remove('selected');});
-  var allPills=document.querySelectorAll('#quickPills .quick-pill');
-  var chargeCount=(window._qcChargePatterns||[]).length;
-  var cpCount=document.querySelectorAll('#quickPills .quick-pill[onclick^="quickCarpool"]').length;
-  var tripPillIdx=chargeCount+cpCount+idx;
-  if(allPills[tripPillIdx])allPills[tripPillIdx].classList.add('selected');
-  
-  // Auto-detect trip type from history
-  var ttCounts={};
-  if(pattern.types&&pattern.types.length){
-    pattern.types.forEach(function(t){ttCounts[t]=(ttCounts[t]||0)+1;});
-  }
-  var ttAuto='mixed';for(var i=0;i<trips.length;i++){if(trips[i].tripType){ttAuto=trips[i].tripType;break;}}
-  if(Object.keys(ttCounts).length){
-    ttAuto=Object.entries(ttCounts).sort(function(a,b){return b[1]-a[1];})[0][0];
-  }
-  
-  var suggestStart=lastOdo||0;
-  var suggestEnd=suggestStart+pattern.km;
-  
-  var fields=document.getElementById('quickFields');
-  fields.classList.add('visible');
-  fields.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-    '<div><label style="margin:0 0 3px">Start Odo</label><input type="text" id="qtStartOdo" inputmode="numeric" placeholder="'+(suggestStart?suggestStart.toLocaleString('en-IN'):'start')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
-    '<div><label style="margin:0 0 3px">End Odo</label><input type="text" id="qtEndOdo" inputmode="numeric" placeholder="'+(suggestEnd?suggestEnd.toLocaleString('en-IN'):'end')+'" oninput="formatNumericInput(this)" style="font-size:15px;padding:10px"></div>'+
-    '</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
-    '<div><label style="margin:0 0 3px">Start %</label><input type="number" id="qtStartPct" min="0" max="100" value="'+pattern.s+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
-    '<div><label style="margin:0 0 3px">End %</label><input type="number" id="qtEndPct" min="0" max="100" value="'+pattern.e+'" style="font-size:15px;padding:10px;opacity:0.7"></div>'+
-    '</div>'+
-    '<label style="font-size:11px;color:var(--muted);margin-top:8px;display:block">Trip type</label>'+
-    '<div class="eff-tabs" style="margin:6px 0">'+
-      '<div class="eff-tab'+(ttAuto==='city'?' active':'')+'" onclick="pickQcTripType(\'city\',this)">City</div>'+
-      '<div class="eff-tab'+(ttAuto==='highway'?' active':'')+'" onclick="pickQcTripType(\'highway\',this)">Highway</div>'+
-      '<div class="eff-tab'+(ttAuto==='mixed'?' active':'')+'" onclick="pickQcTripType(\'mixed\',this)">Mixed</div>'+
-    '</div>'+
-    '<input type="hidden" id="qcTripType" value="'+ttAuto+'">'+
-    '<button class="primary" onclick="saveQuickTrip('+idx+')" style="margin-top:10px">🛣️ Save Trip</button>';
-  setTimeout(function(){document.getElementById('qtStartOdo').focus();},100);
-}
-
-function saveQuickTrip(idx){
-  if(navigator.vibrate)navigator.vibrate(10);
-  var pattern=window._qcTripPatterns[idx];
-  var startOdoRaw=stripCommas(document.getElementById('qtStartOdo').value);
-  var endOdoRaw=stripCommas(document.getElementById('qtEndOdo').value);
-  var startOdo=+startOdoRaw;
-  var endOdo=+endOdoRaw;
-  var startPct=+document.getElementById('qtStartPct').value;
-  var endPct=+document.getElementById('qtEndPct').value;
-  if(!startOdo||startOdo<=0){toast('Enter start odometer');return;}
-  if(!endOdo||endOdo<=startOdo){toast('End odo must be greater than start');return;}
-  if(isNaN(startPct)||startPct<0||startPct>100){toast('Enter valid start %');return;}
-  if(isNaN(endPct)||endPct<0||endPct>100){toast('Enter valid end %');return;}
-  var tripType=document.getElementById('qcTripType')?document.getElementById('qcTripType').value:'mixed';
-  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),startOdo:startOdo,endOdo:endOdo,startPct:startPct,endPct:endPct,tripType:tripType};
-  trips.unshift(obj);
-  
-  recomputeAllKm();persist();render();
-  closeQuickAdd();
-  toast('Trip saved ✓');
-}
-
-function quickAddToast(entryType,chargeType){
-  var label=entryType==='charge'?((chargeType==='office'?'Office':'Home')+' charge'):'Trip';
-  var toastEl=document.createElement('div');
-  toastEl.className='toast-undo';
-  toastEl.innerHTML='<span>'+label+' saved</span><button onclick="quickAddEdit(\''+entryType+'\')">Edit</button><button onclick="quickAddUndo(\''+entryType+'\')">Undo</button>';
-  document.body.appendChild(toastEl);
-  setTimeout(function(){toastEl.classList.add('show');},10);
-  window._qaToast=toastEl;
-  window._qaTimeout=setTimeout(function(){toastEl.classList.remove('show');setTimeout(function(){if(toastEl.parentNode)toastEl.parentNode.removeChild(toastEl);},300);},5000);
-}
-function quickAddUndo(entryType){
-  if(window._qaTimeout)clearTimeout(window._qaTimeout);
-  if(entryType==='charge'){sessions.shift();}
-  else{trips.shift();}
-  recomputeAllKm();persist();render();
-  var t=window._qaToast;if(t&&t.parentNode)t.parentNode.removeChild(t);
-  toast('Undone');
-}
-function quickAddEdit(entryType){
-  if(window._qaTimeout)clearTimeout(window._qaTimeout);
-  var t=window._qaToast;if(t&&t.parentNode)t.parentNode.removeChild(t);
-  if(entryType==='charge'){
-    switchTab('charges');
-    setTimeout(function(){editCharge(0);},200);
-  } else {
-    switchTab('charges');
-    setTimeout(function(){
-      // Switch to trip mode and edit
-      var tripBtn=document.querySelector('.entry-mode-btn:last-child');
-      if(tripBtn)tripBtn.click();
-      setTimeout(function(){editTrip(0);},200);
-    },200);
-  }
-}
-
-function saveQuickCharge(idx){
-  if(navigator.vibrate)navigator.vibrate(10);
-  var pattern=window._qcChargePatterns[idx];
-  var s=+document.getElementById('qcStart').value;
-  var odoRaw=stripCommas(document.getElementById('qcOdo').value);
-  var odo=+odoRaw;
-  if(isNaN(s)||s<0||s>=pattern.e){toast('Enter valid start % (below '+pattern.e+'%)');return;}
-  if(!odo||odo<=0){toast('Enter odometer reading');return;}
-  var e=pattern.e;
-  var type=pattern.t;
-  var kwh=settings.battery*(e-s)/100;
-  var cost=type==='office'?0:type==='home'?kwh*(settings.homeRate||0):null;
-  var lastOdo=0;
-  sessions.forEach(function(x){if(x.odo&&x.odo>lastOdo)lastOdo=x.odo;});
-  trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});
-  var km=lastOdo>0&&odo>lastOdo?odo-lastOdo:null;
-  var drivingType=document.getElementById('qcDrivingType')?document.getElementById('qcDrivingType').value:'mixed';
-  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),s:s,e:e,kwh:kwh,cost:cost,t:type,odo:odo,km:km,startTime:null,endTime:null,duration:null,charger:null,notes:null,chargedSince:false,drivingType:drivingType};
-  sessions.unshift(obj);
-  
-  recomputeAllKm();persist();render();
-  closeQuickAdd();
-  toast((type==='office'?'Office':'Home')+' charge saved ✓');
-}
-
-function quickCarpoolSave(dir,pax,amount){
-  if(navigator.vibrate)navigator.vibrate(10);
-  var obj={id:Date.now()+Math.random(),date:new Date().toISOString().slice(0,10),dir:dir,km:null,pax:pax,amount:amount,amountExpr:null,notes:null};
-  carpools.unshift(obj);
-  persist();renderCarpool();renderDash();
-  closeQuickAdd();
-  toast('Carpool added ✓');
-}
-
-
-// ── MONTHLY COST BAR CHART ─────────────────────────────────────────────────
 function drawCostChart(){
   var canvas=document.getElementById('costChart');if(!canvas)return;
   // v5.6.0: Monthly Expenditures with carpool below axis + net markers
@@ -3874,7 +3636,7 @@ function updateThemePills(mode){
 })();
 
 // — Swipe Navigation —
-(function(){var sx=0,sy=0,st=null,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;st=e.target;},{passive:true});document.addEventListener('touchend',function(e){if(st&&st.closest&&st.closest('.bottom-nav,.bottom-sheet,.sheet-overlay'))return;var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,st=null,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;st=e.target;},{passive:true});document.addEventListener('touchend',function(e){if(st&&st.closest&&st.closest('.bottom-nav,.bottom-sheet'))return;var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — Android Back Button (navigate tabs instead of exit) —
 (function(){var tabs=['dash','charges','carpool','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
@@ -3960,7 +3722,7 @@ function cloudPull(){
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      recomputeAllKm();render();renderCarpool();
+      _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();renderCarpool();
       syncStatus('Pulled ✓ — '+sessions.length+' charges, '+trips.length+' trips');
       toast('Cloud data loaded ✓');
     }).catch(function(e){syncStatus('Pull failed: '+e.message,'err');});
@@ -3992,7 +3754,7 @@ function importData(event){
       if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      recomputeAllKm();render();renderCarpool();
+      _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();renderCarpool();
       // v5.6.0: Handle credentials import
       if(p.credentials&&p.credentials.gistId&&p.credentials.gistToken){
         if(confirm('This backup contains sync credentials. Import them?')){
