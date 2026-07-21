@@ -476,6 +476,22 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
         <div class="eff-tab" id="tw-mild" onclick="pickTripWeather('mild')">🌤️</div>
         <input type="hidden" id="tripWeather" value="">
       </div>
+      <div style="margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#0d1525;border-radius:8px;padding:8px 12px;margin-top:10px;border:1px solid var(--border)">
+          <span style="font-size:12px;color:var(--muted)">🚗 Carpool</span>
+          <label class="toggle"><input type="checkbox" id="tripCarpoolToggle" onchange="toggleTripCarpool()"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="tripCarpoolFields" style="display:none;margin-top:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <div class="eff-tab active" id="tcd-to_office" onclick="pickTripCpDir('to_office')" style="padding:8px 10px;font-size:14px;flex:0 0 auto">🏢</div>
+            <div class="eff-tab" id="tcd-to_home" onclick="pickTripCpDir('to_home')" style="padding:8px 10px;font-size:14px;flex:0 0 auto">🏠</div>
+            <input type="hidden" id="tripCpDir" value="to_office">
+            <input type="text" inputmode="decimal" id="tripCpAmount" placeholder="₹ e.g. 100+150" oninput="previewTripCpAmount()" style="flex:1;min-width:0">
+          </div>
+          <div id="tripCpAmountPreview" class="stat-sub" style="margin-top:4px;min-height:14px"></div>
+          <div id="tripCpFarePills" style="margin-top:6px"></div>
+        </div>
+      </div>
       <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
       <input type="text" id="tripNote" placeholder="e.g. AC on, heavy traffic">
       <div class="charged-since-row">
@@ -624,38 +640,6 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="card" id="pubHistoryCard" style="display:none">
     <h3 onclick="var el=document.getElementById('pubHistory');el.style.display=el.style.display==='none'?'block':'none'" style="cursor:pointer">Public Charger History <span id="pubHistoryCount"></span> <span style="float:right;font-size:10px">&#9654;</span></h3><div id="pubHistory" style="display:none"></div>
   </div>
-</div>
-
-<!-- ═══════════════════ CARPOOL ═══════════════════ -->
-<div id="carpool" class="view">
-  <div class="card"><h3>Summary</h3><div class="stats-grid" id="carpoolStats"></div></div>
-  <div class="card">
-    <h3 id="cpFormTitle">Log Trip</h3>
-    <div class="form-row">
-      <div><label>Date</label><input type="date" id="cpDate"></div>
-      <div><label>Direction</label>
-        <input type="hidden" id="cpDir" value="to_office">
-        <div style="display:flex;gap:8px">
-          <div id="dirPill_office" onclick="selectDir('to_office')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#000;font-size:13px;cursor:pointer">🏢</div>
-          <div id="dirPill_home" onclick="selectDir('to_home')" style="flex:1;text-align:center;padding:10.5px 12px;line-height:1;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;cursor:pointer">🏠</div>
-        </div>
-      </div>
-    </div>
-    <div class="form-row" style="margin-top:10px">
-      <input type="hidden" id="cpKm" value="">
-      <div><label>Passengers</label><input type="number" id="cpPax" placeholder="" min="1"></div>
-      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="cpAmount" placeholder="e.g. 100+110" oninput="previewCpAmount()" >
-<div id="cpAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-    </div>
-    <div id="farePills" style="margin-top:4px"></div>
-    <label style="margin-top:14px">Notes <span style="color:var(--muted);font-size:10px">(optional)</span></label>
-    <input type="text" id="cpNotes" placeholder="">
-    <div id="cpError" class="error-msg"></div>
-    <button class="primary" onclick="saveCarpool()">Save</button>
-          <button class="ghost" onclick="clearCpForm()" style="margin-top:8px">Reset</button>
-    <button class="secondary" id="cancelCpEdit" style="display:none" onclick="cancelCpEdit()">Cancel Edit</button>
-  </div>
-  <div class="card"><h3>Trips</h3><div id="cpList"></div></div>
 </div>
 
 <!-- ═══════════════════ EXPENSES ═══════════════════ -->
@@ -826,6 +810,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.0.0 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Carpool merged into Trip form</b>: Toggle "🚗 Carpool" on any trip to add direction + amount. Carpool tab removed.</li>
+      <li>Adaptive validation: if odo/% empty but carpool ON, saves carpool-only entry. If all filled, saves linked trip+carpool.</li>
+      <li>Trip list shows carpool badge (₹ amount + direction) on entries with carpool data.</li>
+      <li>Dashboard & breakeven now source carpool income from both old carpools array and new trip entries.</li>
+      <li>Monthly chart carpool-below-axis includes trip carpool data.</li>
+      <li>Fare pills in trip carpool draw from both old and new carpool history.</li>
+    </ul>
     <div class="cl-ver">v6.1.1 <span class="cl-date">21 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Pax custom input matches pill height/style</li>
@@ -1136,10 +1129,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
     <span class="nav-label">Charges</span>
   </div>
-  <div class="nav-item" id="t-carpool" onclick="switchTab('carpool')">
-    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <span class="nav-label">Carpool</span>
-  </div>
+
   <div class="nav-item" id="t-expenses" onclick="switchTab('expenses')">
     <svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
     <span class="nav-label">Costs</span>
@@ -1229,7 +1219,7 @@ let tripEditIndex = null;
 let planEffMode = 'city';
 let entryMode = 'charge'; // 'charge' or 'trip'
 var _chargesTabVisited = false;
-let editIndex=null, cpEditIndex=null;
+let editIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
 
 // ── CHANGELOG ─────────────────────────────────────────────────────────────────
@@ -1269,7 +1259,7 @@ function switchTab(tab) {
   window.scrollTo({top:0,behavior:'instant'});
   if (tab==='dash')    setTimeout(function(){renderDash();drawAllCharts();renderBreakevenSummary();},30);
   if (tab==='charges') { renderCharges(); restoreDraft(); updateOdoPlaceholder(); if(!_chargesTabVisited){_chargesTabVisited=true;var _ls=getLastKnownState();if(_ls&&_ls.source==='trip')setEntryMode('trip');else setEntryMode('charge');} }
-  if (tab==='carpool') renderCarpool();
+
   if (tab==='expenses') renderExpenses();
   if (tab==='planner') runPlan();
 }
@@ -1397,13 +1387,13 @@ function renderDash(){
   // === MONTHLY STATS ===
   var spTitle=document.getElementById('spendingTitle');if(spTitle){var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];spTitle.textContent=mNames[new Date().getMonth()]+' '+new Date().getFullYear();}
   var monthExpenditure=sessions.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.cost!=null&&x.cost>0}).reduce(function(a,x){return a+x.cost},0)+(expenses||[]).filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.category!=='purchase'}).reduce(function(a,x){return a+(x.amount||0)},0);
-  var cpThisMonthAmt=carpools.filter(function(x){return x.date&&x.date.startsWith(thisMonth)}).reduce(function(a,x){return a+(x.amount||0)},0);
+  var cpThisMonthAmt=carpools.filter(function(x){return x.date&&x.date.startsWith(thisMonth)}).reduce(function(a,x){return a+(x.amount||0)},0)+trips.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.carpool}).reduce(function(a,x){return a+(x.carpool.amount||0)},0);
   var netMonthlyCost=monthExpenditure-cpThisMonthAmt;
   var monthSavings=(function(){if(!settings.petrolMileage||!settings.petrolPrice||monthKm<=0)return null;var petrolCost=monthKm/settings.petrolMileage*settings.petrolPrice;var evCost=sessions.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.cost>0}).reduce(function(a,x){return a+x.cost},0);return Math.round(petrolCost-evCost);})();
   document.getElementById('paidStats').innerHTML=
     statBox(monthKm>0?monthKm.toLocaleString('en-IN')+' km':'\u2014','Distance',projectedKm?'~'+projectedKm.toLocaleString('en-IN')+' km projected':null)+
     statBox('\u20b9 '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure','charging + expenses')+
-    '<div class="stat-box tappable" onclick="switchTab(\'carpool\')"><div class="stat-val" style="color:var(--good)">\u20b9 '+Math.round(cpThisMonthAmt).toLocaleString('en-IN')+'</div><div class="stat-label">Carpool</div><div class="stat-sub">'+(netMonthlyCost<=0?'Surplus \u20b9'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN'):'Net \u20b9'+Math.round(netMonthlyCost).toLocaleString('en-IN'))+'</div></div>'+
+    '<div class="stat-box tappable" onclick="setEntryMode(\'trip\');switchTab(\'charges\')"><div class="stat-val" style="color:var(--good)">\u20b9 '+Math.round(cpThisMonthAmt).toLocaleString('en-IN')+'</div><div class="stat-label">Carpool</div><div class="stat-sub">'+(netMonthlyCost<=0?'Surplus \u20b9'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN'):'Net \u20b9'+Math.round(netMonthlyCost).toLocaleString('en-IN'))+'</div></div>'+
     statBox(monthSavings!=null?(monthSavings>=0?'<span style="color:var(--good)">\u20b9 '+monthSavings.toLocaleString('en-IN')+'</span>':'\u20b9 '+Math.abs(monthSavings).toLocaleString('en-IN')):'\u2014','Savings','vs petrol this month');
 
 
@@ -2149,18 +2139,6 @@ function pickConn(val){
   document.getElementById('connDisplay').textContent=val;
   document.getElementById('connDropdown').style.display='none';
 }
-function selectDir(val){
-  document.getElementById('cpDir').value=val;
-  var oEl=document.getElementById('dirPill_office');
-  var hEl=document.getElementById('dirPill_home');
-  if(val==='to_office'){
-    oEl.style.background='var(--accent)';oEl.style.color='#000';oEl.style.borderColor='var(--accent)';
-    hEl.style.background='var(--card)';hEl.style.color='var(--text)';hEl.style.borderColor='var(--border)';
-  } else {
-    hEl.style.background='var(--accent)';hEl.style.color='#000';hEl.style.borderColor='var(--accent)';
-    oEl.style.background='var(--card)';oEl.style.color='var(--text)';oEl.style.borderColor='var(--border)';
-  }
-}
 function pickScType(val){
   document.getElementById('scType').value=val;
   document.getElementById('scTypeDisplay').textContent=val;
@@ -2431,6 +2409,66 @@ function updateTripPreview(){
   } else { el.textContent=''; }
 }
 
+// ── TRIP CARPOOL FUNCTIONS ─────────────────────────────────────────────────
+var _tripSelectedFares=[];
+function toggleTripCarpool(){
+  var on=document.getElementById('tripCarpoolToggle').checked;
+  document.getElementById('tripCarpoolFields').style.display=on?'block':'none';
+  if(on)renderTripCpFarePills();
+}
+function pickTripCpDir(val){
+  document.getElementById('tripCpDir').value=val;
+  ['to_office','to_home'].forEach(function(d){
+    var el=document.getElementById('tcd-'+d);
+    if(d===val){el.classList.add('active');}else{el.classList.remove('active');}
+  });
+}
+function previewTripCpAmount(){
+  var v=document.getElementById('tripCpAmount').value;
+  var el=document.getElementById('tripCpAmountPreview');
+  var r=evalExpr(v);
+  if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= \u20b9'+r.toLocaleString('en-IN');el.style.color='var(--good)';}
+  else{el.textContent='';el.style.color='';}
+  // Auto-populate pax from + segments (e.g. 100+150 = 2 riders + driver = 3 pax)
+  var parts=v.split('+').filter(function(p){return parseFloat(p.trim())>0;});
+  if(parts.length>0){pickTripPax(parts.length+1);}
+}
+function renderTripCpFarePills(){
+  var el=document.getElementById('tripCpFarePills');if(!el)return;
+  // Source fare amounts from both old carpools array AND trip entries with carpool data
+  var freq={};
+  carpools.forEach(function(c){
+    var expr=c.amountExpr||String(c.amount||'');
+    expr.split('+').forEach(function(part){var v=parseFloat(part.trim());if(v>0&&v===Math.round(v))freq[v]=(freq[v]||0)+1;});
+  });
+  trips.forEach(function(t){
+    if(t.carpool&&t.carpool.amountExpr){
+      t.carpool.amountExpr.split('+').forEach(function(part){var v=parseFloat(part.trim());if(v>0&&v===Math.round(v))freq[v]=(freq[v]||0)+1;});
+    } else if(t.carpool&&t.carpool.amount){
+      freq[Math.round(t.carpool.amount)]=(freq[Math.round(t.carpool.amount)]||0)+1;
+    }
+  });
+  var sorted=Object.keys(freq).map(function(k){return{amt:+k,count:freq[k]};})
+    .sort(function(a,b){return b.count-a.count;}).slice(0,6);
+  if(!sorted.length){el.innerHTML='';return;}
+  var html='<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;gap:8px 0">';
+  sorted.forEach(function(p){
+    var isActive=_tripSelectedFares.indexOf(p.amt)>=0;
+    html+='<div class="quick-pill'+(isActive?' active':'')+'" onclick="toggleTripCpFare('+p.amt+')" style="padding:6px 12px;font-size:11px;'+(isActive?'background:var(--accent);color:#000;border-color:var(--accent)':'')+'">\u20b9'+p.amt+'</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+function toggleTripCpFare(amt){
+  var idx=_tripSelectedFares.indexOf(amt);
+  if(idx>=0)_tripSelectedFares.splice(idx,1);else _tripSelectedFares.push(amt);
+  document.getElementById('tripCpAmount').value=_tripSelectedFares.join('+');
+  previewTripCpAmount();
+  // Auto-set pax from fare pill count (riders + driver)
+  if(_tripSelectedFares.length>0)pickTripPax(_tripSelectedFares.length+1);
+  renderTripCpFarePills();
+}
+
 function saveTrip(){
   var date=document.getElementById('tripDate').value;
   var so=+document.getElementById('tripStartOdo').value;
@@ -2440,19 +2478,40 @@ function saveTrip(){
   var note=document.getElementById('tripNote').value.trim()||null;
   var chargedSince=document.getElementById('tripChargedSince').checked;
   var errEl=document.getElementById('tripError');
+  var carpoolOn=document.getElementById('tripCarpoolToggle').checked;
+  var carpoolData=null;
+  if(carpoolOn){
+    var cpDir=document.getElementById('tripCpDir').value;
+    var cpAmtRaw=document.getElementById('tripCpAmount').value.trim();
+    var cpAmount=evalExpr(cpAmtRaw);
+    var cpAmountExpr=cpAmtRaw.match(/[+\-*/]/)?cpAmtRaw:null;
+    if(!cpAmount){errEl.textContent=cpAmtRaw?'Invalid carpool amount expression.':'Carpool is on — please enter amount.';return;}
+    carpoolData={dir:cpDir,amount:cpAmount,amountExpr:cpAmountExpr};
+  }
   if(!date){errEl.textContent='Please set a date.';return;}
-  if(!so||!eo||eo<=so){errEl.textContent='Need valid start and end odo (or enter distance).';return;}
-  if(isNaN(sp)||isNaN(ep)){errEl.textContent='Need valid start and end % (or enter consumed).';return;}
-  if(sp>100||ep<0){errEl.textContent='% values must be 0-100.';return;}
+  // Adaptive validation: if carpool is ON and odo/% are empty, save carpool-only trip
+  var hasTripData=(so>0&&eo>0)||(sp>0||ep>0);
+  if(!carpoolOn&&(!so||!eo||eo<=so)){errEl.textContent='Need valid start and end odo (or enter distance).';return;}
+  if(!carpoolOn&&(isNaN(sp)||isNaN(ep))){errEl.textContent='Need valid start and end % (or enter consumed).';return;}
+  if(hasTripData&&so>0&&eo>0&&eo<=so){errEl.textContent='End odo must be greater than start odo.';return;}
+  if(hasTripData&&(sp>100||ep<0)){errEl.textContent='% values must be 0-100.';return;}
   errEl.textContent='';
-  var km=parseFloat((eo-so).toFixed(1));
-  var consumption=(sp-ep)*settings.battery/100;
-  var isRegen=sp<=ep;
-  var eff=isRegen?null:km/consumption;
+  var km=null,consumption=null,isRegen=null,eff=null;
+  if(so>0&&eo>so){
+    km=parseFloat((eo-so).toFixed(1));
+    if(sp>=0&&ep>=0&&sp>ep){
+      consumption=(sp-ep)*settings.battery/100;
+      isRegen=false;
+      eff=km/consumption;
+    } else if(sp>=0&&ep>=0&&ep>=sp){
+      isRegen=true;eff=null;
+    }
+  }
   var tripTypeVal=document.getElementById('tripType').value||null;
   var obj={id:tripEditIndex!==null?trips[tripEditIndex].id:(Date.now()+Math.random()),
-    date:date,startOdo:Math.round(so),endOdo:Math.round(eo),startPct:sp,endPct:ep,km:km,
-    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal,pax:+(document.getElementById('tripPax').value)||1,weather:document.getElementById('tripWeather').value||null};
+    date:date,startOdo:so?Math.round(so):null,endOdo:eo?Math.round(eo):null,startPct:sp!=null?sp:null,endPct:ep!=null?ep:null,km:km,
+    consumption:consumption,efficiency:eff,regen:isRegen,note:note,chargedSince:chargedSince,tripType:tripTypeVal,pax:+(document.getElementById('tripPax').value)||1,weather:document.getElementById('tripWeather').value||null,
+    carpool:carpoolData};
   var wasEditing=tripEditIndex!==null;
   if(wasEditing){trips[tripEditIndex]=obj;tripEditIndex=null;
     document.getElementById('tripFormTitle').textContent='New Trip';
@@ -2461,7 +2520,7 @@ function saveTrip(){
   
   persist();
   clearTripForm();render();
-  toast(wasEditing?'Trip updated \u2713':'Trip saved \u2713');
+  toast(wasEditing?'Trip updated \u2713':(carpoolData&&!km?'Carpool saved \u2713':'Trip saved \u2713'));
 }
 
 function clearTripForm(){
@@ -2473,6 +2532,14 @@ function clearTripForm(){
   (function(){var _ltt='mixed';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
   pickTripPax(1);
   pickTripWeather(getAutoWeather());
+  // Reset carpool fields
+  document.getElementById('tripCarpoolToggle').checked=false;
+  document.getElementById('tripCarpoolFields').style.display='none';
+  document.getElementById('tripCpAmount').value='';
+  document.getElementById('tripCpAmountPreview').textContent='';
+  document.getElementById('tripCpDir').value='to_office';
+  pickTripCpDir('to_office');
+  _tripSelectedFares=[];
   // Pre-fill start odo/% from last known state
   prefillTripFromLastState();
 }
@@ -2490,17 +2557,34 @@ function editTrip(i){
   document.getElementById('tripFormTitle').textContent='Edit Trip';
   document.getElementById('cancelTripEdit').style.display='block';
   document.getElementById('tripDate').value=x.date;
-  document.getElementById('tripStartOdo').value=Math.round(x.startOdo);
-  document.getElementById('tripEndOdo').value=Math.round(x.endOdo);
+  document.getElementById('tripStartOdo').value=x.startOdo?Math.round(x.startOdo):'';
+  document.getElementById('tripEndOdo').value=x.endOdo?Math.round(x.endOdo):'';
   document.getElementById('tripDistance').value=x.km||'';
-  document.getElementById('tripStartPct').value=Math.round(x.startPct);
-  document.getElementById('tripEndPct').value=Math.round(x.endPct);
+  document.getElementById('tripStartPct').value=x.startPct!=null?Math.round(x.startPct):'';
+  document.getElementById('tripEndPct').value=x.endPct!=null?Math.round(x.endPct):'';
   document.getElementById('tripConsumed').value=(x.startPct>x.endPct)?Math.round(x.startPct-x.endPct):'';
   document.getElementById('tripNote').value=x.note||'';
   document.getElementById('tripChargedSince').checked=x.chargedSince||false;
   pickTripType(x.tripType||'mixed');
   pickTripPax(x.pax||1);
   pickTripWeather(x.weather||getAutoWeather());
+  // Restore carpool fields
+  if(x.carpool){
+    document.getElementById('tripCarpoolToggle').checked=true;
+    document.getElementById('tripCarpoolFields').style.display='block';
+    pickTripCpDir(x.carpool.dir||'to_office');
+    document.getElementById('tripCpAmount').value=x.carpool.amountExpr||x.carpool.amount||'';
+    previewTripCpAmount();
+    _tripSelectedFares=[];
+    if(x.carpool.amountExpr){x.carpool.amountExpr.split('+').forEach(function(p){var v=parseFloat(p.trim());if(v>0)_tripSelectedFares.push(v);});}
+    renderTripCpFarePills();
+  } else {
+    document.getElementById('tripCarpoolToggle').checked=false;
+    document.getElementById('tripCarpoolFields').style.display='none';
+    document.getElementById('tripCpAmount').value='';
+    document.getElementById('tripCpAmountPreview').textContent='';
+    _tripSelectedFares=[];
+  }
   updateTripPreview();
 }
 
@@ -2609,12 +2693,11 @@ var _chartDataHash='';
 function render(){
   // Only render visible tab + dashboard summary
   var activeTab='dash';
-  ['dash','charges','carpool','expenses'].forEach(function(t){
+  ['dash','charges','expenses'].forEach(function(t){
     if(document.getElementById(t)&&document.getElementById(t).classList.contains('active'))activeTab=t;
   });
   if(activeTab==='dash'){renderDash();drawAllCharts();renderBreakevenSummary();}
   else if(activeTab==='charges')renderCharges();
-  else if(activeTab==='carpool')renderCarpool();
   else if(activeTab==='expenses')renderExpenses();
   updateOdoPlaceholder();
 }
@@ -2842,10 +2925,24 @@ function renderTripsOnly(){
       if(x.efficiency) effStr=x.efficiency.toFixed(1)+' km/kWh \u00b7 '+(x.km/(x.startPct-x.endPct)).toFixed(1)+' km/%';
       if(x.regen) effStr='+'+Math.abs(x.startPct-x.endPct)+'% regen \u26a1';
       if(x.efficiency&&x.effWarn) effStr='\u26a0\ufe0f '+effStr;
-      var line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'% \u00b7 '+parseFloat((x.km||0).toFixed(1))+' km';
-      var line2=Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN');
-      if(effStr) line2+=' \u00b7 '+effStr;
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge badge-trip">Trip</span></div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div><div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>'+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+((x.pax&&x.pax>1)||(x.weather)?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax>1?x.pax+' pax':'')+(x.pax>1&&x.weather?' \u00b7 ':'')+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+'</div>':'')+'</div>';
+      var isCarpoolOnly=x.carpool&&!x.km;
+      var line1='';
+      if(isCarpoolOnly){
+        line1='\ud83d\ude97 Carpool '+(x.carpool.dir==='to_office'?'\u2192 Office':'\u2190 Home')+' \u00b7 \u20b9'+Math.round(x.carpool.amount).toLocaleString('en-IN');
+      } else {
+        line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'% \u00b7 '+parseFloat((x.km||0).toFixed(1))+' km';
+      }
+      var line2='';
+      if(!isCarpoolOnly&&x.startOdo&&x.endOdo){
+        line2=Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN');
+        if(effStr) line2+=' \u00b7 '+effStr;
+      }
+      var carpoolBadge='';
+      if(x.carpool&&!isCarpoolOnly){
+        carpoolBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 6px;border-radius:4px">\ud83d\ude97 \u20b9'+Math.round(x.carpool.amount)+(x.carpool.dir==='to_office'?' \u2192':' \u2190')+'</span>';
+      }
+      var badgeType=isCarpoolOnly?'<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span>':'<span class="badge badge-trip">Trip</span>';
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+carpoolBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+((x.pax&&x.pax>1)||(x.weather)?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax>1?x.pax+' pax':'')+(x.pax>1&&x.weather?' \u00b7 ':'')+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+'</div>':'')+'</div>';
     });
     out+='</div>';
     mIdx++;
@@ -2861,6 +2958,7 @@ function drawCostChart(){
   sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].charge+=s.cost}});
   (expenses||[]).forEach(function(e){if(e.date&&e.amount>0&&e.category!=='purchase'){var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].expense+=e.amount}});
   carpools.forEach(function(c){if(c.date&&c.amount>0){var m=c.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].carpool+=c.amount}});
+  trips.forEach(function(t){if(t.date&&t.carpool&&t.carpool.amount>0){var m=t.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].carpool+=t.carpool.amount}});
   var keys=Object.keys(months).sort();if(keys.length<1)return;
   var data=keys.map(function(k){var d=months[k];return{month:k,charge:d.charge,expense:d.expense,carpool:d.carpool}});
   var maxUp=Math.max.apply(null,data.map(function(d){return d.charge+d.expense}))||100;
@@ -2947,152 +3045,6 @@ function evalExpr(str){
   if(!/^[\d+\-*/().\s]+$/.test(s))return null;
   try{const r=Function('"use strict";return ('+s+')')();return isFinite(r)?Math.round(r*100)/100:null;}catch(e){return null;}
 }
-function previewCpAmount(){
-  const v=document.getElementById('cpAmount').value;
-  const el=document.getElementById('cpAmountPreview');
-  const r=evalExpr(v);
-  if(r!=null&&v.match(/[+\-*/]/)){el.textContent='= ₹'+r.toLocaleString('en-IN');el.style.color='var(--good)';}
-  else{el.textContent='';el.style.color='';}
-  // Auto-populate pax from + segments
-  var parts=v.split('+').filter(function(p){return parseFloat(p.trim())>0;});
-  if(parts.length>1){document.getElementById('cpPax').value=parts.length;}
-}
-
-var _selectedFares=[];
-function renderFarePills(){
-  var el=document.getElementById('farePills');if(!el)return;
-  // Extract individual amounts from all carpool amountExpr fields
-  var freq={};
-  carpools.forEach(function(c){
-    var expr=c.amountExpr||String(c.amount||'');
-    expr.split('+').forEach(function(part){
-      var v=parseFloat(part.trim());
-      if(v>0&&v===Math.round(v)){freq[v]=(freq[v]||0)+1;}
-    });
-  });
-  // Sort by frequency desc, take top 8
-  var sorted=Object.keys(freq).map(function(k){return{amt:+k,count:freq[k]};})
-    .sort(function(a,b){return b.count-a.count;}).slice(0,6);
-  if(!sorted.length){el.innerHTML='';return;}
-  var html='';
-  html+='<div style="display:flex;flex-wrap:wrap;justify-content:space-evenly;gap:8px 0">';
-  sorted.forEach(function(p){
-    var isActive=_selectedFares.indexOf(p.amt)>=0;
-    html+='<div class="quick-pill'+(isActive?' active':'')+'" onclick="toggleFare('+p.amt+')" style="padding:6px 12px;font-size:11px;'+(isActive?'background:var(--accent);color:#000;border-color:var(--accent)':'')+'">\u20b9'+p.amt+'</div>';
-  });
-  html+='</div>';
-  el.innerHTML=html;
-}
-function toggleFare(amt){
-  var idx=_selectedFares.indexOf(amt);
-  if(idx>=0)_selectedFares.splice(idx,1);else _selectedFares.push(amt);
-  // Update amount field
-  var field=document.getElementById('cpAmount');
-  field.value=_selectedFares.join('+');
-  previewCpAmount();
-  // Update pax
-  var paxEl=document.getElementById('cpPax');
-  if(paxEl&&_selectedFares.length>0)paxEl.value=_selectedFares.length;
-  renderFarePills();
-}
-
-function saveCarpool(){
-  const date=document.getElementById('cpDate').value,dir=document.getElementById('cpDir').value;
-  const km=null;
-  const pax=document.getElementById('cpPax').value!==''?+document.getElementById('cpPax').value:null;
-  const amtRaw=document.getElementById('cpAmount').value.trim();const amount=evalExpr(amtRaw);const amountExpr=amtRaw.match(/[+\-*/]/)?amtRaw:null;
-  const notes=document.getElementById('cpNotes').value||null;
-  const errEl=document.getElementById('cpError');
-  if(!date){errEl.textContent='Please set a date.';return;}
-  if(!amount){const raw=document.getElementById('cpAmount').value.trim();errEl.textContent=raw?'Invalid expression — use numbers and +−×÷':'Please enter amount collected.';return;}
-  errEl.textContent='';
-  const obj={id:cpEditIndex!==null?carpools[cpEditIndex].id:(Date.now()+Math.random()),date,dir,km,pax,amount,amountExpr,notes};
-  const wasEditing=cpEditIndex!==null;
-  if(wasEditing){carpools[cpEditIndex]=obj;cpEditIndex=null;
-    document.getElementById('cpFormTitle').textContent='Log Trip';
-    document.getElementById('cancelCpEdit').style.display='none';
-  } else carpools.unshift(obj);
-  persist();renderCarpool();renderDash();clearCpForm();
-  document.getElementById('cpList').scrollIntoView({behavior:'smooth',block:'start'});
-  toast(wasEditing?'Trip updated ✓':'Carpool trip saved ✓');
-}
-
-function cancelCpEdit(){cpEditIndex=null;document.getElementById('cpFormTitle').textContent='Log Trip';document.getElementById('cancelCpEdit').style.display='none';clearCpForm();}
-
-function clearCpForm(){
-  _selectedFares=[];renderFarePills();
-  ['cpKm','cpPax','cpAmount','cpNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('cpAmountPreview').textContent='';
-  document.getElementById('cpDate').value=new Date().toISOString().slice(0,10);
-  document.getElementById('cpDir').value='to_office';document.getElementById('cpError').textContent='';
-  
-}
-
-function editCarpool(i){
-  const x=carpools[i];cpEditIndex=i;
-  document.getElementById('cpFormTitle').textContent='Edit Trip';document.getElementById('cancelCpEdit').style.display='block';
-  document.getElementById('cpDate').value=x.date;document.getElementById('cpDir').value=x.dir||'to_office';selectDir(x.dir||'to_office');
-  document.getElementById('cpKm').value=x.km!=null?x.km:'';document.getElementById('cpPax').value=x.pax!=null?x.pax:'';
-  document.getElementById('cpAmount').value=x.amountExpr||x.amount||'';previewCpAmount();document.getElementById('cpNotes').value=x.notes||'';
-  _selectedFares=[];
-  if(x.amountExpr){x.amountExpr.split('+').forEach(function(p){var v=parseFloat(p.trim());if(v>0)_selectedFares.push(v);});}
-  renderFarePills();
-  document.getElementById('cpFormTitle').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function delCarpool(i){undoableDelete('carpool',i,'Carpool trip');}
-
-function renderCarpool(){
-  var _expandState=getExpandedGroups();
-  const ti=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const tk=carpools.reduce((a,x)=>a+(x.km||0),0);
-  const tp=carpools.reduce((a,x)=>a+(x.pax||0),0);
-  document.getElementById('carpoolStats').innerHTML=function(){
-    var now=new Date();var ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-    var moIncome=carpools.filter(function(c){return c.date&&c.date.startsWith(ym);}).reduce(function(a,c){return a+(c.amount||0);},0);
-    return statBox(ti>0?'\u20b9 '+Math.round(ti).toLocaleString('en-IN'):'\u2014','Total Income',null,'good')+
-    statBox(moIncome>0?'\u20b9 '+Math.round(moIncome).toLocaleString('en-IN'):'\u2014','This Month')+
-    statBox(carpools.length>0?'\u20b9 '+Math.round(ti/carpools.length):'\u2014','Avg / Trip')+
-    statBox(tp>0?'\u20b9 '+Math.round(ti/tp):'\u2014','Avg / Passenger');
-  }();
-  const listEl=document.getElementById('cpList');
-  if(!carpools.length){listEl.innerHTML='<div class="empty">No trips yet.</div>';return;}
-  const dl={to_office:'\u2192 To Office',to_home:'\u2190 To Home',both:'\u2194 Both Ways'};
-  // Group by month + collapsible
-  const cpSorted=[...carpools].map((x,i)=>({...x,_idx:i})).sort((a,b)=>b.date.localeCompare(a.date));
-  const cpGroups={};
-  cpSorted.forEach(x=>{const m=x.date.slice(0,7);if(!cpGroups[m])cpGroups[m]=[];cpGroups[m].push(x);});
-  let cpOut='',cpMIdx=0;
-  Object.entries(cpGroups).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([month,rows])=>{
-    const[yr,mo]=month.split('-');
-    const label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+yr;
-    const mAmt=rows.reduce((a,x)=>a+(x.amount||0),0);
-    const mId='cpgrp-'+month;
-    const collapsed=cpMIdx>0?' style="display:none"':'';
-    cpOut+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} trip${rows.length>1?'s':''} \u00b7 \u20b9${mAmt.toFixed(0)} <span style="float:right;font-size:10px">${cpMIdx>0?'\u25b6':'\u25bc'}</span></div>`;
-    cpOut+=`<div id="${mId}"${collapsed}>`;
-    rows.forEach(x=>{
-      const parts=[];if(x.km)parts.push(x.km+' km');if(x.pax)parts.push(x.pax+(x.pax===1?' passenger':' passengers'));if(x.notes)parts.push(escapeHtml(x.notes));
-      cpOut+=`<div class="session-row">
-        <div class="session-top">
-          <div class="session-date-badge"><span class="session-date">${fmtDate(x.date)}</span>${badgeHtml(x.dir||'to_office')}</div>
-          <div class="session-actions">
-            <button class="btn-sm btn-edit" onclick="editCarpool(${x._idx})"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><line x1="5.12" y1="15.88" x2="8.62" y2="19.38" stroke="var(--card)" stroke-width="1"/></svg></button>
-            <button class="btn-sm btn-del" onclick="delCarpool(${x._idx})">\u2715</button>
-          </div>
-        </div>
-        <div class="session-detail">
-          <span class="session-main" style="font-size:12px">${parts.join(' \u00b7 ')||'\u2014'}</span>
-          <span class="session-cost" style="color:var(--good)">+\u20b9${x.amount.toFixed(0)}</span>
-        </div>
-      </div>`;
-    });
-    cpOut+='</div>';cpMIdx++;
-  });
-  listEl.innerHTML=cpOut;
-  restoreExpandedGroups(_expandState);
-  renderFarePills();
-}
-
 
 // ── EXPENSES ──────────────────────────────────────────────────────────────────────
 var expEditIndex=null;
@@ -3229,7 +3181,7 @@ function renderExpenses(){
     var savingPerKm=iceTotalPerKm-evCostPerKm;
 
     // With carpool
-    var carpoolIncome=carpools.reduce(function(a,x){return a+(x.amount||0);},0);
+    var carpoolIncome=carpools.reduce(function(a,x){return a+(x.amount||0);},0)+trips.filter(function(t){return t.carpool;}).reduce(function(a,t){return a+(t.carpool.amount||0);},0);
     var savingPerKmWithCp=savingPerKm+(totalKm>0?carpoolIncome/totalKm:0);
 
     if(savingPerKm>0||savingPerKmWithCp>0){
@@ -3577,7 +3529,7 @@ function saveSettings(){
   }
   toast('Settings saved ✓');
 }
-function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();renderCarpool();safeLS.set('cm-chargers','[]');toast('All data cleared');}
+function clearAll(){var t=prompt('Type DELETE to permanently erase all data:');if(t!=='DELETE'){if(t!==null)toast('Cancelled');return;}sessions=[];carpools=[];expenses=[];trips=[];savedChargers=[];petrolLog=[];persist();render();safeLS.set('cm-chargers','[]');toast('All data cleared');}
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 function populateSettingsInputs(){
@@ -3601,8 +3553,12 @@ var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toI
 (function(){var ldt=null;for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){ldt=sessions[i].drivingType;break;}}if(ldt)pickDrivingType(ldt);})();
 // Pre-fill charge form start % from last known state on initial load
 prefillChargeFromLastState();
-document.getElementById('cpDate').value            = new Date().toISOString().slice(0,10);
-try{render();renderCarpool();}catch(e){console.error('Init error:',e);}
+// Reset carpool toggle (browser autofill can restore checkbox state)
+document.getElementById('tripCarpoolToggle').checked=false;
+document.getElementById('tripCarpoolFields').style.display='none';
+// Auto-select weather on initial load
+pickTripWeather(getAutoWeather());
+try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
 function setTheme(mode){
@@ -3636,10 +3592,10 @@ function updateThemePills(mode){
 })();
 
 // — Swipe Navigation —
-(function(){var sx=0,sy=0,st=null,tabs=['dash','charges','carpool','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;st=e.target;},{passive:true});document.addEventListener('touchend',function(e){if(st&&st.closest&&st.closest('.bottom-nav,.bottom-sheet'))return;var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
+(function(){var sx=0,sy=0,st=null,tabs=['dash','charges','expenses'];document.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;sy=e.changedTouches[0].screenY;st=e.target;},{passive:true});document.addEventListener('touchend',function(e){if(st&&st.closest&&st.closest('.bottom-nav,.bottom-sheet'))return;var diffX=sx-e.changedTouches[0].screenX;var diffY=sy-e.changedTouches[0].screenY;if(Math.abs(diffX)<40||Math.abs(diffY)>Math.abs(diffX))return;var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur<0)return;if(diffX>0&&cur<tabs.length-1)switchTab(tabs[cur+1]);else if(diffX<0&&cur>0)switchTab(tabs[cur-1]);},{passive:true});})();
 
 // — Android Back Button (navigate tabs instead of exit) —
-(function(){var tabs=['dash','charges','carpool','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
+(function(){var tabs=['dash','charges','expenses'];window.addEventListener('popstate',function(e){e.preventDefault();var cur=-1;for(var i=0;i<tabs.length;i++){var el=document.getElementById(tabs[i]);if(el&&el.classList.contains('active')){cur=i;break;}}if(cur>0){switchTab(tabs[cur-1]);history.pushState(null,null);}else{history.pushState(null,null);}});history.pushState(null,null);})();
 
 // — Undo Delete —
 var _undoTimer=null,_undoData=null;
@@ -3647,7 +3603,7 @@ function undoableDelete(type,index,label){
   var item;
   if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
   else if(type==='trip'){item=trips.splice(index,1)[0];persist();render();}
-  else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));renderCarpool();}
+  else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));render();}
   else if(type==='expense'){item=expenses.splice(index,1)[0];safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   if(!item)return;
   _undoData={type:type,index:index,item:item};
@@ -3664,7 +3620,7 @@ function undoLast(){
   if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
   if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
   else if(d.type==='trip'){trips.splice(d.index,0,d.item);persist();render();}
-  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));renderCarpool();}
+  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));render();}
   else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   document.getElementById('toast').classList.remove('show');
   toast('Restored ✓');
@@ -3722,7 +3678,7 @@ function cloudPull(){
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();renderCarpool();
+      _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();
       syncStatus('Pulled ✓ — '+sessions.length+' charges, '+trips.length+' trips');
       toast('Cloud data loaded ✓');
     }).catch(function(e){syncStatus('Pull failed: '+e.message,'err');});
@@ -3754,7 +3710,7 @@ function importData(event){
       if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
-      _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();renderCarpool();
+      _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();
       // v5.6.0: Handle credentials import
       if(p.credentials&&p.credentials.gistId&&p.credentials.gistToken){
         if(confirm('This backup contains sync credentials. Import them?')){
