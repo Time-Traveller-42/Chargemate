@@ -486,7 +486,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
             <div class="eff-tab active" id="tcd-to_office" onclick="pickTripCpDir('to_office')" style="padding:8px 10px;font-size:14px;flex:0 0 auto">🏢</div>
             <div class="eff-tab" id="tcd-to_home" onclick="pickTripCpDir('to_home')" style="padding:8px 10px;font-size:14px;flex:0 0 auto">🏠</div>
             <input type="hidden" id="tripCpDir" value="to_office">
-            <input type="text" inputmode="decimal" id="tripCpAmount" placeholder="₹ e.g. 100+150" oninput="previewTripCpAmount()" style="flex:1;min-width:0">
+            <input type="text" inputmode="tel" id="tripCpAmount" placeholder="₹ e.g. 100+150" oninput="previewTripCpAmount()" style="flex:1;min-width:0">
           </div>
           <div id="tripCpAmountPreview" class="stat-sub" style="margin-top:4px;min-height:14px"></div>
           <div id="tripCpFarePills" style="margin-top:6px"></div>
@@ -619,7 +619,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <button class="secondary" id="cancelChargeEdit" style="display:none" onclick="cancelChargeEdit()">Cancel Edit</button>
   </div>
   </div>
-  <div class="card"><h3>Log</h3><div id="list"></div></div>
+  <div class="card"><h3>Log</h3>
+    <div style="display:flex;gap:4px;margin-bottom:12px">
+      <div class="eff-tab active" id="lf-all" onclick="setLogFilter('all')">All</div>
+      <div class="eff-tab" id="lf-charges" onclick="setLogFilter('charges')">Charges</div>
+      <div class="eff-tab" id="lf-trips" onclick="setLogFilter('trips')">Trips</div>
+      <div class="eff-tab" id="lf-carpool" onclick="setLogFilter('carpool')">Carpool</div>
+    </div>
+    <div id="list"></div>
+  </div>
   <div class="card">
     <h3>Saved Chargers</h3>
     <div id="savedChargersList"></div>
@@ -810,6 +818,24 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.1.0 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Log filter pills</b>: [All] [Charges] [Trips] [Carpool] — filter the log list independently of the entry form.</li>
+      <li>Unified "All" view shows charges + trips in a single timeline sorted by date.</li>
+      <li>Carpool filter shows all carpool entries (old + new) grouped by month with totals.</li>
+      <li>Entry form (Charge/Trip toggle) is now independent of which log filter is active.</li>
+    </ul>
+    <div class="cl-ver">v7.0.2 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Efficiency: Distance-based window (last 500km × 65% + older 1500km × 25% + lifetime × 10%) replaces count-based (last 10 segments). Prevents short trips from skewing the average.</li>
+      <li>Fix: Efficiency chart x-axis labels no longer overlap when data points are dense (pixel-distance check).</li>
+    </ul>
+    <div class="cl-ver">v7.0.1 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>UX: Nav "Charges" renamed to "Logs"</li>
+      <li>Trip list: pax/weather moved to header line (compact), carpool uses 🏢/🏠 icons directly</li>
+      <li>Carpool amount: inputmode=tel for native + key on numeric pad</li>
+    </ul>
     <div class="cl-ver">v7.0.0 <span class="cl-date">21 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Carpool merged into Trip form</b>: Toggle "🚗 Carpool" on any trip to add direction + amount. Carpool tab removed.</li>
@@ -1127,7 +1153,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   </div>
   <div class="nav-item" id="t-charges" onclick="switchTab('charges')">
     <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    <span class="nav-label">Charges</span>
+    <span class="nav-label">Logs</span>
   </div>
 
   <div class="nav-item" id="t-expenses" onclick="switchTab('expenses')">
@@ -1218,6 +1244,7 @@ let petrolLog=[];try{petrolLog=JSON.parse(safeLS.get('cm-petrol-log')||'[]');}ca
 let tripEditIndex = null;
 let planEffMode = 'city';
 let entryMode = 'charge'; // 'charge' or 'trip'
+var logFilter = 'all'; // 'all', 'charges', 'trips', 'carpool'
 var _chargesTabVisited = false;
 let editIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
@@ -1436,18 +1463,25 @@ function getWeightedRecentEff(){
   if(!valid.length) return getAvgEff();
   // Sort by date DESC (most recent first)
   valid.sort(function(a,b){return b.date>a.date?1:b.date<a.date?-1:0;});
-  // Last 10: weight 70%, next 11-30: weight 30%
-  var recent10=valid.slice(0,10);
-  var next20=valid.slice(10,30);
-  var r10Km=recent10.reduce(function(a,s){return a+safeNum(s.km);},0);
-  var r10Kwh=recent10.reduce(function(a,s){return a+safeNum(s.consumption);},0);
-  var r10Eff=r10Kwh>0?r10Km/r10Kwh:null;
-  if(!next20.length||!r10Eff) return r10Eff||getAvgEff();
-  var n20Km=next20.reduce(function(a,s){return a+safeNum(s.km);},0);
-  var n20Kwh=next20.reduce(function(a,s){return a+safeNum(s.consumption);},0);
-  var n20Eff=n20Kwh>0?n20Km/n20Kwh:null;
-  if(!n20Eff) return r10Eff;
-  return r10Eff*0.7+n20Eff*0.3;
+  // Distance-based windows: recent 500km (65%), older 1500km (25%), lifetime (10%)
+  var recentKm=0,recentKwh=0,olderKm=0,olderKwh=0;
+  var RECENT_WINDOW=500,OLDER_WINDOW=1500;
+  for(var i=0;i<valid.length;i++){
+    var s=valid[i],km=safeNum(s.km),kwh=safeNum(s.consumption);
+    if(recentKm<RECENT_WINDOW){
+      recentKm+=km;recentKwh+=kwh;
+    } else if(olderKm<OLDER_WINDOW){
+      olderKm+=km;olderKwh+=kwh;
+    } else break;
+  }
+  var recentEff=recentKwh>0?recentKm/recentKwh:null;
+  if(!recentEff) return getAvgEff();
+  var olderEff=olderKwh>0?olderKm/olderKwh:null;
+  var lifetimeEff=getAvgEff();
+  if(!olderEff&&!lifetimeEff) return recentEff;
+  if(!olderEff) return recentEff*0.9+lifetimeEff*0.1;
+  if(!lifetimeEff) return recentEff*0.7+olderEff*0.3;
+  return recentEff*0.65+olderEff*0.25+lifetimeEff*0.1;
 }
 
 
@@ -2803,8 +2837,20 @@ function restoreExpandedGroups(state){
   });
 }
 
+function setLogFilter(f){
+  logFilter=f;
+  ['all','charges','trips','carpool'].forEach(function(t){
+    var el=document.getElementById('lf-'+t);
+    if(el){if(t===f)el.classList.add('active');else el.classList.remove('active');}
+  });
+  renderCharges();
+}
+
 function renderCharges(){
-  if(entryMode==='trip'){renderTripsOnly();}else{renderList();}
+  if(logFilter==='charges') renderList();
+  else if(logFilter==='trips') renderTripsOnly();
+  else if(logFilter==='carpool') renderCarpoolOnly();
+  else renderAllLog();
   renderPubHistory();renderSavedChargers();
   // Update trip count on toggle button
   
@@ -2928,7 +2974,7 @@ function renderTripsOnly(){
       var isCarpoolOnly=x.carpool&&!x.km;
       var line1='';
       if(isCarpoolOnly){
-        line1='\ud83d\ude97 Carpool '+(x.carpool.dir==='to_office'?'\u2192 Office':'\u2190 Home')+' \u00b7 \u20b9'+Math.round(x.carpool.amount).toLocaleString('en-IN');
+        line1=(x.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(x.carpool.amount).toLocaleString('en-IN');
       } else {
         line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'% \u00b7 '+parseFloat((x.km||0).toFixed(1))+' km';
       }
@@ -2939,16 +2985,93 @@ function renderTripsOnly(){
       }
       var carpoolBadge='';
       if(x.carpool&&!isCarpoolOnly){
-        carpoolBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 6px;border-radius:4px">\ud83d\ude97 \u20b9'+Math.round(x.carpool.amount)+(x.carpool.dir==='to_office'?' \u2192':' \u2190')+'</span>';
+        carpoolBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 6px;border-radius:4px">'+(x.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(x.carpool.amount)+'</span>';
       }
       var badgeType=isCarpoolOnly?'<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span>':'<span class="badge badge-trip">Trip</span>';
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+carpoolBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+((x.pax&&x.pax>1)||(x.weather)?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax>1?x.pax+' pax':'')+(x.pax>1&&x.weather?' \u00b7 ':'')+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+'</div>':'')+'</div>';
+      var paxWeatherStr='';
+      if((x.pax&&x.pax>1)||(x.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax>1?' '+x.pax+'p':'')+'</span>';}
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+carpoolBadge+paxWeatherStr+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
     });
     out+='</div>';
     mIdx++;
   });
   listEl.innerHTML=out;
   restoreExpandedGroups(_expandState);
+}
+
+function renderCarpoolOnly(){
+  var listEl=document.getElementById('list');
+  // Gather all carpool entries: from old carpools array + trip entries with carpool
+  var entries=[];
+  carpools.forEach(function(c,i){entries.push({date:c.date,dir:c.dir,amount:c.amount,amountExpr:c.amountExpr,source:'old',idx:i});});
+  trips.forEach(function(t,i){if(t.carpool){entries.push({date:t.date,dir:t.carpool.dir,amount:t.carpool.amount,amountExpr:t.carpool.amountExpr,km:t.km,source:'trip',idx:i});}});
+  if(!entries.length){listEl.innerHTML='<div class="empty">No carpool entries yet.</div>';return;}
+  entries.sort(function(a,b){return b.date.localeCompare(a.date);});
+  var groups={};
+  entries.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
+  var out='',mIdx=0;
+  Object.entries(groups).sort(function(a,b){return b[0].localeCompare(a[0]);}).forEach(function(entry){
+    var month=entry[0],rows=entry[1];
+    var parts=month.split('-');
+    var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+parts[1]-1]+' '+parts[0];
+    var monthAmt=rows.reduce(function(a,x){return a+(x.amount||0);},0);
+    var tId='cpgrp-'+month;
+    var collapsed=mIdx>0?' style="display:none"':'';
+    out+='<div class="month-header" onclick="var g=document.getElementById(\''+tId+'\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' trip'+(rows.length>1?'s':'')+' \u00b7 \u20b9'+Math.round(monthAmt).toLocaleString('en-IN')+' <span style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
+    out+='<div id="'+tId+'"'+collapsed+'>';
+    rows.forEach(function(x){
+      var dirIcon=x.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0';
+      var detail=dirIcon+' \u20b9'+Math.round(x.amount).toLocaleString('en-IN');
+      if(x.km) detail+=' \u00b7 '+x.km+' km';
+      var editBtn='';
+      if(x.source==='trip'){editBtn='<button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>';}
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(x.date)+'</span><span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span></div><div class="session-actions">'+editBtn+'</div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+detail+'</div></div>';
+    });
+    out+='</div>';mIdx++;
+  });
+  listEl.innerHTML=out;
+}
+
+function renderAllLog(){
+  var listEl=document.getElementById('list');
+  // Merge charges + trips into one timeline sorted by date
+  var entries=[];
+  sessions.forEach(function(s,i){entries.push({type:'charge',date:s.date,time:s.startTime||'',odo:s.odo||0,idx:i,data:s});});
+  trips.forEach(function(t,i){entries.push({type:'trip',date:t.date,time:'',odo:t.startOdo||0,idx:i,data:t});});
+  if(!entries.length){listEl.innerHTML='<div class="empty">No entries yet.</div>';return;}
+  entries.sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.odo||0)-(a.odo||0);});
+  var groups={};
+  entries.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
+  var out='',mIdx=0;
+  Object.entries(groups).sort(function(a,b){return b[0].localeCompare(a[0]);}).forEach(function(entry){
+    var month=entry[0],rows=entry[1];
+    var parts=month.split('-');
+    var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+parts[1]-1]+' '+parts[0];
+    var tId='allgrp-'+month;
+    var collapsed=mIdx>0?' style="display:none"':'';
+    out+='<div class="month-header" onclick="var g=document.getElementById(\''+tId+'\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' entries <span style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
+    out+='<div id="'+tId+'"'+collapsed+'>';
+    rows.forEach(function(x){
+      if(x.type==='charge'){
+        var s=x.data;
+        var line1=Math.round(s.s)+'% \u2192 '+Math.round(s.e)+'% \u00b7 '+(s.kwh||0).toFixed(1)+' kWh';
+        var costStr=s.cost!=null&&s.cost>0?'\u20b9'+Math.round(s.cost):'';
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(s.date)+'</span>'+badgeHtml(s.t)+(costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':'')+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div></div>';
+      } else {
+        var t=x.data;
+        var isCarpoolOnly=t.carpool&&!t.km;
+        var tLine='';
+        if(isCarpoolOnly){tLine=(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount).toLocaleString('en-IN');}
+        else{tLine=Math.round(t.startPct)+'% \u2192 '+Math.round(t.endPct)+'% \u00b7 '+parseFloat((t.km||0).toFixed(1))+' km';}
+        var badge=isCarpoolOnly?'<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span>':'<span class="badge badge-trip">Trip</span>';
+        var cpBadge='';
+        if(t.carpool&&!isCarpoolOnly){cpBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 6px;border-radius:4px">'+(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount)+'</span>';}
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+cpBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+tLine+'</div></div>';
+      }
+    });
+    out+='</div>';mIdx++;
+  });
+  listEl.innerHTML=out;
 }
 
 function drawCostChart(){
@@ -3388,15 +3511,20 @@ function drawChart(id,pts,dates,color){
   valid.forEach(({v},i)=>{ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
   ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';
   const maxL=Math.max(2,Math.floor(gW/44));
+  var lastLabelX=-999;
   valid.forEach(({d},i)=>{
     const step=Math.ceil((valid.length-1)/Math.max(1,maxL-1));
     const isFirst=i===0;
     const isLast=i===valid.length-1;
     const isSpaced=valid.length>2&&i%step===0;
-    // Always show first+last. Skip second-to-last if too close to last.
-    const tooCloseToLast=isSpaced&&!isLast&&(valid.length-1-i)<step*0.6;
-    const show=isFirst||isLast||(isSpaced&&!tooCloseToLast);
-    if(show){const lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));ctx.fillText(fmtDateShort(d),lx,H-4);}
+    const show=isFirst||isLast||isSpaced;
+    if(show){
+      var lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));
+      // Skip if too close to previous label (min 40px gap)
+      if(!isFirst&&Math.abs(lx-lastLabelX)<40) return;
+      ctx.fillText(fmtDateShort(d),lx,H-4);
+      lastLabelX=lx;
+    }
   });
 }
 
