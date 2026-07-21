@@ -818,6 +818,12 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.1.1 <span class="cl-date">21 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: "All" log view now shows full info (odo, efficiency, duration, notes, pax/weather) matching individual tabs.</li>
+      <li>Fix: Delete button added to All log view entries.</li>
+      <li>Fix: Sort uses entry ID as tiebreaker for same-date entries (newer entries show first).</li>
+    </ul>
     <div class="cl-ver">v7.1.0 <span class="cl-date">21 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Log filter pills</b>: [All] [Charges] [Trips] [Carpool] — filter the log list independently of the entry form.</li>
@@ -3003,10 +3009,10 @@ function renderCarpoolOnly(){
   var listEl=document.getElementById('list');
   // Gather all carpool entries: from old carpools array + trip entries with carpool
   var entries=[];
-  carpools.forEach(function(c,i){entries.push({date:c.date,dir:c.dir,amount:c.amount,amountExpr:c.amountExpr,source:'old',idx:i});});
-  trips.forEach(function(t,i){if(t.carpool){entries.push({date:t.date,dir:t.carpool.dir,amount:t.carpool.amount,amountExpr:t.carpool.amountExpr,km:t.km,source:'trip',idx:i});}});
+  carpools.forEach(function(c,i){entries.push({date:c.date,id:c.id||0,dir:c.dir,amount:c.amount,amountExpr:c.amountExpr,source:'old',idx:i});});
+  trips.forEach(function(t,i){if(t.carpool){entries.push({date:t.date,id:t.id||0,dir:t.carpool.dir,amount:t.carpool.amount,amountExpr:t.carpool.amountExpr,km:t.km,source:'trip',idx:i});}});
   if(!entries.length){listEl.innerHTML='<div class="empty">No carpool entries yet.</div>';return;}
-  entries.sort(function(a,b){return b.date.localeCompare(a.date);});
+  entries.sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.id||0)-(a.id||0);});
   var groups={};
   entries.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
   var out='',mIdx=0;
@@ -3034,12 +3040,12 @@ function renderCarpoolOnly(){
 
 function renderAllLog(){
   var listEl=document.getElementById('list');
-  // Merge charges + trips into one timeline sorted by date
+  // Merge charges + trips into one timeline sorted by date, using id as tiebreaker
   var entries=[];
-  sessions.forEach(function(s,i){entries.push({type:'charge',date:s.date,time:s.startTime||'',odo:s.odo||0,idx:i,data:s});});
-  trips.forEach(function(t,i){entries.push({type:'trip',date:t.date,time:'',odo:t.startOdo||0,idx:i,data:t});});
+  sessions.forEach(function(s,i){entries.push({type:'charge',date:s.date,id:s.id||0,odo:s.odo||0,idx:i,data:s});});
+  trips.forEach(function(t,i){entries.push({type:'trip',date:t.date,id:t.id||0,odo:t.startOdo||0,idx:i,data:t});});
   if(!entries.length){listEl.innerHTML='<div class="empty">No entries yet.</div>';return;}
-  entries.sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.odo||0)-(a.odo||0);});
+  entries.sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.id||0)-(a.id||0);});
   var groups={};
   entries.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
   var out='',mIdx=0;
@@ -3054,19 +3060,39 @@ function renderAllLog(){
     rows.forEach(function(x){
       if(x.type==='charge'){
         var s=x.data;
+        var effStr='';
+        if(s.km&&s.km>0){var con=s.kwh||0;if(con>0)effStr=(s.km/con).toFixed(1)+' km/kWh';}
         var line1=Math.round(s.s)+'% \u2192 '+Math.round(s.e)+'% \u00b7 '+(s.kwh||0).toFixed(1)+' kWh';
+        if(s.odo) line1+=' \u00b7 '+Math.round(s.odo).toLocaleString('en-IN')+' km';
+        var line2='';
+        if(s.km) line2+=s.km+' km';
+        if(effStr) line2+=(line2?' \u00b7 ':'')+effStr;
+        if(s.duration) line2+=(line2?' \u00b7 ':'')+s.duration+' min';
         var costStr=s.cost!=null&&s.cost>0?'\u20b9'+Math.round(s.cost):'';
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(s.date)+'</span>'+badgeHtml(s.t)+(costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':'')+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div></div>';
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(s.date)+'</span>'+badgeHtml(s.t)+(costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':'')+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'charge\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+'</div>';
       } else {
         var t=x.data;
         var isCarpoolOnly=t.carpool&&!t.km;
-        var tLine='';
-        if(isCarpoolOnly){tLine=(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount).toLocaleString('en-IN');}
-        else{tLine=Math.round(t.startPct)+'% \u2192 '+Math.round(t.endPct)+'% \u00b7 '+parseFloat((t.km||0).toFixed(1))+' km';}
+        var effStr='';
+        if(t.efficiency) effStr=t.efficiency.toFixed(1)+' km/kWh \u00b7 '+(t.km/(t.startPct-t.endPct)).toFixed(1)+' km/%';
+        if(t.regen) effStr='+'+Math.abs(t.startPct-t.endPct)+'% regen \u26a1';
+        var line1='';
+        if(isCarpoolOnly){
+          line1=(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount).toLocaleString('en-IN');
+        } else {
+          line1=Math.round(t.startPct)+'% \u2192 '+Math.round(t.endPct)+'% \u00b7 '+parseFloat((t.km||0).toFixed(1))+' km';
+        }
+        var line2='';
+        if(!isCarpoolOnly&&t.startOdo&&t.endOdo){
+          line2=Math.round(t.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(t.endOdo).toLocaleString('en-IN');
+          if(effStr) line2+=' \u00b7 '+effStr;
+        }
         var badge=isCarpoolOnly?'<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span>':'<span class="badge badge-trip">Trip</span>';
         var cpBadge='';
         if(t.carpool&&!isCarpoolOnly){cpBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 6px;border-radius:4px">'+(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount)+'</span>';}
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+cpBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+tLine+'</div></div>';
+        var paxWeatherStr='';
+        if((t.pax&&t.pax>1)||(t.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax>1?' '+t.pax+'p':'')+'</span>';}
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+cpBadge+paxWeatherStr+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
       }
     });
     out+='</div>';mIdx++;
