@@ -1232,7 +1232,7 @@ function fmtDate(d){if(!d)return'—';var p=d.split('-');if(p.length!==3)return 
 function fmtCurrency(n){return '\u20b9 '+Math.round(n).toLocaleString('en-IN');}
 
 // ── STATE ──────────────────────────────────────────────────────────────────
-let settings,sessions,carpools,trips;
+let settings,sessions,trips;
 try{settings=JSON.parse(safeLS.get('cm-settings')||'{}');}catch(e){settings={};}
 settings=Object.assign({battery:40,homeRate:7,officeRate:0,bufferPct:15,petrolMileage:15,petrolPrice:103,highwayPenalty:25},settings);
 function stripCommas(s){return String(s).replace(/,/g,'');}
@@ -1254,14 +1254,15 @@ function formatNumericInput(el){
 }
 
 try{sessions=JSON.parse(safeLS.get('cm-data')||'[]');}catch(e){sessions=[];}
-try{carpools=JSON.parse(safeLS.get('cm-carpool')||'[]');}catch(e){carpools=[];}
+var carpools=[];
+
 try{trips=JSON.parse(safeLS.get('cm-trips')||'[]');}catch(e){trips=[];}
 let expenses=[];try{expenses=JSON.parse(safeLS.get('cm-expenses')||'[]');}catch(e){expenses=[];}
 let petrolLog=[];try{petrolLog=JSON.parse(safeLS.get('cm-petrol-log')||'[]');}catch(e){petrolLog=[];}
 let tripEditIndex = null;
 let planEffMode = 'city';
 let entryMode = 'charge'; // 'charge' or 'trip'
-var logFilter = 'all'; // 'all', 'charges', 'trips', 'carpool'
+var logFilter = 'all'; // 'all', 'charges', 'trips'
 var _chargesTabVisited = false;
 let editIndex=null;
 let _effWarnThresh=Infinity, _effErrorThresh=Infinity;
@@ -1442,31 +1443,18 @@ function renderDash(){
   // === MONTHLY STATS ===
   var spTitle=document.getElementById('spendingTitle');if(spTitle){var mNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];spTitle.textContent=mNames[new Date().getMonth()]+' '+new Date().getFullYear();}
   var monthExpenditure=sessions.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.cost!=null&&x.cost>0}).reduce(function(a,x){return a+x.cost},0)+(expenses||[]).filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.category!=='purchase'}).reduce(function(a,x){return a+(x.amount||0)},0);
-  var cpThisMonthAmt=carpools.filter(function(x){return x.date&&x.date.startsWith(thisMonth)}).reduce(function(a,x){return a+(x.amount||0)},0);
-  var netMonthlyCost=monthExpenditure-cpThisMonthAmt;
+  var cpThisMonthAmt=0;
+  var netMonthlyCost=monthExpenditure;
   var monthSavings=(function(){if(!settings.petrolMileage||!settings.petrolPrice||monthKm<=0)return null;var petrolCost=monthKm/settings.petrolMileage*settings.petrolPrice;var evCost=sessions.filter(function(x){return x.date&&x.date.startsWith(thisMonth)&&x.cost>0}).reduce(function(a,x){return a+x.cost},0);return Math.round(petrolCost-evCost);})();
   document.getElementById('paidStats').innerHTML=
     statBox(monthKm>0?monthKm.toLocaleString('en-IN')+' km':'\u2014','Distance',projectedKm?'~'+projectedKm.toLocaleString('en-IN')+' km projected':null)+
-    statBox('\u20b9 '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure','charging + expenses')+
-    '<div class="stat-box tappable" onclick="setEntryMode(\'trip\');switchTab(\'charges\')"><div class="stat-val" style="color:var(--good)">\u20b9 '+Math.round(cpThisMonthAmt).toLocaleString('en-IN')+'</div><div class="stat-label">Carpool</div><div class="stat-sub">'+(netMonthlyCost<=0?'Surplus \u20b9'+Math.abs(Math.round(netMonthlyCost)).toLocaleString('en-IN'):'Net \u20b9'+Math.round(netMonthlyCost).toLocaleString('en-IN'))+'</div></div>'+
-    statBox(monthSavings!=null?(monthSavings>=0?'<span style="color:var(--good)">\u20b9 '+monthSavings.toLocaleString('en-IN')+'</span>':'\u20b9 '+Math.abs(monthSavings).toLocaleString('en-IN')):'\u2014','Savings','vs petrol this month');
+    statBox('\u20b9 '+Math.round(monthExpenditure).toLocaleString('en-IN'),'Expenditure',monthSavings!=null&&monthSavings>=0?'saved \u20b9'+monthSavings.toLocaleString('en-IN')+' vs petrol':'charging + expenses');
 
 
   
 
 
   // === CARPOOL DASH ===
-  const totalIncome=carpools.reduce((a,x)=>a+(x.amount||0),0);
-  const netCost=hasCost?totalCost-totalIncome:null;
-  const avgPerTrip=carpools.length>0?(totalIncome/carpools.length).toFixed(0):null;
-  const cpThisMonth=carpools.filter(x=>x.date.startsWith(thisMonth));
-  const cpMonthAmt=cpThisMonth.reduce((a,x)=>a+(x.amount||0),0);
-  var cdEl=document.getElementById('carpoolDash');if(cdEl)cdEl.innerHTML=
-    statBox(totalIncome>0?'₹ '+Math.round(totalIncome).toLocaleString('en-IN'):'—','Total Income',carpools.length>0?carpools.length+' trip'+(carpools.length>1?'s':''):null,'good')+
-    statBox(cpThisMonth.length>0?'₹ '+Math.round(cpMonthAmt).toLocaleString('en-IN'):'—','This Month',cpThisMonth.length>0?cpThisMonth.length+' trip'+(cpThisMonth.length>1?'s':''):null)+
-    statBox(netCost!=null?(netCost>=0?'₹ '+Math.round(netCost).toLocaleString('en-IN'):'₹ '+Math.round(Math.abs(netCost)).toLocaleString('en-IN')+' surplus'):'—','Net Cost',netCost!=null&&netCost<0?'carpool > spend':'spend − carpool',netCost!=null&&netCost<=0?'good':null)+
-    statBox(avgPerTrip?'₹'+Math.round(avgPerTrip).toLocaleString('en-IN'):'—','Avg / Trip');
-
   // === SPLIT BARS ===
   const byTypeCost={home:0,public:0,office:0},byTypeCount={home:0,public:0,office:0};
   sessions.forEach(x=>{byTypeCount[x.t]=(byTypeCount[x.t]||0)+1;if(x.cost!=null)byTypeCost[x.t]=(byTypeCost[x.t]||0)+x.cost;});
@@ -2715,7 +2703,7 @@ function persist(){
   _lksCacheKey='';_ueCacheKey=''; // invalidate caches
   var ok=true;
   ok=safeLS.set('cm-data',JSON.stringify(sessions))&&ok;
-  ok=safeLS.set('cm-carpool',JSON.stringify(carpools))&&ok;
+  
   ok=safeLS.set('cm-trips',JSON.stringify(trips))&&ok;
   ok=safeLS.set('cm-expenses',JSON.stringify(expenses))&&ok;
   safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));
@@ -3049,13 +3037,13 @@ function drawCostChart(){
   var canvas=document.getElementById('costChart');if(!canvas)return;
   // v5.6.0: Monthly Expenditures with carpool below axis + net markers
   var months={};
-  sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].charge+=s.cost}});
-  (expenses||[]).forEach(function(e){if(e.date&&e.amount>0&&e.category!=='purchase'){var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].expense+=e.amount}});
-  carpools.forEach(function(c){if(c.date&&c.amount>0){var m=c.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0,carpool:0};months[m].carpool+=c.amount}});
+  sessions.forEach(function(s){if(s.cost!=null&&s.cost>0){var m=s.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].charge+=s.cost}});
+  (expenses||[]).forEach(function(e){if(e.date&&e.amount>0&&e.category!=='purchase'){var m=e.date.slice(0,7);if(!months[m])months[m]={charge:0,expense:0};months[m].expense+=e.amount}});
+
   var keys=Object.keys(months).sort();if(keys.length<1)return;
-  var data=keys.map(function(k){var d=months[k];return{month:k,charge:d.charge,expense:d.expense,carpool:d.carpool}});
+  var data=keys.map(function(k){var d=months[k];return{month:k,charge:d.charge,expense:d.expense}});
   var maxUp=Math.max.apply(null,data.map(function(d){return d.charge+d.expense}))||100;
-  var maxDown=Math.max.apply(null,data.map(function(d){return d.carpool}))||0;
+  var maxDown=0;
   var avgNet=data.reduce(function(a,d){return a+d.net},0)/data.length;
   var monNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -3099,12 +3087,7 @@ function drawCostChart(){
     var exH=(d.expense/totalRange)*ch;
     ctx.fillStyle='#ff6b6b';
     ctx.fillRect(x,zeroY-chH-exH,barW,exH);
-    // Carpool bar (down)
-    if(d.carpool>0){
-      var cpH=(d.carpool/totalRange)*ch;
-      ctx.fillStyle='#4ade80';
-      ctx.fillRect(x,zeroY,barW,cpH);
-    }
+
     // Net marker position
     var netY=zeroY-(d.net/totalRange)*ch;
 
@@ -3120,7 +3103,7 @@ function drawCostChart(){
 
   // Legend (centered below chart)
   ctx.font='9px Inter,sans-serif';
-  var legY=h-4;var legItems=[{c:'#00e5ff',t:'Charging'},{c:'#ff6b6b',t:'Expenses'},{c:'#4ade80',t:'Carpool'}];
+  var legY=h-4;var legItems=[{c:'#00e5ff',t:'Charging'},{c:'#ff6b6b',t:'Expenses'}];
   var legW=legItems.reduce(function(a,it){return a+ctx.measureText(it.t).width+16;},0);
   var legX=(w-legW)/2;
   legItems.forEach(function(it){
@@ -3274,7 +3257,7 @@ function renderExpenses(){
     var savingPerKm=iceTotalPerKm-evCostPerKm;
 
     // With carpool
-    var carpoolIncome=carpools.reduce(function(a,x){return a+(x.amount||0);},0);
+    var carpoolIncome=0;
     var savingPerKmWithCp=savingPerKm+(totalKm>0?carpoolIncome/totalKm:0);
 
     if(savingPerKm>0||savingPerKmWithCp>0){
@@ -3363,7 +3346,7 @@ function renderBreakevenSummary(){
   }
   var chargeCost=sessions.reduce(function(a,s){return a+(s.cost||0);},0);
   var runningExp=expenses.filter(function(e){return e.category!=='purchase';}).reduce(function(a,e){return a+(e.amount||0);},0);
-  var carpoolInc=carpools.reduce(function(a,x){return a+(x.amount||0);},0);
+  var carpoolInc=0;
   var evRunning=chargeCost+runningExp;
   var petrolFuelCost=getPetrolEquivalentCost(totalKm);
   var iceExpenses=expenses.filter(function(e){return e.category!=='purchase';}).reduce(function(a,e){return a+(e.iceAmount!=null&&e.iceAmount!==''? e.iceAmount : e.amount);},0);
@@ -3544,7 +3527,7 @@ function copyMonthlySummary(){
   var now=new Date();var mo=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   var moSessions=sessions.filter(function(s){return s.date.startsWith(mo);});
   var moTrips=trips.filter(function(t){return t.date&&t.date.startsWith(mo);});
-  var moCarpools=carpools.filter(function(c){return c.date&&c.date.startsWith(mo);});
+  var moCarpools=[];
   var totalKwh=moSessions.reduce(function(a,s){return a+s.kwh;},0);
   var totalCost=moSessions.filter(function(s){return s.cost!=null;}).reduce(function(a,s){return a+s.cost;},0);
   var totalKm=moSessions.reduce(function(a,s){return a+(s.km||0);},0)+moTrips.reduce(function(a,t){return a+((t.endOdo||0)-(t.startOdo||0));},0);
@@ -3557,13 +3540,13 @@ function copyMonthlySummary(){
   txt+='Cost: ₹'+totalCost.toFixed(0)+'\n';
   txt+='Distance: '+totalKm+' km\n';
   if(totalKm>0&&totalCost>0)txt+='Cost/km: ₹'+(totalCost/totalKm).toFixed(1)+'\n';
-  if(moCarpools.length)txt+='Carpool: '+moCarpools.length+' trips · ₹'+cpIncome.toFixed(0)+' earned\n';
+
   if(totalCost>0&&cpIncome>0)txt+='Net cost: ₹'+(totalCost-cpIncome).toFixed(0)+'\n';
   navigator.clipboard.writeText(txt).then(function(){toast('Summary copied ✓');}).catch(function(){toast('Copy failed');});
 }
 
 function exportJSON(){
-  var p={version:32,sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
+  var p={version:32,sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
   // v5.6.0: Include sync credentials if checkbox checked
   var credCb=document.getElementById('credExport');
   if(credCb&&credCb.checked&&settings.gistId&&settings.gistToken){
@@ -3706,7 +3689,7 @@ function undoableDelete(type,index,label){
   var item;
   if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
   else if(type==='trip'){item=trips.splice(index,1)[0];persist();render();}
-  else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));render();}
+  
   else if(type==='expense'){item=expenses.splice(index,1)[0];safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   if(!item)return;
   _undoData={type:type,index:index,item:item};
@@ -3723,7 +3706,7 @@ function undoLast(){
   if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
   if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
   else if(d.type==='trip'){trips.splice(d.index,0,d.item);persist();render();}
-  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));render();}
+  
   else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
   document.getElementById('toast').classList.remove('show');
   toast('Restored ✓');
@@ -3752,7 +3735,7 @@ function syncStatus(msg,err){var el=document.getElementById('syncStatus');el.tex
 
 function cloudPush(){
   if(!_syncSettings.token){syncStatus('Set a GitHub token first','err');return;}
-  var payload={sessions:sessions,carpools:carpools,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
+  var payload={sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,syncedAt:new Date().toISOString()};
   var body={files:{'chargemate-data.json':{content:JSON.stringify(payload)}}};
   if(!_syncSettings.gistId){body.description='ChargeMate Backup';body.public=false;}
   var url=_syncSettings.gistId?'https://api.github.com/gists/'+_syncSettings.gistId:'https://api.github.com/gists';
@@ -3775,7 +3758,7 @@ function cloudPull(){
       var f=d.files['chargemate-data.json'];if(!f||!f.content)throw new Error('No data file in gist');
       var p=JSON.parse(f.content);
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
-      if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
+      if(p.carpools){carpools=p.carpools;}
       if(p.expenses){expenses=p.expenses;safeLS.set('cm-expenses',JSON.stringify(expenses));}
       if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
@@ -3800,14 +3783,14 @@ function importData(event){
       var p=JSON.parse(ev.target.result);
       // Schema validation
       if(!p||typeof p!=='object'){throw new Error('Invalid file format');}
-      if(!p.sessions&&!p.carpools&&!p.trips&&!p.expenses&&!p.settings){throw new Error('No recognizable ChargeMate data found in file');}
+      if(!p.sessions&&!p.trips&&!p.expenses&&!p.settings){throw new Error('No recognizable ChargeMate data found in file');}
       if(p.sessions&&!Array.isArray(p.sessions)){throw new Error('Invalid sessions data');}
       if(p.trips&&!Array.isArray(p.trips)){throw new Error('Invalid trips data');}
       // Confirm before overwriting
       var count=(p.sessions?p.sessions.length:0)+(p.trips?p.trips.length:0);
       if(sessions.length>0&&!confirm('This will replace your current '+sessions.length+' charges with '+count+' entries from backup. Continue?'))return;
       if(p.sessions){sessions=p.sessions;safeLS.set('cm-data',JSON.stringify(sessions));}
-      if(p.carpools){carpools=p.carpools;safeLS.set('cm-carpool',JSON.stringify(carpools));}
+      if(p.carpools){carpools=p.carpools;}
       if(p.trips){trips=p.trips;safeLS.set('cm-trips',JSON.stringify(trips));}
       if(p.expenses){expenses=p.expenses;safeLS.set('cm-expenses',JSON.stringify(expenses));}
       if(p.petrolLog){petrolLog=p.petrolLog;safeLS.set('cm-petrol-log',JSON.stringify(petrolLog));}
