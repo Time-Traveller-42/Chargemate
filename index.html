@@ -419,7 +419,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="card tappable" onclick="openPlanOverlay()"><h3>Estimated Range</h3><div id="rangeCard"></div>
     <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">🗺️ Plan a trip →</a></div></div>
   <div class="card tappable" onclick="switchTab('expenses')"><h3 id="spendingTitle">Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
-  <div class="card"><h3>Efficiency Trend (km/kWh)</h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
+  <div class="card"><h3>Efficiency Trend <span style="font-size:10px;font-weight:400;color:var(--muted)">(1 pax · km/kWh)</span></h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
   <div class="card"><h3>Monthly Expenditures</h3><div class="chart-wrap"><canvas id="costChart" height="200"></canvas></div></div>
   </div>
 
@@ -437,12 +437,39 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="tripForm" style="display:none">
       <h3 id="tripFormTitle">New Trip</h3>
       <label>Date</label><input type="date" id="tripDate">
-      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--muted);margin-right:4px;white-space:nowrap">Type:</span>
-        <div class="eff-tab" id="tt-city" onclick="pickTripType('city')">City</div>
-        <div class="eff-tab active" id="tt-mixed" onclick="pickTripType('mixed')">Mixed</div>
-        <div class="eff-tab" id="tt-highway" onclick="pickTripType('highway')">Highway</div>
-        <input type="hidden" id="tripType" value="mixed">
+      <!-- Collapsible Details Bar -->
+      <div style="margin-top:10px;background:#0d1525;border-radius:8px;border:1px solid var(--border);overflow:hidden">
+        <div onclick="toggleTripDetails()" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer">
+          <span id="tripDetailsSummary" style="font-size:11px;color:var(--muted)">City · 1 pax · ☀️</span>
+          <span id="tripDetailsArrow" style="font-size:10px;color:var(--muted)">▼</span>
+        </div>
+        <div id="tripDetailsPanel" style="display:none;padding:0 12px 10px">
+          <div style="display:flex;gap:4px;align-items:center">
+            <span style="font-size:10px;color:var(--muted);margin-right:4px;white-space:nowrap">Type:</span>
+            <div class="eff-tab" id="tt-city" onclick="pickTripType('city')">City</div>
+            <div class="eff-tab active" id="tt-mixed" onclick="pickTripType('mixed')">Mixed</div>
+            <div class="eff-tab" id="tt-highway" onclick="pickTripType('highway')">Highway</div>
+            <input type="hidden" id="tripType" value="mixed">
+          </div>
+          <div style="margin-top:8px;display:flex;gap:4px;align-items:center">
+            <span style="font-size:10px;color:var(--muted);margin-right:4px">Pax:</span>
+            <div class="eff-tab active" id="tp-1" onclick="pickTripPax(1)">1</div>
+            <div class="eff-tab" id="tp-2" onclick="pickTripPax(2)">2</div>
+            <div class="eff-tab" id="tp-3" onclick="pickTripPax(3)">3</div>
+            <div class="eff-tab" id="tp-4" onclick="pickTripPax(4)">4</div>
+            <div class="eff-tab" id="tp-5" onclick="pickTripPax(5)">5</div>
+            <input type="number" id="tripPaxCustom" min="1" max="20" placeholder="6+" style="flex:1;min-width:0;padding:7px 4px;font-size:11px;font-weight:600;text-align:center;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)" oninput="pickTripPax(+this.value)">
+            <input type="hidden" id="tripPax" value="1">
+          </div>
+          <div style="margin-top:8px;display:flex;gap:4px;align-items:center">
+            <span style="font-size:10px;color:var(--muted);margin-right:4px">Weather:</span>
+            <div class="eff-tab" id="tw-hot" onclick="pickTripWeather('hot')">☀️</div>
+            <div class="eff-tab" id="tw-rain" onclick="pickTripWeather('rain')">🌧️</div>
+            <div class="eff-tab" id="tw-cold" onclick="pickTripWeather('cold')">❄️</div>
+            <div class="eff-tab" id="tw-mild" onclick="pickTripWeather('mild')">🌤️</div>
+            <input type="hidden" id="tripWeather" value="">
+          </div>
+        </div>
       </div>
       <div style="margin-top:10px">
         <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
@@ -457,24 +484,6 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <div><label>End %</label><input type="number" id="tripEndPct" min="0" max="100" placeholder="e.g. 67" oninput="autoCalcTrip('endPct')"></div>
           <div><label>Used %</label><input type="number" id="tripConsumed" min="0" max="100" placeholder="e.g. 23" oninput="autoCalcTrip('consumed')"></div>
         </div>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--muted);margin-right:4px">Pax:</span>
-        <div class="eff-tab active" id="tp-1" onclick="pickTripPax(1)">1</div>
-        <div class="eff-tab" id="tp-2" onclick="pickTripPax(2)">2</div>
-        <div class="eff-tab" id="tp-3" onclick="pickTripPax(3)">3</div>
-        <div class="eff-tab" id="tp-4" onclick="pickTripPax(4)">4</div>
-        <div class="eff-tab" id="tp-5" onclick="pickTripPax(5)">5</div>
-        <input type="number" id="tripPaxCustom" min="1" max="20" placeholder="6+" style="flex:1;min-width:0;padding:7px 4px;font-size:11px;font-weight:600;text-align:center;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)" oninput="pickTripPax(+this.value)">
-        <input type="hidden" id="tripPax" value="1">
-      </div>
-      <div style="margin-top:10px;display:flex;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--muted);margin-right:4px">Weather:</span>
-        <div class="eff-tab" id="tw-hot" onclick="pickTripWeather('hot')">☀️</div>
-        <div class="eff-tab" id="tw-rain" onclick="pickTripWeather('rain')">🌧️</div>
-        <div class="eff-tab" id="tw-cold" onclick="pickTripWeather('cold')">❄️</div>
-        <div class="eff-tab" id="tw-mild" onclick="pickTripWeather('mild')">🌤️</div>
-        <input type="hidden" id="tripWeather" value="">
       </div>
       <div style="margin-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;background:#0d1525;border-radius:8px;padding:8px 12px;margin-top:10px;border:1px solid var(--border)">
@@ -818,6 +827,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.2.0 <span class="cl-date">22 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Charges with "missed charge" no longer show bogus km (displays odo only).</li>
+      <li>Fix: Trip type defaults to last used on initial load (was always "mixed").</li>
+      <li><b>Collapsible Details panel</b>: Type/Pax/Weather now in a collapsible bar showing inline summary (e.g. "City · 2 pax · ☀️"). Tap to expand and change.</li>
+      <li>Pax default: uses avg across all entries (adapts to your typical driving pattern).</li>
+      <li><b>Efficiency normalization</b>: Chart and dashboard normalize to 1-pax equivalent. Penalty factor derived from your data (falls back to 2.5%/pax). Removes passenger-load noise from efficiency trend.</li>
+    </ul>
     <div class="cl-ver">v7.1.1 <span class="cl-date">21 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: "All" log view now shows full info (odo, efficiency, duration, notes, pax/weather) matching individual tabs.</li>
@@ -1412,7 +1429,7 @@ function renderDash(){
   var avgMonthSpend=(function(){var allM=new Set();sessions.forEach(function(s){if(s.date&&s.cost>0)allM.add(s.date.slice(0,7))});(expenses||[]).forEach(function(e){if(e.date&&e.category!=='purchase')allM.add(e.date.slice(0,7))});var n=Math.max(1,allM.size);var tot=sessions.filter(function(s){return s.cost>0}).reduce(function(a,s){return a+s.cost},0)+(expenses||[]).filter(function(e){return e.category!=='purchase'}).reduce(function(a,e){return a+(e.amount||0)},0);return Math.round(tot/n);})();
   document.getElementById('stats').innerHTML=
     statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'\u2014','Total Distance',avgEff?avgEff+' km/kWh \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
-    statBox(avgEff?avgEff+' km/kWh':'\u2014','Efficiency',avgEff?(+avgEff*settings.battery/100).toFixed(1)+' km/% \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
+    statBox(avgEff?avgEff+' km/kWh':'\u2014','Efficiency (1 pax)',avgEff?(+avgEff*settings.battery/100).toFixed(1)+' km/% \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
     statBox((function(){var paidKm=sessions.filter(function(s){return s.cost>0&&s.km>0}).reduce(function(a,s){return a+s.km},0);return hasCost&&paidKm>0?'\u20b9'+(totalCost/paidKm).toFixed(2):'\u2014'})(),'Cost / km',settings.homeRate&&avgEff?'\u20b9'+(settings.homeRate/+avgEff).toFixed(2)+'/km at home':'paid charges')+
     statBox('\u20b9 '+avgMonthSpend.toLocaleString('en-IN'),'Avg / Month','lifetime spend');
 
@@ -1453,7 +1470,7 @@ function renderDash(){
 
   // === RANGE CARD ===
   document.getElementById('rangeCard').innerHTML=avgEff
-    ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on recent efficiency (${avgEff} km/kWh)</div>
+    ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on recent efficiency (${avgEff} km/kWh · 1 pax)</div>
       <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">${(+avgEff*settings.battery*0.8).toFixed(0)} km<span style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif"> at 80% charge</span></div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Full charge: ${(+avgEff*settings.battery).toFixed(0)} km theoretical</div>
       <div class="range-meter"><div class="range-track"><div class="range-fill" style="width:80%"></div></div>
@@ -1470,19 +1487,24 @@ function getWeightedRecentEff(){
   // Sort by date DESC (most recent first)
   valid.sort(function(a,b){return b.date>a.date?1:b.date<a.date?-1:0;});
   // Distance-based windows: recent 500km (65%), older 1500km (25%), lifetime (10%)
-  var recentKm=0,recentKwh=0,olderKm=0,olderKwh=0;
+  // Normalize each segment to 1-pax before accumulating
+  var _avgPax=getAvgPax();
+  var recentKm=0,recentNormKwh=0,olderKm=0,olderNormKwh=0;
   var RECENT_WINDOW=500,OLDER_WINDOW=1500;
   for(var i=0;i<valid.length;i++){
     var s=valid[i],km=safeNum(s.km),kwh=safeNum(s.consumption);
+    var pax=s.pax||_avgPax;
+    var normFactor=1-(pax-1)*getPaxPenalty();
+    var normKwh=normFactor>0?kwh*normFactor:kwh;
     if(recentKm<RECENT_WINDOW){
-      recentKm+=km;recentKwh+=kwh;
+      recentKm+=km;recentNormKwh+=normKwh;
     } else if(olderKm<OLDER_WINDOW){
-      olderKm+=km;olderKwh+=kwh;
+      olderKm+=km;olderNormKwh+=normKwh;
     } else break;
   }
-  var recentEff=recentKwh>0?recentKm/recentKwh:null;
+  var recentEff=recentNormKwh>0?recentKm/recentNormKwh:null;
   if(!recentEff) return getAvgEff();
-  var olderEff=olderKwh>0?olderKm/olderKwh:null;
+  var olderEff=olderNormKwh>0?olderKm/olderNormKwh:null;
   var lifetimeEff=getAvgEff();
   if(!olderEff&&!lifetimeEff) return recentEff;
   if(!olderEff) return recentEff*0.9+lifetimeEff*0.1;
@@ -1597,6 +1619,7 @@ function pickDrivingType(val){
 function pickTripType(val){
   document.getElementById('tripType').value=val;
   ['city','mixed','highway'].forEach(function(m){document.getElementById('tt-'+m).classList.toggle('active',m===val);});
+  updateTripDetailsSummary();
 }
 
 function pickTripPax(val){
@@ -1605,6 +1628,7 @@ function pickTripPax(val){
   [1,2,3,4,5].forEach(function(n){var el=document.getElementById('tp-'+n);if(el)el.classList.toggle('active',n===val);});
   if(val>5)document.getElementById('tripPaxCustom').value=val;
   else document.getElementById('tripPaxCustom').value='';
+  updateTripDetailsSummary();
 }
 
 function pickChargePax(val){
@@ -1630,6 +1654,7 @@ function getAutoWeatherForDate(dateStr){
 function pickTripWeather(val){
   document.getElementById('tripWeather').value=val;
   ['hot','rain','cold','mild'].forEach(function(w){document.getElementById('tw-'+w).classList.toggle('active',w===val);});
+  updateTripDetailsSummary();
 }
 
 function pickChargeWeather(val){
@@ -2449,6 +2474,55 @@ function updateTripPreview(){
   } else { el.textContent=''; }
 }
 
+// ── TRIP DETAILS PANEL ─────────────────────────────────────────────────────
+function toggleTripDetails(){
+  var panel=document.getElementById('tripDetailsPanel');
+  var arrow=document.getElementById('tripDetailsArrow');
+  if(panel.style.display==='none'){panel.style.display='block';arrow.textContent='\u25b2';}
+  else{panel.style.display='none';arrow.textContent='\u25bc';}
+}
+function updateTripDetailsSummary(){
+  var type=document.getElementById('tripType').value||'city';
+  var pax=document.getElementById('tripPax').value||1;
+  var weather=document.getElementById('tripWeather').value;
+  var wMap={'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'};
+  var parts=[];
+  parts.push(type.charAt(0).toUpperCase()+type.slice(1));
+  parts.push(pax+' pax');
+  if(weather&&wMap[weather]) parts.push(wMap[weather]);
+  document.getElementById('tripDetailsSummary').textContent=parts.join(' \u00b7 ');
+}
+function getAvgPax(){
+  var sum=0,count=0;
+  trips.forEach(function(t){if(t.pax&&t.pax>0){sum+=t.pax;count++;}});
+  sessions.forEach(function(s){if(s.pax&&s.pax>0){sum+=s.pax;count++;}});
+  return count>0?Math.round(sum/count):1;
+}
+function getPaxPenalty(){
+  // Try to derive from data: compare 1-pax trips vs multi-pax trips
+  var solo=[],multi=[];
+  trips.forEach(function(t){
+    if(!t.efficiency||!isFinite(t.efficiency)||t.regen) return;
+    if(t.pax===1) solo.push(t.efficiency);
+    else if(t.pax&&t.pax>1) multi.push({eff:t.efficiency,pax:t.pax});
+  });
+  if(solo.length>=3&&multi.length>=3){
+    var avgSolo=solo.reduce(function(a,v){return a+v;},0)/solo.length;
+    var avgMultiEff=multi.reduce(function(a,m){return a+m.eff;},0)/multi.length;
+    var avgMultiPax=multi.reduce(function(a,m){return a+m.pax;},0)/multi.length;
+    if(avgSolo>avgMultiEff&&avgMultiPax>1){
+      var penalty=(1-avgMultiEff/avgSolo)/(avgMultiPax-1);
+      if(penalty>0.005&&penalty<0.08) return penalty; // sanity check: 0.5%-8% per pax
+    }
+  }
+  return 0.025; // fallback: 2.5% per extra passenger
+}
+function normalizeTo1Pax(eff,pax){
+  if(!pax||pax<=1||!eff) return eff;
+  var penalty=getPaxPenalty();
+  return eff/(1-(pax-1)*penalty);
+}
+
 // ── TRIP CARPOOL FUNCTIONS ─────────────────────────────────────────────────
 var _tripSelectedFares=[];
 function toggleTripCarpool(){
@@ -2569,8 +2643,8 @@ function clearTripForm(){
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
-  (function(){var _ltt='mixed';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
-  pickTripPax(1);
+  (function(){var _ltt='city';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
+  pickTripPax(getAvgPax());
   pickTripWeather(getAutoWeather());
   // Reset carpool fields
   document.getElementById('tripCarpoolToggle').checked=false;
@@ -2688,10 +2762,10 @@ function computeUnifiedEfficiency(){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
       tripSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType||null});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType||null,pax:t.pax||null});
     } else if(km>0&&drop<0){
       tripSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
-        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType||null});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType||null,pax:t.pax||null});
     }
   });
 
@@ -2919,7 +2993,7 @@ function renderList(){
       let line2parts=[];
       if(x.duration){let tStr=fmtDuration(x.duration);line2parts.push(tStr);}
       
-      if(x.km!=null&&x.km>0){let s2=x.km+' km';if(x.odo!=null)s2+=' <span style="color:var(--muted)">(odo '+x.odo.toLocaleString()+')</span>';line2parts.push(s2);}
+      if(x.km!=null&&x.km>0&&!x.chargedSince){let s2=x.km+' km';if(x.odo!=null)s2+=' <span style="color:var(--muted)">(odo '+x.odo.toLocaleString()+')</span>';line2parts.push(s2);}
       else if(x.odo!=null){line2parts.push('<span style="color:var(--muted)">odo '+x.odo.toLocaleString()+'</span>');}
       if(effStr) line2parts.push(effStr);
       let line2=line2parts.join(' \u00b7 ');
@@ -3498,7 +3572,7 @@ function closePlanOverlay(){
 }
 
 // ── CHARTS ─────────────────────────────────────────────────────────────────
-function drawChart(id,pts,dates,color){
+function drawChart(id,pts,dates,color,overrideAvg){
   const canvas=document.getElementById(id);if(!canvas)return;
   const ctx=canvas.getContext('2d');
   const dpr=window.devicePixelRatio||1;
@@ -3528,7 +3602,7 @@ function drawChart(id,pts,dates,color){
   ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';
   for(let i=0;i<valid.length;i++){const x=toX(i),y=toY(valid[i].v);if(i===0){ctx.moveTo(x,y);continue;}const px=toX(i-1),py=toY(valid[i-1].v),cpx=(px+x)/2;ctx.bezierCurveTo(cpx,py,cpx,y,x,y);}
   ctx.stroke();
-  const avg=values.reduce((a,v)=>a+v,0)/values.length,avgY=toY(avg);
+  const avg=overrideAvg||values.reduce((a,v)=>a+v,0)/values.length,avgY=toY(avg);
   ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.2)';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,avgY);ctx.lineTo(W-pad.r,avgY);ctx.stroke();
   ctx.setLineDash([]);ctx.fillStyle=document.body.classList.contains('light')?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.3)';ctx.font='9px Inter,sans-serif';ctx.textAlign='left';
@@ -3570,7 +3644,12 @@ function drawAllCharts(retryCount){
   var segments=computeUnifiedEfficiency();
   const allEffPts=[];
   if(segments.length>0){
-    segments.filter(function(s){return s.flag!=='error'&&!s.regen&&isFinite(s.efficiency);}).forEach(function(seg){allEffPts.push({v:+seg.efficiency.toFixed(2),d:seg.date});});
+    var _avgPax=getAvgPax();
+    segments.filter(function(s){return s.flag!=='error'&&!s.regen&&isFinite(s.efficiency);}).forEach(function(seg){
+      var pax=seg.pax||_avgPax;
+      var normEff=normalizeTo1Pax(seg.efficiency,pax);
+      allEffPts.push({v:+normEff.toFixed(2),d:seg.date});
+    });
   } else {
     for(let i=1;i<sorted.length;i++){
       const p=sorted[i-1],c=sorted[i];
@@ -3586,7 +3665,7 @@ function drawAllCharts(retryCount){
   const chartData=[...weekPts,...recent];
   const effPts=chartData.map(p=>p.v);
   const effDates=chartData.map(p=>p.d);
-  drawChart('effChart',effPts,effDates,'#00e5ff');
+  drawChart('effChart',effPts,effDates,'#00e5ff',getWeightedRecentEff());
   _chartDataHash=newHash; // Set hash only after successful draw
 }
 
@@ -3712,6 +3791,8 @@ document.getElementById('tripCarpoolToggle').checked=false;
 document.getElementById('tripCarpoolFields').style.display='none';
 // Auto-select weather on initial load
 pickTripWeather(getAutoWeather());
+// Auto-select trip type from last used on initial load
+(function(){var _ltt='city';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
 try{render();}catch(e){console.error('Init error:',e);}
 
 // — Theme Toggle —
