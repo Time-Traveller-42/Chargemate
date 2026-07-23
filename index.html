@@ -504,7 +504,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
       <input type="text" id="tripNote" placeholder="e.g. AC on, heavy traffic">
       <div class="charged-since-row">
-        <input type="checkbox" id="tripChargedSince">
+        <input type="checkbox" id="tripChargedSince" onchange="checkTripRangeWarning()">
         <label for="tripChargedSince">Charged during this trip (breaks efficiency)</label>
       </div>
       <div id="tripPreview" class="small" style="margin-top:8px"></div>
@@ -563,7 +563,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     </div>
     <div style="margin-top:10px">
       <div class="form-row" style="grid-template-columns:1fr 1fr;margin-top:4px">
-        <div><label>Odo (km)</label><input type="text" id="odo" inputmode="numeric" placeholder="" oninput="validateOdo();formatNumericInput(this);autoCalcCharge('odo')"></div>
+        <div><label>Odo (km)</label><input type="text" id="odo" inputmode="tel" placeholder="" oninput="validateOdo();formatNumericInput(this);autoCalcCharge('odo')"></div>
         <div><label>Distance (km)</label><input type="number" id="chargeDistance" placeholder="since last" step="0.1" oninput="autoCalcCharge('dist')"></div>
       </div>
     </div>
@@ -686,7 +686,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="form-row" style="margin-top:10px">
       <div><label>Amount (₹)</label><input type="text" inputmode="text" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';" >
 <div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
-      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="decimal" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)" >
+      <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="tel" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)" >
 <div style="font-size:9px;color:var(--muted);margin-top:2px">= EV amount if left empty</div></div>
     </div>
     <div style="margin-top:10px">
@@ -739,7 +739,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <h3>Vehicle &amp; Rates</h3>
     <div class="form-row"><div><label>Battery (kWh)</label><input type="number" id="battery" placeholder="40" min="1" max="200" step="0.1"></div><div><label>Home Rate (₹/unit)</label><input type="number" id="homeRate" placeholder="7" min="0" step="0.1"></div></div>
     <div class="form-row"><div><label>Office Rate (₹/unit)</label><input type="number" id="defaultOfficeRate" placeholder="0"></div><div><label>ICE Mileage (km/l)</label><input type="number" id="petrolMileage" placeholder="15"></div></div>
-    <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="text" id="evPremium" placeholder="e.g. 5,00,000" inputmode="numeric" oninput="formatNumericInput(this)"></div></div>
+    <div class="form-row"><div><label>ICE Fuel Price (₹/l)</label><input type="number" id="petrolPrice" placeholder="103"></div><div><label>EV Premium (₹)</label><input type="text" id="evPremium" placeholder="e.g. 5,00,000" inputmode="tel" oninput="formatNumericInput(this)"></div></div>
     <div class="form-row"><div><label>Highway Penalty (%)</label><input type="number" id="highwayPenalty" placeholder="25" min="0" max="50" step="1"></div><div style="display:flex;align-items:flex-end;padding-bottom:4px"><span style="font-size:10px;color:var(--muted)">Applied when insufficient highway data for Trip Planner</span></div></div>
     <button class="primary" onclick="saveSettings()">Save Settings</button>
   </div>
@@ -826,6 +826,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.3.1 <span class="cl-date">23 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Bug fix</b>: <code>autoCalcTrip</code> now strips commas from odo fields before parsing (fixes NaN / failed validation on formatted numbers).</li>
+      <li><b>Bug fix</b>: Inline error shown when end odo &lt; start odo in trip form.</li>
+      <li><b>Bug fix</b>: Trip preview no longer shows consumption when End&nbsp;% is empty.</li>
+      <li><b>Bug fix</b>: Trip form pax now always defaults to 1 (was incorrectly using avg pax from history).</li>
+      <li><b>Validation</b>: Trip distance exceeding car range triggers a confirmation asking about mid-trip charging. Extremely high distances show inline warning.</li>
+    </ul>
     <div class="cl-ver">v7.3.0 <span class="cl-date">23 Jul 2026</span></div>
     <ul class="cl-list">
       <li><b>Charge form restructured</b>: Layout now matches trip form pattern. Date and Type full-width, collapsible Details bar (Driving/Pax/Weather), 3-column battery row (Start/End/kWh with auto-calc), notes always visible.</li>
@@ -2444,17 +2452,27 @@ function autoCalcTrip(changed){
   var spEl=document.getElementById('tripStartPct');
   var epEl=document.getElementById('tripEndPct');
   var conEl=document.getElementById('tripConsumed');
+  var errEl=document.getElementById('tripError');
   
-  var so=+soEl.value, eo=+eoEl.value, dist=+distEl.value;
+  var so=+stripCommas(soEl.value), eo=+stripCommas(eoEl.value), dist=+stripCommas(distEl.value);
   var sp=+spEl.value, ep=+epEl.value, con=+conEl.value;
   
-  // Distance auto-calc: any 2 of 3 computes the 3rd
-  if(changed==='startOdo'||changed==='endOdo'){
-    if(so>0&&eo>0&&eo>so) distEl.value=parseFloat((eo-so).toFixed(1));
-  } else if(changed==='dist'){
-    if(dist>0&&so>0&&!eo) eoEl.value=Math.round(so+dist);
-    else if(dist>0&&eo>0&&!so) soEl.value=Math.round(eo-dist);
-    else if(dist>0&&so>0) eoEl.value=Math.round(so+dist);
+  // Inline validation: end odo must be > start odo
+  if(so>0&&eo>0&&eo<=so){
+    errEl.textContent='End odo must be greater than start odo.';
+    distEl.value='';
+  } else {
+    if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
+    // Distance auto-calc: any 2 of 3 computes the 3rd
+    if(changed==='startOdo'||changed==='endOdo'){
+      if(so>0&&eo>0&&eo>so) distEl.value=parseFloat((eo-so).toFixed(1));
+    } else if(changed==='dist'){
+      if(dist>0&&so>0&&!eo) eoEl.value=Math.round(so+dist);
+      else if(dist>0&&eo>0&&!so) soEl.value=Math.round(eo-dist);
+      else if(dist>0&&so>0) eoEl.value=Math.round(so+dist);
+    }
+    // Inline range sanity warning
+    checkTripRangeWarning();
   }
   
   // Battery auto-calc: any 2 of 3 computes the 3rd
@@ -2470,12 +2488,33 @@ function autoCalcTrip(changed){
   updateTripPreview();
 }
 
+function checkTripRangeWarning(){
+  var distEl=document.getElementById('tripDistance');
+  var errEl=document.getElementById('tripError');
+  var _tripKm=+(stripCommas(distEl.value));
+  // Clear previous range warnings (but not other errors)
+  if(errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
+  if(_tripKm>0){
+    var _estEff=getAvgEff()||8;
+    var _estRange=_estEff*settings.battery;
+    var _chargedBox=document.getElementById('tripChargedSince').checked;
+    if(_tripKm>_estRange*3){
+      errEl.textContent='\u26a0\ufe0f '+_tripKm.toLocaleString('en-IN')+' km seems very high \u2014 double-check odo values.';
+    } else if(_tripKm>_estRange&&!_chargedBox){
+      errEl.textContent='\u26a0\ufe0f '+_tripKm.toLocaleString('en-IN')+' km exceeds full range (~'+Math.round(_estRange)+' km). Mid-trip charge?';
+    }
+  }
+}
+
 function updateTripPreview(){
-  var so=+document.getElementById('tripStartOdo').value;
-  var eo=+document.getElementById('tripEndOdo').value;
-  var sp=+document.getElementById('tripStartPct').value;
-  var ep=+document.getElementById('tripEndPct').value;
+  var so=+stripCommas(document.getElementById('tripStartOdo').value);
+  var eo=+stripCommas(document.getElementById('tripEndOdo').value);
+  var spEl=document.getElementById('tripStartPct');
+  var epEl=document.getElementById('tripEndPct');
+  var sp=+spEl.value, ep=+epEl.value;
   var el=document.getElementById('tripPreview');
+  // Don't show preview if Start% or End% fields are empty
+  if(spEl.value===''||epEl.value===''){el.textContent='';return;}
   if(eo>so&&sp<=100&&ep>=0&&ep<=100&&sp>ep){
     var km=parseFloat((eo-so).toFixed(1));
     var drop=sp-ep;
@@ -2617,8 +2656,8 @@ function toggleTripCpFare(amt){
 
 function saveTrip(){
   var date=document.getElementById('tripDate').value;
-  var so=+document.getElementById('tripStartOdo').value;
-  var eo=+document.getElementById('tripEndOdo').value;
+  var so=+stripCommas(document.getElementById('tripStartOdo').value);
+  var eo=+stripCommas(document.getElementById('tripEndOdo').value);
   var sp=+document.getElementById('tripStartPct').value;
   var ep=+document.getElementById('tripEndPct').value;
   var note=document.getElementById('tripNote').value.trim()||null;
@@ -2645,6 +2684,16 @@ function saveTrip(){
   var km=null,consumption=null,isRegen=null,eff=null;
   if(so>0&&eo>so){
     km=parseFloat((eo-so).toFixed(1));
+    // Range sanity check
+    var estEff=getAvgEff()||8; // fallback 8 km/kWh if no data
+    var estFullRange=estEff*settings.battery;
+    if(km>estFullRange&&!chargedSince){
+      if(!confirm('This trip ('+km.toLocaleString('en-IN')+' km) exceeds your estimated full range (~'+Math.round(estFullRange)+' km).\n\nDid you charge mid-trip? Tap OK to check the box, or Cancel to go back and fix odo values.')){return;}
+      document.getElementById('tripChargedSince').checked=true;
+      chargedSince=true;
+    } else if(km>estFullRange*3){
+      errEl.textContent='\u26a0\ufe0f '+km.toLocaleString('en-IN')+' km seems very high — double-check odo values.';
+    }
     if(sp>=0&&ep>=0&&sp>ep){
       consumption=(sp-ep)*settings.battery/100;
       isRegen=false;
@@ -2676,7 +2725,7 @@ function clearTripForm(){
   document.getElementById('tripPreview').textContent='';
   document.getElementById('tripError').textContent='';
   (function(){var _ltt='city';for(var i=0;i<trips.length;i++){if(trips[i].tripType){_ltt=trips[i].tripType;break;}}pickTripType(_ltt);})();
-  pickTripPax(getAvgPax());
+  pickTripPax(1);
   pickTripWeather(getAutoWeather());
   // Reset carpool fields
   document.getElementById('tripCarpoolToggle').checked=false;
