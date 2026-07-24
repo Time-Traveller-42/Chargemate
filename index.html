@@ -3102,7 +3102,7 @@ function renderList(){
           ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
           ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
           ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
-          ${(x.pax&&x.pax>1)||(x.weather&&x.weather!==getAutoWeatherForDate(x.date))?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax>1?x.pax+' pax':'')+(x.pax>1&&x.weather?' · ':'')+(x.weather?({'hot':'☀️','rain':'🌧️','cold':'❄️','mild':'🌤️'}[x.weather]||''):' ')+'</div>':''}
+          ${(x.pax)||(x.weather&&x.weather!==getAutoWeatherForDate(x.date))?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax?x.pax+' pax':'')+(x.pax&&x.weather?' · ':'')+(x.weather?({'hot':'☀️','rain':'🌧️','cold':'❄️','mild':'🌤️'}[x.weather]||''):' ')+'</div>':''}
         </div>`;
     });
     out+='</div>';
@@ -3153,7 +3153,7 @@ function renderTripsOnly(){
       }
       var badgeType=isCarpoolOnly?'<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span>':'<span class="badge badge-trip">Trip</span>';
       var paxWeatherStr='';
-      if((x.pax&&x.pax>1)||(x.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax>1?' '+x.pax+'p':'')+'</span>';}
+      if((x.pax)||(x.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
       out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+carpoolBadge+paxWeatherStr+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
     });
     out+='</div>';
@@ -3249,7 +3249,7 @@ function renderAllLog(){
         var cpBadge='';
         if(t.carpool&&!isCarpoolOnly){cpBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 6px;border-radius:4px">'+(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount)+'</span>';}
         var paxWeatherStr='';
-        if((t.pax&&t.pax>1)||(t.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax>1?' '+t.pax+'p':'')+'</span>';}
+        if((t.pax)||(t.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
         out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+cpBadge+paxWeatherStr+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
       }
     });
