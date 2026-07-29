@@ -828,6 +828,12 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
     <div class="cl-ver">v7.3.1 <span class="cl-date">23 Jul 2026</span></div>
     <ul class="cl-list">
+      <li>Fix: chargedSince entries no longer corrupt efficiency (were used as segment startpoints)</li>
+      <li>Fix: Odo placeholder now reflects highest odo from charges AND trips</li>
+      <li>Fix: Delete defers sync until undo window expires (5s) — prevents premature data loss to cloud</li>
+    </ul>
+    <div class="cl-ver">v7.3.2 <span class="cl-date">29 Jul 2026</span></div>
+    <ul class="cl-list">
       <li><b>Bug fix</b>: <code>autoCalcTrip</code> now strips commas from odo fields before parsing (fixes NaN / failed validation on formatted numbers).</li>
       <li><b>Bug fix</b>: Inline error shown when end odo &lt; start odo in trip form.</li>
       <li><b>Bug fix</b>: Trip preview no longer shows consumption when End&nbsp;% is empty.</li>
@@ -2269,14 +2275,19 @@ function onTypeChange(){
 function updateOdoPlaceholder(){
   const odoInput=document.getElementById('odo');
   if(odoInput.value) return; // don't override if user typed
-  const withOdo=sessions.filter(s=>s.odo>0);
-  if(!withOdo.length){odoInput.placeholder='e.g. 12,450';return;}
-  const last=withOdo.reduce((a,b)=>b.odo>a.odo?b:a);
-  if(editIndex!==null&&sessions[editIndex]?.odo===last.odo){
-    const others=withOdo.filter(s=>s!==sessions[editIndex]);
-    odoInput.placeholder=others.length?'prev: '+(others.reduce((a,b)=>b.odo>a.odo?b:a).odo).toLocaleString('en-IN'):'e.g. 12,450';
+  // Find max odo across both sessions AND trips
+  var maxOdo=0, maxSource=null;
+  sessions.forEach(function(s){if(s.odo&&s.odo>maxOdo){maxOdo=s.odo;maxSource=s;}});
+  trips.forEach(function(t){if(t.endOdo&&t.endOdo>maxOdo){maxOdo=t.endOdo;maxSource=t;}});
+  if(!maxOdo){odoInput.placeholder='e.g. 12,450';return;}
+  if(editIndex!==null&&sessions[editIndex]&&sessions[editIndex].odo===maxOdo){
+    // Editing the entry with max odo — show second highest
+    var secondMax=0;
+    sessions.forEach(function(s){if(s!==sessions[editIndex]&&s.odo&&s.odo>secondMax)secondMax=s.odo;});
+    trips.forEach(function(t){if(t.endOdo&&t.endOdo>secondMax)secondMax=t.endOdo;});
+    odoInput.placeholder=secondMax?'prev: '+secondMax.toLocaleString('en-IN'):'e.g. 12,450';
   } else {
-    odoInput.placeholder='prev: '+last.odo.toLocaleString('en-IN');
+    odoInput.placeholder='prev: '+maxOdo.toLocaleString('en-IN');
   }
 }
 function validateOdo(){
@@ -2809,7 +2820,7 @@ function computeUnifiedEfficiency(){
   // Build sorted charge points: [{odo, arrival, departure, date, chargedSince}]
   var chargePoints=Object.keys(odoMap).map(function(k){
     return {odo:+k, arrival:odoMap[k].s, departure:odoMap[k].e, date:odoMap[k].date, chargedSince:odoMap[k].chargedSince};
-  }).sort(function(a,b){return a.odo-b.odo;});
+  }).filter(function(p){return !p.chargedSince;}).sort(function(a,b){return a.odo-b.odo;});
 
   // Charge-to-charge segments
   var chargeSegs=[];
@@ -3921,10 +3932,10 @@ function updateThemePills(mode){
 var _undoTimer=null,_undoData=null;
 function undoableDelete(type,index,label){
   var item;
-  if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();persist();render();}
-  else if(type==='trip'){item=trips.splice(index,1)[0];persist();render();}
-  else if(type==='carpool'){item=carpools.splice(index,1)[0];safeLS.set('cm-carpool',JSON.stringify(carpools));render();}
-  else if(type==='expense'){item=expenses.splice(index,1)[0];safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
+  if(type==='charge'){item=sessions.splice(index,1)[0];recomputeAllKm();render();}
+  else if(type==='trip'){item=trips.splice(index,1)[0];render();}
+  else if(type==='carpool'){item=carpools.splice(index,1)[0];render();}
+  else if(type==='expense'){item=expenses.splice(index,1)[0];renderExpenses();}
   if(!item)return;
   _undoData={type:type,index:index,item:item};
   if(_undoTimer)clearTimeout(_undoTimer);
@@ -3932,18 +3943,19 @@ function undoableDelete(type,index,label){
   var t=document.getElementById('toast');
   t.innerHTML=label+' deleted. <span onclick="undoLast()" style="text-decoration:underline;cursor:pointer;margin-left:8px">Undo</span>';
   t.classList.add('show');
-  _undoTimer=setTimeout(function(){t.classList.remove('show');t.textContent='';_undoData=null;_undoTimer=null;},5000);
+  _undoTimer=setTimeout(function(){t.classList.remove('show');t.textContent='';_undoData=null;_undoTimer=null;persist();},5000);
 }
 function undoLast(){
   if(!_undoData)return;
   var d=_undoData;_undoData=null;
   if(_undoTimer){clearTimeout(_undoTimer);_undoTimer=null;}
-  if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();persist();render();}
-  else if(d.type==='trip'){trips.splice(d.index,0,d.item);persist();render();}
-  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);safeLS.set('cm-carpool',JSON.stringify(carpools));render();}
-  else if(d.type==='expense'){expenses.splice(d.index,0,d.item);safeLS.set('cm-expenses',JSON.stringify(expenses));renderExpenses();}
+  if(d.type==='charge'){sessions.splice(d.index,0,d.item);recomputeAllKm();}
+  else if(d.type==='trip'){trips.splice(d.index,0,d.item);}
+  else if(d.type==='carpool'){carpools.splice(d.index,0,d.item);}
+  else if(d.type==='expense'){expenses.splice(d.index,0,d.item);}
+  persist();render();
   document.getElementById('toast').classList.remove('show');
-  toast('Restored ✓');
+  toast('Restored');
 }
 
 // — Backup Reminder (7 days) —
