@@ -811,15 +811,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v7.3.1 <span class="cl-date">23 Jul 2026</span></div>
-    <ul class="cl-list">
-      <li>Fix: All number fields use inputmode="tel" (consistent numeric keyboard on mobile)</li>
-    </ul>
     <div class="cl-ver">v7.3.3 <span class="cl-date">30 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: chargedSince entries no longer corrupt efficiency (were used as segment startpoints)</li>
       <li>Fix: Odo placeholder now reflects highest odo from charges AND trips</li>
       <li>Fix: Delete defers sync until undo window expires (5s) — prevents premature data loss to cloud</li>
+      <li>Fix: Efficiency chart outlier threshold relaxed (3× avg) — valid high-efficiency trips no longer excluded</li>
+      <li>Fix: Pax always displayed in log (was hidden when pax=1)</li>
+      <li>Fix: All number fields use inputmode="tel"</li>
     </ul>
     <div class="cl-ver">v7.3.2 <span class="cl-date">29 Jul 2026</span></div>
     <ul class="cl-list">
@@ -2453,9 +2452,9 @@ function autoCalcTrip(changed){
     if(changed==='startOdo'||changed==='endOdo'){
       if(so>0&&eo>0&&eo>so) distEl.value=parseFloat((eo-so).toFixed(1));
     } else if(changed==='dist'){
-      if(dist>0&&so>0&&!eo) eoEl.value=Math.round(so+dist);
-      else if(dist>0&&eo>0&&!so) soEl.value=Math.round(eo-dist);
-      else if(dist>0&&so>0) eoEl.value=Math.round(so+dist);
+      // Only fill the empty field — never overwrite a user-entered value
+      if(dist>0&&so>0&&!eoEl.value) eoEl.value=Math.round(so+dist);
+      else if(dist>0&&eo>0&&!soEl.value) soEl.value=Math.round(eo-dist);
     }
     // Inline range sanity warning
     checkTripRangeWarning();
@@ -2698,13 +2697,14 @@ function computeUnifiedEfficiency(){
   // Build sorted charge points: [{odo, arrival, departure, date, chargedSince}]
   var chargePoints=Object.keys(odoMap).map(function(k){
     return {odo:+k, arrival:odoMap[k].s, departure:odoMap[k].e, date:odoMap[k].date, chargedSince:odoMap[k].chargedSince};
-  }).filter(function(p){return !p.chargedSince;}).sort(function(a,b){return a.odo-b.odo;});
+  }).sort(function(a,b){return a.odo-b.odo;});
 
-  // Charge-to-charge segments
+  // Charge-to-charge segments (chargedSince points break the chain)
   var chargeSegs=[];
   for(var i=1;i<chargePoints.length;i++){
     var prev=chargePoints[i-1], curr=chargePoints[i];
-    if(curr.chargedSince) continue;
+    // Skip segment if either endpoint is a chargedSince entry (unreliable % boundary)
+    if(prev.chargedSince||curr.chargedSince) continue;
     var km=curr.odo-prev.odo;
     var drop=prev.departure-curr.arrival;
     if(km>0&&drop>0){
@@ -2748,8 +2748,8 @@ function computeUnifiedEfficiency(){
   if(validEffs.length>=5){
     var sumEff=validEffs.reduce(function(a,s){return a+s.efficiency;},0);
     var avgEff=sumEff/validEffs.length;
-    var warnThresh=avgEff*1.5;
-    var errThresh=avgEff*2;
+    var warnThresh=avgEff*2;
+    var errThresh=avgEff*3;
     segments.forEach(function(s){
       if(!s.efficiency||!isFinite(s.efficiency)) return;
       if(s.efficiency>errThresh) s.flag='error';
@@ -3064,11 +3064,12 @@ function renderAllLog(){
       if(x.type==='charge'){
         var s=x.data;
         var effStr='';
-        if(s.km&&s.km>0){var con=s.kwh||0;if(con>0)effStr=(s.km/con).toFixed(1)+' km/kWh';}
+        if(s.chargedSince){effStr='<span style="color:var(--muted)">\u26a1 chain break</span>';}
+        else if(s.km&&s.km>0){var con=s.kwh||0;if(con>0)effStr=(s.km/con).toFixed(1)+' km/kWh';}
         var line1=Math.round(s.s)+'% \u2192 '+Math.round(s.e)+'% \u00b7 '+(s.kwh||0).toFixed(1)+' kWh';
         if(s.odo) line1+=' \u00b7 '+Math.round(s.odo).toLocaleString('en-IN')+' km';
         var line2='';
-        if(s.km) line2+=s.km+' km';
+        if(s.km&&!s.chargedSince) line2+=s.km+' km';
         if(effStr) line2+=(line2?' \u00b7 ':'')+effStr;
         if(s.duration) line2+=(line2?' \u00b7 ':'')+s.duration+' min';
         var costStr=s.cost!=null&&s.cost>0?'\u20b9'+Math.round(s.cost):'';
@@ -3535,8 +3536,8 @@ function drawChart(id,pts,dates,color,overrideAvg){
     const show=isFirst||isLast||isSpaced;
     if(show){
       var lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));
-      // Skip if too close to previous label (min 40px gap)
-      if(!isFirst&&Math.abs(lx-lastLabelX)<40) return;
+      // Skip if too close to previous label (min 40px gap) — but always show first and last
+      if(!isFirst&&!isLast&&Math.abs(lx-lastLabelX)<40) return;
       ctx.fillText(fmtDateShort(d),lx,H-4);
       lastLabelX=lx;
     }
