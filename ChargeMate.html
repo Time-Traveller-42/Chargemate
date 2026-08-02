@@ -113,7 +113,14 @@ button.secondary{background:#1e2d45;color:var(--accent);border:none;
 
 
 /* -- Popup Selector -- */
-
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:150;
+  display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
+.popup-overlay.open{display:flex}
+.popup-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px;width:100%;max-width:360px;max-height:70vh;overflow-y:auto}
+.popup-title{font-family:'Inter',sans-serif;font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.popup-options{display:flex;flex-direction:column;gap:8px}
+.popup-opt{padding:10px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:12px;color:var(--text)}
 .popup-opt:active,.popup-opt.selected{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
 .popup-opt:hover{border-color:var(--accent)}
 .popup-trigger{padding:9px 12px;border-radius:8px;border:1px solid var(--border);
@@ -811,6 +818,17 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.3.4 <span class="cl-date">31 Jul 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Popup overlay CSS was missing — picking from saved chargers could freeze the entire UI</li>
+      <li>Fix: Charge form now prefills odo from last known state (charges + trips unified)</li>
+      <li>Fix: autoCalcTrip distance no longer overwrites user-entered End Odo</li>
+      <li>Fix: chargedSince charges hide bogus km/efficiency in All log view</li>
+      <li>Fix: Efficiency chart x-axis always shows last date label</li>
+      <li>Fix: chargedSince charge points break the chain without creating mega-segments (fixes missing recent data in chart)</li>
+      <li>Fix: Outlier threshold relaxed to 3× avg (was 2×)</li>
+      <li>Fix: Changelog version order corrected</li>
+    </ul>
     <div class="cl-ver">v7.3.3 <span class="cl-date">30 Jul 2026</span></div>
     <ul class="cl-list">
       <li>Fix: chargedSince entries no longer corrupt efficiency (were used as segment startpoints)</li>
@@ -2190,7 +2208,7 @@ function autoCalcPublic(changed){
 
 // -- Popup Selector --
 var _popupOverlay=null;
-function closePopup(){if(_popupOverlay){_popupOverlay.classList.remove('open');_popupOverlay.innerHTML='';document.body.style.overflow='';}}
+function closePopup(){if(_popupOverlay){_popupOverlay.classList.remove('open');_popupOverlay.innerHTML='';}_popupOverlay=null;document.body.style.overflow='';}
 
 
 function pickType(val){
@@ -2348,6 +2366,9 @@ function clearChargeForm(){
   document.getElementById('formError').textContent='';
   document.getElementById('odoWarn').textContent='';
   document.getElementById('odo').classList.remove('warn-input');
+  // Restore type to last saved (prefer actual data over localStorage)
+  var _lt=sessions.length>0?sessions[0].t:safeLS.get('cm-lastType');
+  if(_lt)pickType(_lt);
   // Default driving type to last used (fallback to smart default)
   var _lastDT=null;for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){_lastDT=sessions[i].drivingType;break;}}
   if(_lastDT)pickDrivingType(_lastDT); else setDrivingTypeDefault();
@@ -2395,9 +2416,14 @@ function prefillChargeFromLastState(){
   var state=getLastKnownState();
   if(!state)return;
   var startEl=document.getElementById('start');
+  var odoEl=document.getElementById('odo');
   if(startEl&&!startEl.value&&state.endPct!=null){
     startEl.value=state.endPct;
     updatePreview();
+  }
+  if(odoEl&&!odoEl.value&&state.odo){
+    odoEl.value=state.odo;
+    formatNumericInput(odoEl);
   }
 }
 
@@ -3003,7 +3029,7 @@ function renderTripsOnly(){
   var _expandState=getExpandedGroups();
   var listEl=document.getElementById('list');
   if(!trips.length){listEl.innerHTML='<div class="empty">No trips logged yet.</div>';return;}
-  var sorted=[...trips].sort(function(a,b){return b.date.localeCompare(a.date);});
+  var sorted=[...trips].sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.endOdo||0)-(a.endOdo||0);});
   var groups={};
   sorted.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
   var mIdx=0;
@@ -3048,7 +3074,7 @@ function renderAllLog(){
   sessions.forEach(function(s,i){entries.push({type:'charge',date:s.date,id:s.id||0,odo:s.odo||0,idx:i,data:s});});
   trips.forEach(function(t,i){entries.push({type:'trip',date:t.date,id:t.id||0,odo:t.startOdo||0,idx:i,data:t});});
   if(!entries.length){listEl.innerHTML='<div class="empty">No entries yet.</div>';return;}
-  entries.sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.id||0)-(a.id||0);});
+  entries.sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.odo||0)-(a.odo||0);});
   var groups={};
   entries.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
   var out='',mIdx=0;
@@ -3698,7 +3724,7 @@ document.getElementById('date').value              = new Date().toISOString().sl
 document.getElementById('tripDate').value          = new Date().toISOString().slice(0,10);
 var _edEl=document.getElementById('expDate');if(_edEl)_edEl.value=new Date().toISOString().slice(0,10);
 (function(){var lastOdo=0;sessions.forEach(function(s){if(s.odo&&s.odo>lastOdo)lastOdo=s.odo;});trips.forEach(function(t){if(t.endOdo&&t.endOdo>lastOdo)lastOdo=t.endOdo;});if(lastOdo>0)document.getElementById('tripStartOdo').placeholder='Last: '+lastOdo;})();
-(function(){var lt=safeLS.get('cm-lastType');if(lt){document.getElementById('type').value=lt;onTypeChange();}})();
+(function(){var lt=sessions.length>0?sessions[0].t:safeLS.get('cm-lastType');if(lt)pickType(lt);})();
 (function(){var ldt=null;for(var i=0;i<sessions.length;i++){if(sessions[i].drivingType){ldt=sessions[i].drivingType;break;}}if(ldt)pickDrivingType(ldt);})();
 // Pre-fill charge form start % from last known state on initial load
 prefillChargeFromLastState();
