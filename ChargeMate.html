@@ -676,7 +676,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       </div>
     </div>
     <div class="form-row" style="margin-top:10px">
-      <div><label>Amount (₹)</label><input type="text" inputmode="text" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';" >
+      <div><label>Amount (₹)</label><input type="text" inputmode="tel" id="expAmount" placeholder="e.g. 500+200" oninput="previewExpAmount();formatNumericInput(this);var _v=evalExpr(stripCommas(this.value));document.getElementById('expIceAmount').placeholder=_v?'\u20b9 '+Math.round(_v).toLocaleString('en-IN'):'';" >
 <div id="expAmountPreview" class="stat-sub" style="margin-top:2px;min-height:14px"></div></div>
       <div><label>ICE Equivalent (₹)</label><input type="text" inputmode="tel" id="expIceAmount" placeholder="" oninput="formatNumericInput(this)" >
 <div style="font-size:9px;color:var(--muted);margin-top:2px">= EV amount if left empty</div></div>
@@ -1802,8 +1802,8 @@ function renderPlanStops(){
   if(!planStops.length){ el.innerHTML='<div style="font-size:11px;color:var(--muted)">No stops. Direct trip.</div>'; return; }
   el.innerHTML=planStops.map((s,i)=>`
     <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px">
-      <div><label>At km</label><input type="number" value="${s.km||''}" placeholder="e.g. 200" oninput="updatePlanStop(${i},'km',this.value)" style="font-size:12px"></div>
-      <div><label>Charge to %</label><input type="number" value="${s.chargeTo||''}" placeholder="e.g. 80" min="0" max="100" oninput="updatePlanStop(${i},'chargeTo',this.value)" style="font-size:12px"></div>
+      <div><label>At km</label><input type="text" inputmode="tel" value="${s.km||''}" placeholder="e.g. 200" oninput="updatePlanStop(${i},'km',this.value)" style="font-size:12px"></div>
+      <div><label>Charge to %</label><input type="text" inputmode="tel" value="${s.chargeTo||''}" placeholder="e.g. 80" oninput="updatePlanStop(${i},'chargeTo',this.value)" style="font-size:12px"></div>
       <div style="display:flex;align-items:flex-end;padding-bottom:4px"><button class="btn-sm btn-del" onclick="removePlanStop(${i})">✕</button></div>
     </div>
   `).join('');
@@ -2477,10 +2477,22 @@ function autoCalcTrip(changed){
     // Distance auto-calc: any 2 of 3 computes the 3rd
     if(changed==='startOdo'||changed==='endOdo'){
       if(so>0&&eo>0&&eo>so) distEl.value=parseFloat((eo-so).toFixed(1));
+      // Mark user-entered fields
+      if(changed==='startOdo'&&soEl.value) soEl.dataset.userEntered='1';
+      if(changed==='endOdo'&&eoEl.value) eoEl.dataset.userEntered='1';
+      // Clear auto-calc marker if user clears the field
+      if(changed==='startOdo'&&!soEl.value) delete soEl.dataset.userEntered;
+      if(changed==='endOdo'&&!eoEl.value) delete eoEl.dataset.userEntered;
     } else if(changed==='dist'){
-      // Only fill the empty field — never overwrite a user-entered value
-      if(dist>0&&so>0&&!eoEl.value) eoEl.value=Math.round(so+dist);
-      else if(dist>0&&eo>0&&!soEl.value) soEl.value=Math.round(eo-dist);
+      if(dist>0&&eo>0&&!soEl.dataset.userEntered){
+        soEl.value=Math.round(eo-dist);
+      } else if(dist>0&&so>0&&!eoEl.dataset.userEntered){
+        eoEl.value=Math.round(so+dist);
+      } else if(!dist){
+        // User cleared distance — clear whichever odo was auto-calculated
+        if(!soEl.dataset.userEntered&&soEl.value){soEl.value='';}
+        else if(!eoEl.dataset.userEntered&&eoEl.value){eoEl.value='';}
+      }
     }
     // Inline range sanity warning
     checkTripRangeWarning();
@@ -2659,6 +2671,8 @@ function saveTrip(){
 
 function clearTripForm(){
   ['tripStartOdo','tripEndOdo','tripDistance','tripStartPct','tripEndPct','tripConsumed','tripNote'].forEach(function(id){document.getElementById(id).value='';});
+  delete document.getElementById('tripStartOdo').dataset.userEntered;
+  delete document.getElementById('tripEndOdo').dataset.userEntered;
   document.getElementById('tripDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
@@ -2707,66 +2721,80 @@ function computeUnifiedEfficiency(){
   var key=sessions.length+'-'+trips.length+'-'+(sessions.length?sessions[0].id:'')+(trips.length?trips[0].id:'');
   if(key===_ueCacheKey&&_ueCache)return _ueCache;
   _ueCacheKey=key;
-  // === STEP 1: Charge-to-charge segments (primary, longest by nature) ===
-  var odoMap={};
-  sessions.forEach(function(s){
-    if(s.odo&&s.odo>0){
-      var key=s.odo;
-      if(!odoMap[key]) odoMap[key]={s:s.s,e:s.e,date:s.date,chargedSince:!!s.chargedSince};
-      else{
-        if(s.s<odoMap[key].s) odoMap[key].s=s.s;
-        if(s.e>odoMap[key].e) odoMap[key].e=s.e;
-        if(s.chargedSince) odoMap[key].chargedSince=true;
-      }
+
+  // === STEP 1: Build trip segments (TRIPS HAVE PRIORITY) ===
+  var validTrips=trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&!t.chargedSince&&t.startPct!=null&&t.endPct!=null;})
+    .sort(function(a,b){return a.startOdo-b.startOdo;});
+
+  // Merge consecutive trips with same metadata if no charge in between
+  var mergedTrips=[];
+  validTrips.forEach(function(t){
+    var last=mergedTrips.length?mergedTrips[mergedTrips.length-1]:null;
+    var sameMetadata=last&&(last.pax||1)===(t.pax||1)&&(last.weather||'')===(t.weather||'')&&(last.tripType||'mixed')===(t.tripType||'mixed');
+    var continuous=last&&t.startOdo===last.endOdo;
+    var noChargeBetween=last&&t.startPct<=last.endPct;
+    if(sameMetadata&&continuous&&noChargeBetween){
+      last.endOdo=t.endOdo;
+      last.endPct=t.endPct;
+      last.date=t.date;
+    } else {
+      mergedTrips.push({startOdo:t.startOdo,endOdo:t.endOdo,startPct:t.startPct,endPct:t.endPct,
+        date:t.date,pax:t.pax||null,weather:t.weather||null,tripType:t.tripType||null});
     }
   });
-  // Build sorted charge points: [{odo, arrival, departure, date, chargedSince}]
-  var chargePoints=Object.keys(odoMap).map(function(k){
-    return {odo:+k, arrival:odoMap[k].s, departure:odoMap[k].e, date:odoMap[k].date, chargedSince:odoMap[k].chargedSince};
-  }).sort(function(a,b){return a.odo-b.odo;});
 
-  // Charge-to-charge segments (chargedSince points break the chain)
-  var chargeSegs=[];
-  for(var i=1;i<chargePoints.length;i++){
-    var prev=chargePoints[i-1], curr=chargePoints[i];
-    // Skip segment if either endpoint is a chargedSince entry (unreliable % boundary)
-    if(prev.chargedSince||curr.chargedSince) continue;
-    var km=curr.odo-prev.odo;
-    var drop=prev.departure-curr.arrival;
-    if(km>0&&drop>0){
-      var consumption=drop*settings.battery/100;
-      var eff=km/consumption;
-      chargeSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:prev.odo,toOdo:curr.odo,date:curr.date,regen:false,flag:null,source:'charge'});
-    } else if(km>0&&drop<0&&!curr.chargedSince){
-      // Regen: % went up while driving
-      chargeSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
-        fromOdo:prev.odo,toOdo:curr.odo,date:curr.date,regen:true,flag:null,source:'charge'});
-    }
-  }
-
-  // === STEP 2: Trip segments (each trip is self-contained — no merging needed) ===
-  // Exclude trips with chargedSince=true (mid-trip charge makes % drop unreliable)
   var tripSegs=[];
-  trips.filter(function(t){return t.startOdo&&t.endOdo&&t.startOdo<t.endOdo&&!t.chargedSince;}).forEach(function(t){
-    // Check if any charge-to-charge segment fully covers this trip (charge priority)
-    var covered=chargeSegs.some(function(c){return c.fromOdo<=t.startOdo&&c.toOdo>=t.endOdo;});
-    if(covered) return;
+  mergedTrips.forEach(function(t){
     var km=t.endOdo-t.startOdo;
     var drop=t.startPct-t.endPct;
     if(km>0&&drop>0){
       var consumption=drop*settings.battery/100;
       var eff=km/consumption;
       tripSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
-        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType||null,pax:t.pax||null});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:false,flag:null,source:'trip',trip_type:t.tripType,pax:t.pax});
     } else if(km>0&&drop<0){
       tripSegs.push({km:km,drop:drop,consumption:0,efficiency:null,
-        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType||null,pax:t.pax||null});
+        fromOdo:t.startOdo,toOdo:t.endOdo,date:t.date,regen:true,flag:null,source:'trip',trip_type:t.tripType,pax:t.pax});
     }
   });
 
+  // === STEP 2: Charge-to-charge segments (only for gaps not covered by trips) ===
+  var odoMap={};
+  sessions.forEach(function(s){
+    if(s.odo&&s.odo>0){
+      var k=s.odo;
+      if(!odoMap[k]) odoMap[k]={s:s.s,e:s.e,date:s.date,chargedSince:!!s.chargedSince};
+      else{
+        if(s.s<odoMap[k].s) odoMap[k].s=s.s;
+        if(s.e>odoMap[k].e) odoMap[k].e=s.e;
+        if(s.chargedSince) odoMap[k].chargedSince=true;
+      }
+    }
+  });
+  var chargePoints=Object.keys(odoMap).map(function(k){
+    return {odo:+k, arrival:odoMap[k].s, departure:odoMap[k].e, date:odoMap[k].date, chargedSince:odoMap[k].chargedSince};
+  }).sort(function(a,b){return a.odo-b.odo;});
+
+  var chargeSegs=[];
+  for(var i=1;i<chargePoints.length;i++){
+    var prev=chargePoints[i-1], curr=chargePoints[i];
+    if(prev.chargedSince||curr.chargedSince) continue;
+    var km=curr.odo-prev.odo;
+    var drop=prev.departure-curr.arrival;
+    if(km>0&&drop>0){
+      var coveredByTrip=tripSegs.some(function(ts){return ts.fromOdo<=prev.odo&&ts.toOdo>=curr.odo;});
+      if(coveredByTrip) continue;
+      var overlaps=tripSegs.some(function(ts){return ts.toOdo>prev.odo&&ts.fromOdo<curr.odo;});
+      if(overlaps) continue;
+      var consumption=drop*settings.battery/100;
+      var eff=km/consumption;
+      chargeSegs.push({km:km,drop:drop,consumption:consumption,efficiency:eff,
+        fromOdo:prev.odo,toOdo:curr.odo,date:curr.date,regen:false,flag:null,source:'charge'});
+    }
+  }
+
   // === STEP 3: Combine and sort by date ===
-  var segments=chargeSegs.concat(tripSegs);
+  var segments=tripSegs.concat(chargeSegs);
   segments.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.fromOdo-b.fromOdo;});
 
   // === STEP 4: Flag outliers ===
