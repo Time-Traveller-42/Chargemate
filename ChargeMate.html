@@ -410,7 +410,6 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
 
 </head>
 <body>
-<input type="tel" id="_kbPrime" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none" tabindex="-1" aria-hidden="true">
 <!-- Bottom nav added after container -->
 
 
@@ -820,6 +819,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.5.5 <span class="cl-date">7 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Prefill uses placeholder instead of value (fields stay empty for correct APK keyboard)</li>
+      <li>Fix: Save falls back to last known state when start odo/% fields are empty</li>
+    </ul>
     <div class="cl-ver">v7.5.3 <span class="cl-date">4 Aug 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Changelog em-dash encoding (mojibake from PowerShell UTF-8 handling)</li>
@@ -2391,7 +2395,10 @@ function validateOdo(){
 
 // ── SAVE CHARGE ────────────────────────────────────────────────────────────
 function saveCharge(){
-  const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  var startEl=document.getElementById('start');
+  var sVal=startEl.value;
+  if(!sVal){var _st=getLastKnownState();if(_st&&_st.endPct!=null)sVal=''+_st.endPct;}
+  const s=+sVal,e=+document.getElementById('end').value;
   const errEl=document.getElementById('formError');
   if(!document.getElementById('date').value){errEl.textContent='Please set a date.';return;}
   if(s<0||s>100){errEl.textContent='Start % must be 0–100.';return;}
@@ -2410,6 +2417,7 @@ function saveCharge(){
   }
 
   var odoVal=stripCommas(document.getElementById('odo').value);
+  if(!odoVal){var _st2=getLastKnownState();if(_st2&&_st2.odo)odoVal=''+_st2.odo;}
   if(!odoVal||isNaN(+odoVal)||+odoVal<=0){errEl.textContent='Odometer reading is required.';return;}
   const odo=+odoVal;
   const startTime=document.getElementById('startTime').value||null;
@@ -2511,28 +2519,25 @@ function prefillChargeFromLastState(){
   var startEl=document.getElementById('start');
   var odoEl=document.getElementById('odo');
   if(startEl&&!startEl.value&&state.endPct!=null){
-    startEl.value=state.endPct;
-    updatePreview();
+    startEl.placeholder='Last: '+state.endPct+'%';
   }
   if(odoEl&&!odoEl.value&&state.odo){
-    odoEl.value=state.odo;
-    formatNumericInput(odoEl);
+    odoEl.placeholder='Last: '+state.odo.toLocaleString('en-IN');
   }
 }
 
 function prefillTripFromLastState(){
-  if(tripEditIndex!==null)return; // don't prefill when editing
+  if(tripEditIndex!==null)return;
   var state=getLastKnownState();
   if(!state)return;
   var startOdoEl=document.getElementById('tripStartOdo');
   var startPctEl=document.getElementById('tripStartPct');
   if(startOdoEl&&!startOdoEl.value&&state.odo){
-    startOdoEl.value=state.odo;
+    startOdoEl.placeholder='Last: '+state.odo.toLocaleString('en-IN');
   }
   if(startPctEl&&!startPctEl.value&&state.endPct!=null){
-    startPctEl.value=state.endPct;
+    startPctEl.placeholder='Last: '+state.endPct+'%';
   }
-  updateTripPreview();
 }
 
 // ── ENTRY MODE ─────────────────────────────────────────────────────────────
@@ -2713,9 +2718,13 @@ function normalizeTo1Pax(eff,pax){
 
 function saveTrip(){
   var date=document.getElementById('tripDate').value;
-  var so=+stripCommas(document.getElementById('tripStartOdo').value);
+  var soRaw=stripCommas(document.getElementById('tripStartOdo').value);
+  var spRaw=document.getElementById('tripStartPct').value;
+  if(!soRaw||!+soRaw){var _tst=getLastKnownState();if(_tst&&_tst.odo)soRaw=''+_tst.odo;}
+  if(!spRaw){var _tst2=getLastKnownState();if(_tst2&&_tst2.endPct!=null)spRaw=''+_tst2.endPct;}
+  var so=+soRaw;
   var eo=+stripCommas(document.getElementById('tripEndOdo').value);
-  var sp=+document.getElementById('tripStartPct').value;
+  var sp=+spRaw;
   var ep=+document.getElementById('tripEndPct').value;
   var note=document.getElementById('tripNote').value.trim()||null;
   var chargedSince=document.getElementById('tripChargedSince').checked;
@@ -4024,8 +4033,17 @@ function importData(event){
   };r.readAsText(file);
 }
 
-// — Prime Android WebView keyboard (tel type needs initial focus to register) —
-setTimeout(function(){var p=document.getElementById('_kbPrime');if(p){p.focus();p.blur();}},500);
+// — Prime Android WebView keyboard (create temp off-screen tel input, focus, remove) —
+setTimeout(function(){
+  var tmp=document.createElement('input');
+  tmp.type='tel';
+  tmp.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;width:0;height:0;pointer-events:none';
+  tmp.setAttribute('tabindex','-1');
+  tmp.setAttribute('aria-hidden','true');
+  document.body.appendChild(tmp);
+  tmp.focus();
+  setTimeout(function(){tmp.blur();if(tmp.parentNode)tmp.parentNode.removeChild(tmp);},100);
+},300);
 
 </script>
 
