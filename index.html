@@ -834,6 +834,19 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.5.8 <span class="cl-date">10 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Battery % and charge form auto-calc also use last-state fallback (consistent with odo fix)</li>
+    </ul>
+    <div class="cl-ver">v7.5.7 <span class="cl-date">10 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Distance auto-calc with placeholder start odo now always computes end odo (not start) from fallback + distance</li>
+    </ul>
+    <div class="cl-ver">v7.5.6 <span class="cl-date">10 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: autoCalcTrip uses last known odo as fallback when start odo field is empty (placeholder mode)</li>
+      <li>Fix: Keyboard primer uses native Capacitor plugin approach (KeyboardPrimer.restartInput)</li>
+    </ul>
     <div class="cl-ver">v7.5.5 <span class="cl-date">7 Aug 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Prefill uses placeholder instead of value (fields stay empty for correct APK keyboard)</li>
@@ -1389,10 +1402,12 @@ function autoCalcCharge(changed){
     if(dist>0&&lastOdo>0){odoEl.value=Math.round(lastOdo+dist);formatNumericInput(odoEl);}
   } else if(changed==='start'||changed==='end'){
     var s=+document.getElementById('start').value, e=+document.getElementById('end').value;
+    if(!document.getElementById('start').value&&lastState&&lastState.endPct!=null) s=lastState.endPct;
     if(s>=0&&e>s){var kwh=settings.battery*(e-s)/100;document.getElementById('chargeKwh').value=parseFloat(kwh.toFixed(1));}
   } else if(changed==='kwh'){
     var kwh=+document.getElementById('chargeKwh').value;
     var s=+document.getElementById('start').value;
+    if(!document.getElementById('start').value&&lastState&&lastState.endPct!=null) s=lastState.endPct;
     if(kwh>0&&s>=0){var end=s+(kwh/settings.battery*100);if(end<=100)document.getElementById('end').value=Math.round(end);}
   }
 }
@@ -2602,7 +2617,11 @@ function autoCalcTrip(changed){
   var errEl=document.getElementById('tripError');
   
   var so=+stripCommas(soEl.value), eo=+stripCommas(eoEl.value), dist=+stripCommas(distEl.value);
+  var soFromFallback=false;
+  if(!so){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFromFallback=true;}}
   var sp=+spEl.value, ep=+epEl.value, con=+conEl.value;
+  var spFromFallback=false;
+  if(!spEl.value){var _lks2=getLastKnownState();if(_lks2&&_lks2.endPct!=null){sp=_lks2.endPct;spFromFallback=true;}}
   
   // Inline validation: end odo must be > start odo
   if(so>0&&eo>0&&eo<=so){
@@ -2620,12 +2639,12 @@ function autoCalcTrip(changed){
       if(changed==='startOdo'&&!soEl.value) delete soEl.dataset.userEntered;
       if(changed==='endOdo'&&!eoEl.value) delete eoEl.dataset.userEntered;
     } else if(changed==='dist'){
-      if(dist>0&&eo>0&&!soEl.dataset.userEntered){
-        soEl.value=Math.round(eo-dist);
-      } else if(dist>0&&so>0&&!eoEl.dataset.userEntered){
+      // If start odo is from fallback (field empty but last state known), always compute end odo
+      if(dist>0&&so>0&&(soFromFallback||soEl.dataset.userEntered)&&!eoEl.dataset.userEntered){
         eoEl.value=Math.round(so+dist);
+      } else if(dist>0&&eo>0&&!soEl.dataset.userEntered&&!soFromFallback){
+        soEl.value=Math.round(eo-dist);
       } else if(!dist){
-        // User cleared distance — clear whichever odo was auto-calculated
         if(!soEl.dataset.userEntered&&soEl.value){soEl.value='';}
         else if(!eoEl.dataset.userEntered&&eoEl.value){eoEl.value='';}
       }
@@ -2639,9 +2658,9 @@ function autoCalcTrip(changed){
     if(sp>=0&&ep>=0&&sp>ep) conEl.value=sp-ep;
     else if(sp>=0&&ep>=0&&ep>sp) conEl.value=''; // regen
   } else if(changed==='consumed'){
-    if(con>0&&sp>0&&!ep) epEl.value=sp-con;
-    else if(con>0&&ep>=0&&!sp) spEl.value=ep+con;
-    else if(con>0&&sp>0) epEl.value=Math.max(0,sp-con);
+    // If start% from fallback, treat as known — compute end%
+    if(con>0&&sp>0&&(spFromFallback||spEl.value)) epEl.value=Math.max(0,sp-con);
+    else if(con>0&&ep>=0&&!spEl.value&&!spFromFallback) spEl.value=ep+con;
   }
   
   updateTripPreview();
@@ -4237,17 +4256,29 @@ function importData(event){
   };r.readAsText(file);
 }
 
-// — Prime Android WebView keyboard (create temp off-screen tel input, focus, remove) —
-setTimeout(function(){
-  var tmp=document.createElement('input');
-  tmp.type='tel';
-  tmp.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;width:0;height:0;pointer-events:none';
-  tmp.setAttribute('tabindex','-1');
-  tmp.setAttribute('aria-hidden','true');
-  document.body.appendChild(tmp);
-  tmp.focus();
-  setTimeout(function(){tmp.blur();if(tmp.parentNode)tmp.parentNode.removeChild(tmp);},100);
-},300);
+// — Prime Android WebView keyboard (native plugin approach) —
+// On first focusin of a tel field in Capacitor APK, call native restartInput()
+// to force the IME to re-read type="tel". No-op on web.
+(function(){try{
+  if(!window.Capacitor||!Capacitor.isNativePlatform())return;
+  var primed=false;
+  document.addEventListener('focusin',function(e){
+    if(primed)return;
+    var el=e.target;
+    if(!el||el.tagName!=='INPUT'||el.type!=='tel')return;
+    primed=true;
+    setTimeout(function(){
+      try{
+        if(Capacitor.Plugins&&Capacitor.Plugins.KeyboardPrimer){
+          Capacitor.Plugins.KeyboardPrimer.restartInput().then(function(){
+            var a=document.activeElement;
+            if(a&&a.type==='tel'){a.blur();a.focus();}
+          });
+        }
+      }catch(err){}
+    },50);
+  },true);
+}catch(e){}})();
 
 </script>
 
