@@ -834,6 +834,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.5.9 <span class="cl-date">19 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: All Log efficiency display now uses % drop method (was incorrectly using km/kWh charged, causing absurd values for partial charges)</li>
+    </ul>
     <div class="cl-ver">v7.5.8 <span class="cl-date">10 Aug 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Battery % and charge form auto-calc also use last-state fallback (consistent with odo fix)</li>
@@ -3425,7 +3429,11 @@ function renderAllLog(){
         var s=x.data;
         var effStr='';
         if(s.chargedSince){effStr='<span style="color:var(--muted)">\u26a1 chain break</span>';}
-        else if(s.km&&s.km>0){var con=s.kwh||0;if(con>0)effStr=(s.km/con).toFixed(1)+' km/kWh';}
+        else if(s.km&&s.km>0&&s.odo){
+          var _prevC=null;
+          for(var _j=entries.indexOf(x)+1;_j<entries.length;_j++){if(entries[_j].type==='charge'&&entries[_j].data.odo&&entries[_j].data.odo!==s.odo){_prevC=entries[_j].data;break;}}
+          if(_prevC){var _drop=_prevC.e-s.s;if(_drop>0){var _con=settings.battery*_drop/100;var _ev=s.km/_con;effStr=_ev.toFixed(1)+' km/kWh \u00b7 '+(s.km/_drop).toFixed(1)+' km/%';if(_ev>_effErrorThresh)effStr+=' \u26a0\ufe0f missed charge?';else if(_ev>_effWarnThresh)effStr+=' \u26a0\ufe0f';}else if(_drop<0){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+s.s+'% but left prev at '+_prevC.e+'%</span>';}}
+        }
         var line1=Math.round(s.s)+'% \u2192 '+Math.round(s.e)+'% \u00b7 '+(s.kwh||0).toFixed(1)+' kWh';
         if(s.odo) line1+=' \u00b7 '+Math.round(s.odo).toLocaleString('en-IN')+' km';
         var line2='';
