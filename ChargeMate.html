@@ -837,8 +837,8 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
         <div><label>Start odo</label><input type="tel" id="ocrStartOdo" placeholder="—"></div>
         <div><label>Start %</label><input type="tel" id="ocrStartPct" placeholder="—"></div>
       </div>
-      <div class="form-row" style="grid-template-columns:1fr 1fr">
-        <div><label>End odo</label><input type="tel" id="ocrEndOdo" placeholder="—"></div>
+      <div class="form-row" id="ocrEndRow" style="grid-template-columns:1fr 1fr">
+        <div id="ocrEndOdoCell"><label>End odo</label><input type="tel" id="ocrEndOdo" placeholder="—"></div>
         <div><label>End %</label><input type="tel" id="ocrEndPct" placeholder="—"></div>
       </div>
     </div>
@@ -852,6 +852,23 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.8.3 <span class="cl-date">28 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Single-screenshot charge import now uses battery % (not odometer) to decide start vs end when the odometer hasn't moved — a reading above the last known battery is now correctly assigned to the end of the charge</li>
+    </ul>
+    <div class="cl-ver">v7.8.2 <span class="cl-date">28 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Trip form now back-fills the missing odometer from distance in any entry order — typing distance then one odo (start or end) fills the other (previously only worked when distance was typed last)</li>
+    </ul>
+    <div class="cl-ver">v7.8.1 <span class="cl-date">28 Aug 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: Screenshot import overlay had an unclosed container that hid the changelog, bottom navigation, and toasts once the importer closed</li>
+      <li>Fix: Charge import now hides the End odo field — a charge happens at a fixed odometer, so only the end battery % is needed</li>
+      <li>Fix: Trip range warning — the "seems very high" check for distances beyond 3&times; range now actually fires (was unreachable behind the mid-trip-charge prompt)</li>
+      <li>Fix: All Log "missed charge?" efficiency hints now trigger (thresholds were stuck at infinity and never fired)</li>
+      <li>Fix: Last-known-state prefill no longer serves stale data after editing an older entry's odometer</li>
+      <li>Fix: Auto weather-by-date reads the month directly from the date, avoiding a timezone edge case near month boundaries</li>
+    </ul>
     <div class="cl-ver">v7.8.0 <span class="cl-date">25 Aug 2026</span></div>
     <ul class="cl-list">
       <li><b>Screenshot import redesign</b>: single import, pick 1 or 2 images. App auto-assigns start/end by comparing odo and % (no more Before/After steps).</li>
@@ -1609,13 +1626,27 @@ function _ocrAutoAssign(results){
     var lks=getLastKnownState();
     var lastOdo=lks?lks.odo:0;
     var lastPct=lks?lks.endPct:null;
-    if(r.odo!=null&&lastOdo>0&&r.odo>lastOdo){
+    // For a CHARGE the car is parked, so the odometer does NOT move — a
+    // before/after-charge shot share the same odo. When odo hasn't advanced
+    // past last-known, the odometer can't tell start from end; the battery %
+    // does (charged up => higher % => end). So for charge mode we only trust
+    // the odo test when it genuinely advanced, otherwise fall through to %.
+    var odoAdvanced=r.odo!=null&&lastOdo>0&&r.odo>lastOdo;
+    var canUsePct=r.pct!=null&&lastPct!=null;
+    if(_ocrMode==='charge'&&!odoAdvanced&&canUsePct){
+      // Same-odo charge: the odometer is the charge's odo either way, so always
+      // carry it into sOdo (which ocrConfirm maps to the charge odo field). The
+      // battery % decides which end of the charge this reading is.
+      sOdo=r.odo;
+      if(r.pct>=lastPct){ePct=r.pct;note='Same odo, % \u2265 last ('+lastPct+') \u2192 end (charged up)';}
+      else{sPct=r.pct;note='Same odo, % < last ('+lastPct+') \u2192 start';}
+    }else if(odoAdvanced){
       eOdo=r.odo;ePct=r.pct;
       note='Odo > last known ('+lastOdo+') \u2192 end';
     }else if(r.odo!=null&&lastOdo>0){
       sOdo=r.odo;sPct=r.pct;
       note='Odo \u2264 last known ('+lastOdo+') \u2192 start';
-    }else if(r.pct!=null&&lastPct!=null){
+    }else if(canUsePct){
       if(_ocrMode==='charge'){
         if(r.pct<lastPct){sPct=r.pct;sOdo=r.odo;note='% < last \u2192 start';}
         else{ePct=r.pct;eOdo=r.odo;note='% \u2265 last \u2192 end';}
@@ -1630,6 +1661,15 @@ function _ocrAutoAssign(results){
   document.getElementById('ocrResult').style.display='block';
   document.getElementById('ocrConfirmBtn').style.display='block';
   document.getElementById('ocrAssignLabel').textContent=note;
+  // A charge happens at a fixed odometer (car is parked), so the "end" reading
+  // is only the battery %. Hide the End odo cell for charge mode so the form
+  // matches the original intent: same odo, just the end battery %.
+  var endOdoCell=document.getElementById('ocrEndOdoCell');
+  var endRow=document.getElementById('ocrEndRow');
+  if(endOdoCell&&endRow){
+    if(_ocrMode==='charge'){endOdoCell.style.display='none';endRow.style.gridTemplateColumns='1fr';}
+    else{endOdoCell.style.display='';endRow.style.gridTemplateColumns='1fr 1fr';}
+  }
   document.getElementById('ocrStartOdo').value=sOdo!=null?sOdo:'';
   document.getElementById('ocrStartPct').value=sPct!=null?sPct:'';
   document.getElementById('ocrEndOdo').value=eOdo!=null?eOdo:'';
@@ -2084,7 +2124,12 @@ function getAutoWeather(){
 }
 
 function getAutoWeatherForDate(dateStr){
-  var m=dateStr?new Date(dateStr).getMonth():new Date().getMonth();
+  // Parse month straight from the YYYY-MM-DD string. Using new Date(dateStr)
+  // treats it as UTC midnight, which can roll to the previous month at a
+  // boundary in negative-UTC-offset zones. m is 0-based to match getMonth().
+  var m;
+  if(dateStr&&/^\d{4}-\d{2}-\d{2}/.test(dateStr)){m=parseInt(dateStr.slice(5,7),10)-1;}
+  else{m=new Date().getMonth();}
   if(m>=2&&m<=4)return 'hot';
   if(m>=5&&m<=8)return 'rain';
   if(m>=10||m<=1)return 'cold';
@@ -2805,12 +2850,14 @@ function recomputeAllKm(){
 // ── LAST KNOWN STATE (for pre-filling forms) ──────────────────────────────
 var _lksCache=null,_lksCacheKey='';
 function getLastKnownState(){
-  var key=sessions.length+'-'+trips.length+'-'+(sessions.length?sessions[0].odo:'')+(trips.length?trips[0].endOdo:'');
-  if(key===_lksCacheKey)return _lksCache;
-  _lksCacheKey=key;
   var lastSession=null, lastTrip=null;
   sessions.forEach(function(s){if(s.odo&&s.odo>0){if(!lastSession||s.odo>lastSession.odo)lastSession=s;}});
   trips.forEach(function(t){if(t.endOdo&&t.endOdo>0){if(!lastTrip||t.endOdo>lastTrip.endOdo)lastTrip=t;}});
+  // Key off the actual max-odo values (not sessions[0]) so editing any entry's
+  // odometer — not just the most-recently-added one — invalidates the cache.
+  var key=sessions.length+'-'+trips.length+'-'+(lastSession?lastSession.odo:'')+'-'+(lastTrip?lastTrip.endOdo:'');
+  if(key===_lksCacheKey)return _lksCache;
+  _lksCacheKey=key;
   var sessionOdo=lastSession?lastSession.odo:0;
   var tripOdo=lastTrip?lastTrip.endOdo:0;
   if(sessionOdo===0&&tripOdo===0){_lksCache=null;return null;}
@@ -2888,7 +2935,16 @@ function autoCalcTrip(changed){
     if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
     // Distance auto-calc: any 2 of 3 computes the 3rd
     if(changed==='startOdo'||changed==='endOdo'){
-      if(so>0&&eo>0&&eo>so) distEl.value=parseFloat((eo-so).toFixed(1));
+      if(so>0&&eo>0&&eo>so){
+        // Both odos present: distance is derived.
+        distEl.value=parseFloat((eo-so).toFixed(1));
+      } else if(changed==='endOdo'&&eo>0&&dist>0&&!soEl.dataset.userEntered&&!soFromFallback){
+        // End odo + distance known, start blank: back-fill start = end - distance.
+        soEl.value=Math.round(eo-dist);
+      } else if(changed==='startOdo'&&so>0&&dist>0&&!eoEl.dataset.userEntered){
+        // Start odo + distance known, end blank: forward-fill end = start + distance.
+        eoEl.value=Math.round(so+dist);
+      }
       // Mark user-entered fields
       if(changed==='startOdo'&&soEl.value) soEl.dataset.userEntered='1';
       if(changed==='endOdo'&&eoEl.value) eoEl.dataset.userEntered='1';
@@ -3059,12 +3115,13 @@ function saveTrip(){
     // Range sanity check
     var estEff=getAvgEff()||8; // fallback 8 km/kWh if no data
     var estFullRange=estEff*settings.battery;
-    if(km>estFullRange&&!chargedSince){
+    if(!chargedSince&&km>estFullRange*3){
+      // Way beyond plausible range and no mid-trip charge acknowledged: likely an odo typo.
+      errEl.textContent='\u26a0\ufe0f '+km.toLocaleString('en-IN')+' km seems very high — double-check odo values.';
+    } else if(km>estFullRange&&!chargedSince){
       if(!confirm('This trip ('+km.toLocaleString('en-IN')+' km) exceeds your estimated full range (~'+Math.round(estFullRange)+' km).\n\nDid you charge mid-trip? Tap OK to check the box, or Cancel to go back and fix odo values.')){return;}
       document.getElementById('tripChargedSince').checked=true;
       chargedSince=true;
-    } else if(km>estFullRange*3){
-      errEl.textContent='\u26a0\ufe0f '+km.toLocaleString('en-IN')+' km seems very high — double-check odo values.';
     }
     if(sp>=0&&ep>=0&&sp>ep){
       consumption=(sp-ep)*settings.battery/100;
@@ -3224,11 +3281,18 @@ function computeUnifiedEfficiency(){
     var avgEff=sumEff/validEffs.length;
     var warnThresh=avgEff*2;
     var errThresh=avgEff*3;
+    // Publish thresholds so the All-log inline "missed charge?" hints (which read
+    // the _eff*Thresh globals) use the same data-derived cutoffs. Without this
+    // they stayed at Infinity and never fired.
+    _effWarnThresh=warnThresh;_effErrorThresh=errThresh;
     segments.forEach(function(s){
       if(!s.efficiency||!isFinite(s.efficiency)) return;
       if(s.efficiency>errThresh) s.flag='error';
       else if(s.efficiency>warnThresh) s.flag='warn';
     });
+  } else {
+    // Not enough data to judge outliers — keep hints disabled.
+    _effWarnThresh=Infinity;_effErrorThresh=Infinity;
   }
   _ueCache=segments;
   return segments;
