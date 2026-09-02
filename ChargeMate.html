@@ -860,7 +860,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v7.15.0 <span class="cl-date">2 Sep 2026</span></div>
+    <div class="cl-ver">v7.15.1 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Fix</b>: Trip cost-per-km was inflated by charges from before trip logging began — energy from unlogged driving lingered in the cost queue and got wrongly attributed to later trips. The cost engine now reconciles against your actual battery % at every charge and trip: a measured state of charge physically caps how much energy can be left in the pool, so stale energy is trimmed to reality. Recent trips read their true ~₹/km again.</li>
+</ul>
+<div class="cl-ver">v7.15.0 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Cost badge is now just ₹/km</b>: the trip badge shows plain cost-per-km (e.g. "₹2.5/km") — directly comparable across trips of any length, no colour coding to decode. Free trips still read "Free".</li>
 </ul>
@@ -3423,12 +3427,35 @@ function computeTripCosts(){
 
   var queue=[];
   var result={};
+
+  // ── STATE-OF-CHARGE RECONCILIATION (v7.15.1) ───────────────────────────────
+  // Trip logging often starts after charging did (or has gaps), so the FIFO queue
+  // can hold "lots" of energy actually spent on unlogged driving. Those stale lots
+  // then get wrongly attributed to much later trips. Fix: every logged battery-%
+  // reading is ground truth about how much energy is physically in the pack right
+  // then, so at each known SoC point we cap the queue to (pct% × battery) kWh,
+  // dropping the oldest (stalest) lots off the front. No efficiency guessing.
+  var _battery=safeNum(settings.battery,40);
+  function _capQueue(pct){
+    if(pct==null||!isFinite(pct)) return;
+    var maxKwh=Math.max(0,pct)/100*_battery;
+    var tot=0;var k;for(k=0;k<queue.length;k++)tot+=queue[k].kwh;
+    var over=tot-maxKwh;
+    while(over>1e-9&&queue.length){
+      var lot=queue[0];
+      if(lot.kwh<=over+1e-9){over-=lot.kwh;queue.shift();}
+      else{lot.kwh-=over;over=0;}
+    }
+  }
+
   timeline.forEach(function(ev){
     if(ev.kind==='charge'){
+      _capQueue(safeNum(ev.data.s,null)); // arrives holding s% — trim to reality
       var kwh=safeNum(ev.data.kwh,0);
       if(kwh>0) queue.push({kwh:kwh,rate:_chargeRatePerKwh(ev.data)});
       return;
     }
+    _capQueue(ev.data.startPct!=null?safeNum(ev.data.startPct,null):null); // trip starts at startPct
     var need=safeNum(ev.data.consumption,0);
     var cost=0;
     var mix={};

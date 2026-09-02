@@ -875,7 +875,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v7.15.0 <span class="cl-date">2 Sep 2026</span></div>
+    <div class="cl-ver">v7.15.1 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Fix</b>: Trip cost-per-km was inflated by charges from before trip logging began — energy from unlogged driving (e.g. early road-trip public charges) lingered in the cost queue and got wrongly attributed to later home commutes. The cost engine now reconciles against your actual battery % at every charge and trip: a measured state of charge physically caps how much energy can be left in the pool, so stale energy is trimmed to reality. Recent home-charged trips read their true ~₹/km again.</li>
+</ul>
+<div class="cl-ver">v7.15.0 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Cost badge is now just ₹/km</b>: the trip badge shows plain cost-per-km (e.g. "₹2.5/km") — directly comparable across trips of any length, no colour coding to decode. Free trips still read "Free".</li>
 <li>Removed the net-of-carpool line from trip rows to cut noise. Carpool income still appears as its own badge and in the Carpool log.</li>
@@ -3664,13 +3668,43 @@ function computeTripCosts(){
 
   var queue=[]; // FIFO lots: {kwh, rate}
   var result={};
+
+  // ── STATE-OF-CHARGE RECONCILIATION (v7.15.1) ───────────────────────────────
+  // Trip logging often starts after charging did (or has gaps), so the FIFO
+  // queue can hold "lots" of energy that were actually spent on driving that was
+  // never logged as a trip. Those stale lots (often expensive road-trip public
+  // charges) then get wrongly attributed to much later commutes.
+  // Fix: every logged battery-% reading is ground truth about how much energy is
+  // physically in the pack RIGHT THEN. So at each known SoC point we cap the
+  // queue to (pct% × battery) kWh, draining the oldest (stalest) lots off the
+  // front. No efficiency estimation — a measured 18% arrival simply means the
+  // queue can't exceed 7.2 kWh, full stop. This self-corrects the queue at every
+  // charge arrival and trip start, so logged trips price against real energy.
+  var _battery=safeNum(settings.battery,40);
+  function _capQueue(pct){
+    if(pct==null||!isFinite(pct)) return;
+    var maxKwh=Math.max(0,pct)/100*_battery;
+    var tot=0;var k;for(k=0;k<queue.length;k++)tot+=queue[k].kwh;
+    var over=tot-maxKwh;
+    while(over>1e-9&&queue.length){ // drop oldest energy first
+      var lot=queue[0];
+      if(lot.kwh<=over+1e-9){over-=lot.kwh;queue.shift();}
+      else{lot.kwh-=over;over=0;}
+    }
+  }
+
   timeline.forEach(function(ev){
     if(ev.kind==='charge'){
+      // The car ARRIVES at this charge holding s% — cap the queue to that before
+      // adding the new lot, so stale pre-logging energy is trimmed to reality.
+      _capQueue(safeNum(ev.data.s,null));
       var kwh=safeNum(ev.data.kwh,0);
       if(kwh>0) queue.push({kwh:kwh,rate:_chargeRatePerKwh(ev.data)});
       return;
     }
-    // trip draw
+    // trip draw — the trip STARTS at startPct, another ground-truth reading, so
+    // cap the queue to it before the trip consumes its energy.
+    _capQueue(ev.data.startPct!=null?safeNum(ev.data.startPct,null):null);
     var need=safeNum(ev.data.consumption,0);
     var cost=0;
     var mix={}; // rate -> kWh drawn at that rate (for composition display)
