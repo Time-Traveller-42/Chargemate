@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html><head>
 <meta charset="UTF-8">
 <meta name="color-scheme" content="dark light">
@@ -832,14 +832,22 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div id="ocrThumbWrap" style="margin-top:12px;display:none"></div>
     <div id="ocrStatus" style="margin-top:12px;font-size:12px;color:var(--muted);min-height:16px"></div>
     <div id="ocrResult" style="display:none;margin-top:12px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px" id="ocrAssignLabel"></div>
-      <div class="form-row" style="grid-template-columns:1fr 1fr">
-        <div><label>Start odo</label><input type="tel" id="ocrStartOdo" placeholder="—"></div>
-        <div><label>Start %</label><input type="tel" id="ocrStartPct" placeholder="—"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px" id="ocrAssignLabel"></div>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Odometer (km)</label>
+        <div id="ocrOdoRow" style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center">
+          <input type="tel" id="ocrStartOdo" placeholder="Start">
+          <button type="button" id="ocrOdoSwapBtn" onclick="ocrSwap('ocrStartOdo','ocrEndOdo')" title="Swap start/end" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--input-bg);color:var(--accent);font-size:14px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:transform .15s">⇄</button>
+          <div id="ocrEndOdoCell"><input type="tel" id="ocrEndOdo" placeholder="End"></div>
+        </div>
       </div>
-      <div class="form-row" id="ocrEndRow" style="grid-template-columns:1fr 1fr">
-        <div id="ocrEndOdoCell"><label>End odo</label><input type="tel" id="ocrEndOdo" placeholder="—"></div>
-        <div><label>End %</label><input type="tel" id="ocrEndPct" placeholder="—"></div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Battery %</label>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center">
+          <input type="tel" id="ocrStartPct" placeholder="Start">
+          <button type="button" onclick="ocrSwap('ocrStartPct','ocrEndPct')" title="Swap start/end" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--input-bg);color:var(--accent);font-size:14px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:transform .15s">⇄</button>
+          <input type="tel" id="ocrEndPct" placeholder="End">
+        </div>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
@@ -852,6 +860,48 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v7.15.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Cost badge is now just ₹/km</b>: the trip badge shows plain cost-per-km (e.g. "₹2.5/km") — directly comparable across trips of any length, no colour coding to decode. Free trips still read "Free".</li>
+</ul>
+<div class="cl-ver">v7.14.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Cost badge colour = ₹/km, not total</b>: the badge still shows what you paid, but its colour now reflects <i>cost per km</i> so a long trip and a short one are comparable. Green ≈ home-rate driving, red ≈ public-rate driving, neutral in between. A ₹104/32km trip now correctly reads pricier than a ₹132/59km one. Free trips stay cyan. Thresholds are anchored to your own home/public rates and efficiency, so they mean something from the first trip.</li>
+</ul>
+<div class="cl-ver">v7.13.3 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Docs</b>: Corrected the Lite changelog for v7.12.0 — it previously described the carpool-based badge colours (green/amber), which the Lite edition doesn't have. No functional change.</li>
+</ul>
+<div class="cl-ver">v7.13.2 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Fix</b>: OCR trip consistency check no longer warns when battery % rises during a trip — that’s a legitimate regen trip (already supported elsewhere in the app), not an error. Only a genuinely backwards odometer or a crossed swap still warns.</li>
+</ul>
+<div class="cl-ver">v7.13.1 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Fix</b>: OCR trip import now checks for a mismatched swap before saving — if the odometer and battery % swaps were done independently and end up crossed (or the odometer would go backwards, or battery % would rise during a trip), you get a warning before confirming instead of a silently broken record.</li>
+</ul>
+<div class="cl-ver">v7.13.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>OCR import swap buttons</b>: The screenshot-import review screen now groups fields by metric (Odometer, Battery %) instead of Start/End, with a ⇄ swap button on each row — one tap fixes a misread start/end without retyping.</li>
+</ul>
+<div class="cl-ver">v7.12.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Cost badge redesign v2</b>: badge colour now shows what the money <i>is</i>, not how much — in Lite: Free (cyan) and pure expense (default text). The carpool-based states (covered = green, partially offset = amber) are full-edition only, as Lite has no carpool tie-in. Version kept in sync.</li>
+</ul>
+<div class="cl-ver">v7.11.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Cost badge redesign</b>: Trip cost ranked against your own history &#8212; cheapest 25% green, middle 35% muted, upper 25% amber, top 15% red. No trip is ever invisible. Each badge gains a subtle tinted background for easier scanning.</li>
+</ul>
+<div class="cl-ver">v7.10.0 <span class="cl-date">1 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Cost colour coding</b>: Trip cost badges coloured by magnitude (green=cheap, white=average, yellow=pricey, red=expensive). Energy mix rates coloured by source (green=home, blue=free, yellow/red=public).</li>
+    </ul>
+    <div class="cl-ver">v7.9.0 <span class="cl-date">1 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li><b>Cost per trip</b>: Every trip now shows its true ₹ cost, computed with FIFO energy accounting — each charge is a priced "lot" of kWh (home/office/public) and each trip draws from the oldest energy first. A trip that ran partly on home and partly on public power is priced accordingly, not at a flat rate.</li>
+      <li>Trips show the energy mix when it spans more than one rate (e.g. "80% @ ₹7 · 20% @ ₹18"), so you can see exactly where an expensive leg came from.</li>
+      <li>Energy charged before you started logging is priced at your lifetime average ₹/kWh, so early trips still get a sensible cost.</li>
+    </ul>
     <div class="cl-ver">v7.8.3 <span class="cl-date">28 Aug 2026</span></div>
     <ul class="cl-list">
       <li>Fix: Single-screenshot charge import now uses battery % (not odometer) to decide start vs end when the odometer hasn't moved — a reading above the last known battery is now correctly assigned to the end of the charge</li>
@@ -1665,10 +1715,11 @@ function _ocrAutoAssign(results){
   // is only the battery %. Hide the End odo cell for charge mode so the form
   // matches the original intent: same odo, just the end battery %.
   var endOdoCell=document.getElementById('ocrEndOdoCell');
-  var endRow=document.getElementById('ocrEndRow');
-  if(endOdoCell&&endRow){
-    if(_ocrMode==='charge'){endOdoCell.style.display='none';endRow.style.gridTemplateColumns='1fr';}
-    else{endOdoCell.style.display='';endRow.style.gridTemplateColumns='1fr 1fr';}
+  var odoRow=document.getElementById('ocrOdoRow');
+  var odoSwapBtn=document.getElementById('ocrOdoSwapBtn');
+  if(endOdoCell&&odoRow){
+    if(_ocrMode==='charge'){endOdoCell.style.display='none';if(odoSwapBtn)odoSwapBtn.style.display='none';odoRow.style.gridTemplateColumns='1fr';}
+    else{endOdoCell.style.display='';if(odoSwapBtn)odoSwapBtn.style.display='';odoRow.style.gridTemplateColumns='1fr auto 1fr';}
   }
   document.getElementById('ocrStartOdo').value=sOdo!=null?sOdo:'';
   document.getElementById('ocrStartPct').value=sPct!=null?sPct:'';
@@ -1677,6 +1728,26 @@ function _ocrAutoAssign(results){
   status.innerHTML='<span style="color:var(--good)">\u2713 Review and confirm.</span>';
 }
 
+function ocrSwap(idA,idB){
+  var a=document.getElementById(idA),b=document.getElementById(idB);
+  if(!a||!b)return;
+  var tmp=a.value;a.value=b.value;b.value=tmp;
+  if(navigator.vibrate)navigator.vibrate(8);
+  var btn=event&&event.currentTarget;
+  if(btn){btn.style.transform='rotate(180deg)';setTimeout(function(){btn.style.transform='';},200);}
+}
+function _ocrCheckTripConsistency(sOdo,sPct,eOdo,ePct){
+  var sO=sOdo!=='',eO=eOdo!=='',sP=sPct!=='',eP=ePct!=='';
+  if(sO&&!eO&&eP&&!sP)return 'Start odometer and End battery % are filled, but End odometer and Start battery % are empty — this looks like a mismatched swap.';
+  if(eO&&!sO&&sP&&!eP)return 'End odometer and Start battery % are filled, but Start odometer and End battery % are empty — this looks like a mismatched swap.';
+  if(sO&&eO&&sP&&eP){
+    var dOdo=parseFloat(eOdo)-parseFloat(sOdo);
+    if(dOdo<0)return 'End odometer is less than start odometer.';
+    // Note: battery % rising during a trip is NOT flagged — that's a legitimate
+    // regen trip (see the app's own ep>sp handling elsewhere), not an error.
+  }
+  return null;
+}
 function ocrConfirm(){
   if(navigator.vibrate)navigator.vibrate(10);
   var sOdo=document.getElementById('ocrStartOdo').value.trim();
@@ -1684,6 +1755,8 @@ function ocrConfirm(){
   var eOdo=document.getElementById('ocrEndOdo').value.trim();
   var ePct=document.getElementById('ocrEndPct').value.trim();
   if(_ocrMode==='trip'){
+    var _warn=_ocrCheckTripConsistency(sOdo,sPct,eOdo,ePct);
+    if(_warn&&!confirm(_warn+'\n\nConfirm anyway?'))return;
     if(sOdo){document.getElementById('tripStartOdo').value=sOdo;}
     if(sPct){document.getElementById('tripStartPct').value=sPct;}
     if(eOdo){document.getElementById('tripEndOdo').value=eOdo;}
@@ -3298,9 +3371,119 @@ function computeUnifiedEfficiency(){
   return segments;
 }
 
+// ── ACCURATE COST PER TRIP (FIFO energy-lot accounting) ─────────────────────
+// The battery is a tank. Each charge pushes a "lot" of kWh at a known ₹/kWh onto
+// a FIFO queue; each trip draws kWh off the front, pricing each slice at the lot
+// it came from. This gives the true blended cost of every trip even when energy
+// came from mixed sources. Shortfall (energy charged before logging began) is
+// priced at the lifetime average ₹/kWh.
+var _tcCache=null,_tcCacheKey='';
+function _chargeRatePerKwh(s){
+  if(s.t==='home') return safeNum(settings.homeRate,0);
+  if(s.t==='office') return safeNum(settings.officeRate,0);
+  if(s.t==='public'){
+    if(s.charger&&isFinite(s.charger.rate)&&s.charger.rate>0) return s.charger.rate;
+    if(s.charger&&isFinite(s.charger.units)&&s.charger.units>0&&isFinite(s.cost)&&s.cost>0) return s.cost/s.charger.units;
+    if(isFinite(s.cost)&&s.cost>0&&isFinite(s.kwh)&&s.kwh>0) return s.cost/s.kwh;
+  }
+  return 0;
+}
+function _lifetimeAvgRate(){
+  var totCost=0,totKwh=0;
+  sessions.forEach(function(s){
+    var kwh=safeNum(s.kwh,0);
+    if(kwh<=0) return;
+    var rate=_chargeRatePerKwh(s);
+    totCost+=kwh*rate;totKwh+=kwh;
+  });
+  if(totKwh>0) return totCost/totKwh;
+  return safeNum(settings.homeRate,7);
+}
+function computeTripCosts(){
+  var key=sessions.length+'-'+trips.length+'-'+(sessions.length?sessions[0].id:'')+'-'+(trips.length?trips[0].id:'')+'-'+settings.homeRate+'-'+settings.officeRate+'-'+settings.battery;
+  if(key===_tcCacheKey&&_tcCache)return _tcCache;
+  _tcCacheKey=key;
+
+  var fallbackRate=_lifetimeAvgRate();
+  var timeline=[];
+  sessions.forEach(function(s){
+    timeline.push({kind:'charge',date:s.date||'',odo:safeNum(s.odo,0),data:s});
+  });
+  trips.forEach(function(t){
+    var cons=safeNum(t.consumption,0);
+    if(!(cons>0)) return;
+    timeline.push({kind:'trip',date:t.date||'',odo:safeNum(t.startOdo,0),data:t});
+  });
+  timeline.sort(function(a,b){
+    if(a.date!==b.date) return a.date<b.date?-1:1;
+    if(a.odo!==b.odo) return a.odo-b.odo;
+    if(a.kind!==b.kind) return a.kind==='charge'?-1:1;
+    return 0;
+  });
+
+  var queue=[];
+  var result={};
+  timeline.forEach(function(ev){
+    if(ev.kind==='charge'){
+      var kwh=safeNum(ev.data.kwh,0);
+      if(kwh>0) queue.push({kwh:kwh,rate:_chargeRatePerKwh(ev.data)});
+      return;
+    }
+    var need=safeNum(ev.data.consumption,0);
+    var cost=0;
+    var mix={};
+    while(need>1e-9&&queue.length){
+      var lot=queue[0];
+      var take=Math.min(lot.kwh,need);
+      cost+=take*lot.rate;
+      mix[lot.rate]=(mix[lot.rate]||0)+take;
+      lot.kwh-=take;need-=take;
+      if(lot.kwh<=1e-9) queue.shift();
+    }
+    if(need>1e-9){
+      cost+=need*fallbackRate;
+      mix[fallbackRate]=(mix[fallbackRate]||0)+need;
+      need=0;
+    }
+    var t=ev.data;
+    var breakdown=Object.keys(mix).map(function(r){return {rate:+r,kwh:mix[r]};})
+      .sort(function(a,b){return b.kwh-a.kwh;});
+    result[t.id]={cost:cost,breakdown:breakdown,km:safeNum(t.km,0)};
+  });
+  _tcCache=result;
+  return result;
+}
+function _rateColor(rate){
+  if(rate<=0) return 'var(--accent)';
+  if(rate<=10) return 'var(--good)';
+  if(rate<=15) return 'var(--warn)';
+  return 'var(--danger)';
+}
+// Cost-per-km colour anchors, derived from the user's own rates + efficiency so
+// the thresholds MEAN something: "cheap" ≈ driving on home power, "dear" ≈ public.
+// Cost badge = plain cost-per-km. Distance-normalised so trips of different
+// lengths are directly comparable. No colour coding — just the number.
+// Returns '' when there's no comparable distance/cost (badge is then omitted).
+function _costPerKmLabel(entry){
+  if(!entry) return '';
+  if(!(entry.cost>0)) return 'Free';
+  if(!(entry.km>0.5)) return ''; // no meaningful distance → no per-km figure
+  return '\u20b9'+(Math.round(entry.cost/entry.km*10)/10)+'/km';
+}
+function tripCostMixLabel(entry){
+  if(!entry||!entry.breakdown||!entry.breakdown.length) return '';
+  var tot=entry.breakdown.reduce(function(a,b){return a+b.kwh;},0);
+  if(tot<=0) return '';
+  return entry.breakdown.map(function(b){
+    var pct=Math.round(b.kwh/tot*100);
+    var rc=_rateColor(b.rate);
+    return '<span style="color:'+rc+'">'+pct+'% @ \u20b9'+(Math.round(b.rate*10)/10)+'</span>';
+  }).join(' \u00b7 ');
+}
+
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function persist(){
-  _lksCacheKey='';_ueCacheKey=''; // invalidate caches
+  _lksCacheKey='';_ueCacheKey='';_tcCacheKey=''; // invalidate caches
   var ok=true;
   ok=safeLS.set('cm-data',JSON.stringify(sessions))&&ok;
   
@@ -3541,6 +3724,7 @@ function renderTripsOnly(){
   var _expandState=getExpandedGroups();
   var listEl=document.getElementById('list');
   if(!trips.length){listEl.innerHTML='<div class="empty">No trips logged yet.</div>';return;}
+  var _costMap=computeTripCosts();
   var sorted=[...trips].sort(function(a,b){var d=b.date.localeCompare(a.date);if(d!==0)return d;return (b.endOdo||0)-(a.endOdo||0);});
   var groups={};
   sorted.forEach(function(x){var m=x.date.slice(0,7);if(!groups[m])groups[m]=[];groups[m].push(x);});
@@ -3569,9 +3753,19 @@ function renderTripsOnly(){
         if(effStr) line2+=' \u00b7 '+effStr;
       }
       var badgeType='<span class="badge badge-trip">Trip</span>';
+      // Accurate FIFO cost badge + energy-mix line
+      var _tc=_costMap[x.id];
+      var costBadge='',mixLine='';
+      if(_tc){
+        var _cpkTxt=_costPerKmLabel(_tc);
+        if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600">'+_cpkTxt+'</span>';
+        var _mix=tripCostMixLabel(_tc);
+        if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
+      }
       var paxWeatherStr='';
-      if((x.pax)||(x.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+paxWeatherStr+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
+      if((x.pax)||(x.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted)'+(costBadge?';margin-left:8px':';margin-left:auto')+'">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
+      var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
     });
     out+='</div>';
     mIdx++;
@@ -3582,6 +3776,7 @@ function renderTripsOnly(){
 
 function renderAllLog(){
   var listEl=document.getElementById('list');
+  var _costMap=computeTripCosts();
   // Merge charges + trips into one timeline sorted by date, using id as tiebreaker
   var entries=[];
   sessions.forEach(function(s,i){entries.push({type:'charge',date:s.date,id:s.id||0,odo:s.odo||0,idx:i,data:s});});
@@ -3638,9 +3833,19 @@ function renderAllLog(){
           if(effStr) line2+=' \u00b7 '+effStr;
         }
         var badge='<span class="badge badge-trip">Trip</span>';
+        // Accurate FIFO cost badge + energy-mix line
+        var _tc=_costMap[t.id];
+        var costBadge='',mixLine='';
+        if(_tc){
+          var _cpkTxt=_costPerKmLabel(_tc);
+          if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600">'+_cpkTxt+'</span>';
+          var _mix=tripCostMixLabel(_tc);
+          if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
+        }
         var paxWeatherStr='';
-        if((t.pax)||(t.weather)){paxWeatherStr='<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+paxWeatherStr+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
+        if((t.pax)||(t.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted)'+(costBadge?';margin-left:8px':';margin-left:auto')+'">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
+        var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
       }
     });
     out+='</div>';mIdx++;
