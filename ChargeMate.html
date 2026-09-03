@@ -860,7 +860,23 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v8.1.0 <span class="cl-date">2 Sep 2026</span></div>
+    <div class="cl-ver">v8.3.1 <span class="cl-date">3 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Icons: trip rows show a road icon, charge rows show a bolt + type label (Home/Office/Public) directly in the collapsed view.</li>
+    </ul>
+    <div class="cl-ver">v8.3.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Richer expanded detail</b>: tapping a row now shows more — trips reveal total ₹ cost, trip type, and the energy-cost breakdown on its own line. Charges spell out the type in words (Home/Office/Public), plus start–end time, average kW, and ₹/kWh.</li>
+<li>Expanded detail now lists the odometer before the battery %.</li>
+<li>Clearer trip and charge icons (a car and a charging bolt) in place of the earlier rough glyphs.</li>
+</ul>
+<div class="cl-ver">v8.2.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Tidier log rows</b>: each row now shows just the essentials — a trip/charge icon, distance, %, cost and efficiency on one line. Tap a row to expand full detail (start→end %, odometer, km/%, energy mix, charger info, notes).</li>
+<li>Trip and charge rows now lead with a clear icon instead of a text label.</li>
+<li>Fix: the month-group chevron now flips (▸/▾) when you expand or collapse a group — previously it stayed put.</li>
+</ul>
+<div class="cl-ver">v8.1.0 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Energy mix shown in km</b>: on transition trips that ran on more than one charge rate, the breakdown now reads in distance instead of energy share — e.g. "30 km @ ₹20 · 10 km @ ₹7" — so you can see how far you drove on expensive vs cheap power. (km is split across rates in proportion to the energy each supplied.)</li>
 </ul>
@@ -3642,10 +3658,112 @@ function delCharge(i){
 }
 
 
+// ── COLLAPSE / CHEVRON (shared) ────────────────────────────────────────────
+function _toggleCollapse(panelId,chevEl,openChar,closeChar){
+  var g=document.getElementById(panelId);if(!g)return;
+  var show=g.style.display==='none';
+  g.style.display=show?'block':'none';
+  if(chevEl)chevEl.textContent=show?openChar:closeChar;
+}
+var _ICON_TRIP='\ud83d\udee3\ufe0f';
+var _ICON_CHARGE='\u26a1';
+function _typeIcon(kind,color,typeText){if(kind==='trip')return '<span style="font-size:12px">'+ _ICON_TRIP+'</span>';return '<span style="font-size:12px">'+_ICON_CHARGE+'</span>'+(typeText?' <span style="font-size:10px;color:var(--muted)">'+typeText+'</span>':'');}
+var _EDIT_SVG='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+function _detBlock(id,inner){
+  if(!inner) return {chev:'',panel:''};
+  var chev='<span id="chev-det-'+id+'" style="font-size:9px;color:var(--muted);margin-left:6px">\u25b8</span>';
+  var panel='<div id="det-'+id+'" style="display:none;font-size:11px;color:var(--muted);margin-top:4px;padding-left:2px;line-height:1.6">'+inner+'</div>';
+  return {chev:chev,panel:panel};
+}
+function _rowClickToggle(id){
+  return 'onclick="if(event.target.closest(\'.session-actions\')||event.target.closest(\'a\'))return;_toggleCollapse(\'det-'+id+'\',document.getElementById(\'chev-det-'+id+'\'),\'\u25be\',\'\u25b8\')"';
+}
+function _tripRowHtml(x,i,costMap){
+  var id=x.id;
+  var icon=_typeIcon('trip');
+  var _tc=costMap[x.id];
+  var costBadge='';
+  if(_tc){var _cpkTxt=_costPerKmLabel(_tc);if(_cpkTxt)costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:11px">'+_cpkTxt+'</span>';}
+  var paxWeatherStr='';
+  if((x.pax)||(x.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
+  var parts=[];
+  if(x.km) parts.push(parseFloat((x.km||0).toFixed(1))+' km');
+  if(x.regen) parts.push('+'+Math.abs(x.startPct-x.endPct)+'% regen \u26a1');
+  else if(x.startPct>x.endPct) parts.push(Math.round(x.startPct-x.endPct)+'%');
+  if(x.efficiency) parts.push(Math.round(1000/x.efficiency)+' Wh/km');
+  var info=parts.join(' \u00b7 ');
+  // Expanded detail — themed lines (odo BEFORE battery). Energy mix on own line.
+  var detLines=[];
+  var l1=[];
+  if(x.startOdo&&x.endOdo) l1.push('odo '+Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN'));
+  if(x.startPct!=null&&x.endPct!=null) l1.push(Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'%');
+  if(x.tripType) l1.push(x.tripType);
+  if(l1.length) detLines.push(l1.join(' \u00b7 '));
+  var l2=[];
+  if(_tc&&_tc.cost>0) l2.push('\u20b9'+Math.round(_tc.cost));
+  if(x.efficiency&&x.startPct>x.endPct) l2.push((x.km/(x.startPct-x.endPct)).toFixed(1)+' km/%');
+  if(l2.length) detLines.push(l2.join(' \u00b7 '));
+  if(_tc){var _mix=tripCostMixLabel(_tc);if(_mix&&_tc.breakdown.length>1) detLines.push(_mix);}
+  if(x.note) detLines.push('<span style="font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</span>');
+  var det=detLines.join('<br>');
+  var d=_detBlock(id,det);
+  return '<div class="session-row" '+(det?_rowClickToggle(id):'')+' style="'+(det?'cursor:pointer':'')+'">'+
+    '<div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+icon+paxWeatherStr+costBadge+'</div>'+
+    '<div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')">'+_EDIT_SVG+'</button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div>'+
+    (info?'<div style="font-size:11px;margin-top:4px;color:var(--text)">'+info+d.chev+'</div>':'')+
+    d.panel+
+    '</div>';
+}
+function _chargeRowHtml(s,idx,effStr,kmShow,warn){
+  var id=s.id;
+  var icon=_typeIcon('charge',null,_typeText);
+  var costStr=s.cost!=null&&s.cost>0?'<span class="session-cost" style="margin-left:auto">\u20b9'+Math.round(s.cost)+'</span>':(s.cost===0?'<span class="session-cost" style="margin-left:auto;color:var(--muted)">Free</span>':'');
+  var parts=[];
+  if(kmShow>0&&!s.chargedSince) parts.push(kmShow+' km');
+  if(s.e!=null&&s.s!=null) parts.push(Math.round(s.e-s.s)+'%');
+  if(s.kwh) parts.push((s.kwh||0).toFixed(1)+' kWh');
+  if(effStr) parts.push(effStr);
+  if(warn) parts.push('<span style="color:var(--warn)">'+warn+'</span>');
+  var info=parts.join(' \u00b7 ');
+  // Expanded detail — themed lines (odo before battery). Charge type spelled out.
+  var _typeText={home:'Home',office:'Office',public:'Public'}[s.t]||'';
+  var detLines=[];
+  var l1=[];
+  if(_typeText) l1.push(_typeText);
+  if(s.odo) l1.push('odo '+Math.round(s.odo).toLocaleString('en-IN'));
+  if(s.s!=null&&s.e!=null) l1.push(Math.round(s.s)+'% \u2192 '+Math.round(s.e)+'%');
+  if(l1.length) detLines.push(l1.join(' \u00b7 '));
+  var l2=[];
+  if(s.startTime&&s.endTime) l2.push(s.startTime+' \u2013 '+s.endTime);
+  if(s.duration) l2.push(fmtDuration(s.duration));
+  if(s.duration&&s.kwh){var _avgKw=s.kwh/(s.duration/60);if(isFinite(_avgKw)&&_avgKw>0) l2.push(Math.round(_avgKw)+' kW avg');}
+  if(l2.length) detLines.push(l2.join(' \u00b7 '));
+  var l3=[];
+  if(s.charger&&s.charger.connector) l3.push(s.charger.connector);
+  if(s.charger&&s.charger.kw) l3.push(s.charger.kw+' kW rated');
+  if(s.charger&&s.charger.units) l3.push((+s.charger.units).toFixed(1)+' kWh actual');
+  var _rate=(typeof _chargeRatePerKwh==='function')?_chargeRatePerKwh(s):0;
+  if(_rate>0) l3.push('\u20b9'+(Math.round(_rate*10)/10)+'/kWh');
+  if(l3.length) detLines.push(l3.join(' \u00b7 '));
+  if(s.charger&&s.charger.location){
+    var mLink=s.charger.mapsLink||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(s.charger.location));
+    detLines.push('<a href="'+mLink+'" target="_blank" style="color:var(--accent);text-decoration:none">\ud83d\udccd '+escapeHtml(s.charger.location)+' \u2197</a>');
+  }
+  if(s.notes) detLines.push('<span style="font-style:italic">\ud83d\udcdd '+escapeHtml(s.notes)+'</span>');
+  var det=detLines.join('<br>');
+  var d=_detBlock(id,det);
+  return '<div class="session-row" '+(det?_rowClickToggle(id):'')+' style="'+(det?'cursor:pointer':'')+'">'+
+    '<div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(s.date)+'</span>'+icon+costStr+'</div>'+
+    '<div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+idx+')">'+_EDIT_SVG+'</button><button class="btn-sm btn-del" onclick="undoableDelete(\'charge\','+idx+')">\u2715</button></div></div>'+
+    (info?'<div style="font-size:11px;margin-top:4px;color:var(--text)">'+info+d.chev+'</div>':'')+
+    d.panel+
+    '</div>';
+}
+
 // ── MONTH GROUP STATE PRESERVATION ─────────────────────────────────────────
 function getExpandedGroups(){
   var expanded={};
-  ['mgrp-','cpgrp-','tgrp-','egrp-'].forEach(function(prefix){
+  ['mgrp-','cpgrp-','tgrp-','egrp-','det-'].forEach(function(prefix){
     document.querySelectorAll('[id^="'+prefix+'"]').forEach(function(el){
       if(el.style.display!=='none') expanded[el.id]=true;
     });
@@ -3703,21 +3821,17 @@ function renderList(){
     const mKwh=rows.reduce((a,x)=>a+x.kwh,0);
     const mId='mgrp-'+month;
     const collapsed=_mIdx>0?' style="display:none"':'';
-    out+=`<div class="month-header" onclick="var g=document.getElementById('${mId}');g.style.display=g.style.display==='none'?'block':'none'" style="cursor:pointer">${label} \u00b7 ${rows.length} charges \u00b7 ${mKwh.toFixed(1)} kWh${mCost>0?' \u00b7 \u20b9'+mCost.toFixed(0):''} <span style="float:right;font-size:10px">${_mIdx>0?'\u25b6':'\u25bc'}</span></div>`;
+    out+=`<div class="month-header" onclick="_toggleCollapse('${mId}',document.getElementById('chev-${mId}'),'\u25bc','\u25b6')" style="cursor:pointer">${label} \u00b7 ${rows.length} charges \u00b7 ${mKwh.toFixed(1)} kWh${mCost>0?' \u00b7 \u20b9'+mCost.toFixed(0):''} <span id="chev-${mId}" style="float:right;font-size:10px">${_mIdx>0?'\u25b6':'\u25bc'}</span></div>`;
     out+=`<div id="${mId}"${collapsed}>`;
     rows.forEach((x,ri)=>{
       const i=sessions.findIndex(s=>s.id===x.id);
-      const costStr=x.cost!=null?(x.cost===0?'Free':'\u20b9'+x.cost.toFixed(0)+(x.charger&&x.charger.rate?' (\u20b9'+x.charger.rate+'/unit)':'')):'';
       let effStr='';
       {
-        // Show efficiency only on FIRST charge at each new odo
         const fullIdx=sorted.indexOf(x);
         if(x.odo&&fullIdx<sorted.length-1){
-          // Check if this is first at this odo (next older session has different odo)
           const nextOlder=sorted[fullIdx+1];
           const isFirstAtOdo=!nextOlder||!nextOlder.odo||nextOlder.odo!==x.odo;
           if(isFirstAtOdo){
-            // Find prev session at DIFFERENT odo for consumption calc
             let prevDiffOdo=null;
             for(let j=fullIdx+1;j<sorted.length;j++){
               if(sorted[j].odo&&sorted[j].odo!==x.odo){prevDiffOdo=sorted[j];break;}
@@ -3725,46 +3839,15 @@ function renderList(){
             if(prevDiffOdo){
               const km=x.odo-prevDiffOdo.odo;
               const drop=prevDiffOdo.e-x.s;
-            if(x.chargedSince){effStr='<span style="color:var(--muted)">\u26a1 chain break</span>';}
-            else if(km>0&&drop<0){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+x.s+'% but left prev at '+prevDiffOdo.e+'%</span>';}
-            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=Math.round(1000/ev)+' Wh/km · '+(km/drop).toFixed(1)+' km/%';
-            if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
+              if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=Math.round(1000/ev)+' Wh/km \u00b7 '+(km/drop).toFixed(1)+' km/%';
+                if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
             }
           }
         }
       }
-      let line1=`${x.s}% \u2192 ${x.e}% \u00b7 ${x.kwh.toFixed(1)} kWh`;
-      if(x.t==='public'&&x.charger&&x.charger.units) line1+=` <span style="color:var(--muted)">(${(+x.charger.units).toFixed(1)} kWh actual)</span>`;
-      let line2parts=[];
-      if(x.duration){let tStr=fmtDuration(x.duration);line2parts.push(tStr);}
-      
-      if(x.km!=null&&x.km>0&&!x.chargedSince){let s2=x.km+' km';if(x.odo!=null)s2+=' <span style="color:var(--muted)">(odo '+x.odo.toLocaleString()+')</span>';line2parts.push(s2);}
-      else if(x.odo!=null){line2parts.push('<span style="color:var(--muted)">odo '+x.odo.toLocaleString()+'</span>');}
-      if(effStr) line2parts.push(effStr);
-      let line2=line2parts.join(' \u00b7 ');
-      let line3='';
-      if(x.charger&&x.charger.location){
-        const mLink=x.charger.mapsLink||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.charger.location)}`;line3=`<a href="${mLink}" target="_blank" style="color:var(--accent);text-decoration:none">${escapeHtml(x.charger.location)} \u2197</a>`;
-        let cp=[];
-        if(x.charger.kw&&x.duration&&x.kwh){cp.push(x.charger.kw+' kW rated \u00b7 '+(x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
-        else if(x.charger.kw){cp.push(x.charger.kw+' kW rated');}
-        else if(x.duration&&x.kwh){cp.push((x.kwh/(x.duration/60)).toFixed(0)+' kW avg');}
-        if(cp.length) line3+=' <span style="color:var(--muted)">\u00b7 '+cp.join(' \u00b7 ')+'</span>';
-      }
-      out+=`<div class="session-row">
-          <div class="session-top">
-            <div class="session-date-badge"><span class="session-date">${fmtDate(x.date)}</span>${badgeHtml(x.t)}${x.charger&&x.charger.connector?'<span class="badge badge-'+x.charger.connector+'" style="margin-left:3px">'+x.charger.connector+'</span>':''}${costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':''}</div>
-            <div class="session-actions">
-              <button class="btn-sm btn-edit" onclick="editCharge(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><line x1="5.12" y1="15.88" x2="8.62" y2="19.38" stroke="var(--card)" stroke-width="1"/></svg></button>
-              <button class="btn-sm btn-del" onclick="delCharge(${i})">\u2715</button>
-            </div>
-          </div>
-          <div style="font-size:11px;margin-top:4px;color:var(--text)">${line1}</div>
-          ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
-          ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
-          ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
-          ${(x.pax)||(x.weather&&x.weather!==getAutoWeatherForDate(x.date))?'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+(x.pax?x.pax+' pax':'')+(x.pax&&x.weather?' · ':'')+(x.weather?({'hot':'☀️','rain':'🌧️','cold':'❄️','mild':'🌤️'}[x.weather]||''):' ')+'</div>':''}
-        </div>`;
+      var _kmShow=(x.km!=null&&x.km>0&&!x.chargedSince)?x.km:0;
+      var _warn=x.chargedSince?'\u26a1 chain break':'';
+      out+=_chargeRowHtml(x,i,effStr,_kmShow,_warn);
     });
     out+='</div>';
     _mIdx++;
@@ -3790,36 +3873,11 @@ function renderTripsOnly(){
     var totalKmStr=(Math.round(totalKm*10)/10).toLocaleString('en-IN'); // round to 0.1 km; kills float noise like 1320.8999999999999
     var tId='tgrp-'+month;
     var collapsed=mIdx>0?' style="display:none"':'';
-    out+='<div class="month-header" onclick="var g=document.getElementById(\''+tId+'\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' trips \u00b7 '+totalKmStr+' km <span style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
+    out+='<div class="month-header" onclick="_toggleCollapse(\''+tId+'\',document.getElementById(\'chev-'+tId+'\'),\'\u25bc\',\'\u25b6\')" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' trips \u00b7 '+totalKmStr+' km <span id="chev-'+tId+'" style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
     out+='<div id="'+tId+'"'+collapsed+'>';
     rows.forEach(function(x){
       var i=trips.findIndex(function(t){return t.id===x.id;});
-      var effStr='';
-      if(x.efficiency) effStr=Math.round(1000/x.efficiency)+' Wh/km \u00b7 '+(x.km/(x.startPct-x.endPct)).toFixed(1)+' km/%';
-      if(x.regen) effStr='+'+Math.abs(x.startPct-x.endPct)+'% regen \u26a1';
-      if(x.efficiency&&x.effWarn) effStr='\u26a0\ufe0f '+effStr;
-      var line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'%';
-      if(x.startPct>x.endPct) line1+=' \u00b7 ('+Math.round(x.startPct-x.endPct)+'%)';
-      var line2='';
-      if(x.startOdo&&x.endOdo){
-        line2=Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN');
-        if(x.km) line2+=' \u00b7 ('+parseFloat((x.km||0).toFixed(1))+' km)';
-        if(effStr) line2+=' \u00b7 '+effStr;
-      }
-      var badgeType='<span class="badge badge-trip">Trip</span>';
-      // Accurate FIFO cost badge + energy-mix line
-      var _tc=_costMap[x.id];
-      var costBadge='',mixLine='';
-      if(_tc){
-        var _cpkTxt=_costPerKmLabel(_tc);
-        if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:11px">'+_cpkTxt+'</span>';
-        var _mix=tripCostMixLabel(_tc);
-        if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
-      }
-      var paxWeatherStr='';
-      if((x.pax)||(x.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
-      var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:11px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
+      out+=_tripRowHtml(x,i,_costMap);
     });
     out+='</div>';
     mIdx++;
@@ -3846,62 +3904,27 @@ function renderAllLog(){
     var label=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+parts[1]-1]+' '+parts[0];
     var tId='allgrp-'+month;
     var collapsed=mIdx>0?' style="display:none"':'';
-    out+='<div class="month-header" onclick="var g=document.getElementById(\''+tId+'\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' entries <span style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
+    out+='<div class="month-header" onclick="_toggleCollapse(\''+tId+'\',document.getElementById(\'chev-'+tId+'\'),\'\u25bc\',\'\u25b6\')" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' entries <span id="chev-'+tId+'" style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
     out+='<div id="'+tId+'"'+collapsed+'>';
     rows.forEach(function(x){
       if(x.type==='charge'){
         var s=x.data;
-        var effStr='';
-        // v7.5.10: compute km + efficiency from odo diff to previous charge (same as Charges tab),
-        // independent of stored s.km (which may be null if recomputeAllKm hasn't populated it)
-        var _kmDiff=null;
-        if(s.chargedSince){effStr='<span style="color:var(--muted)">\u26a1 chain break</span>';}
+        var _effStr='',_kmDiff=null,_warn='';
+        if(s.chargedSince){_warn='\u26a1 chain break';}
         else if(s.odo){
           var _prevC=null;
           for(var _j=entries.indexOf(x)+1;_j<entries.length;_j++){if(entries[_j].type==='charge'&&entries[_j].data.odo&&entries[_j].data.odo!==s.odo){_prevC=entries[_j].data;break;}}
           if(_prevC){
             _kmDiff=s.odo-_prevC.odo;
             var _drop=_prevC.e-s.s;
-            if(_kmDiff>0&&_drop>0){var _con=settings.battery*_drop/100;var _ev=_kmDiff/_con;effStr=Math.round(1000/_ev)+' Wh/km \u00b7 '+(_kmDiff/_drop).toFixed(1)+' km/%';if(_ev>_effErrorThresh)effStr+=' \u26a0\ufe0f missed charge?';else if(_ev>_effWarnThresh)effStr+=' \u26a0\ufe0f';}
-            else if(_kmDiff>0&&_drop<0){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+s.s+'% but left prev at '+_prevC.e+'%</span>';}
+            if(_kmDiff>0&&_drop>0){var _con=settings.battery*_drop/100;var _ev=_kmDiff/_con;_effStr=Math.round(1000/_ev)+' Wh/km \u00b7 '+(_kmDiff/_drop).toFixed(1)+' km/%';if(_ev>_effErrorThresh)_effStr+=' \u26a0\ufe0f missed charge?';else if(_ev>_effWarnThresh)_effStr+=' \u26a0\ufe0f';}
+            else if(_kmDiff>0&&_drop<0){_warn='\u26a0 gap: arrived at '+s.s+'% but left prev at '+_prevC.e+'%';}
           }
         }
-        var line1=Math.round(s.s)+'% \u2192 '+Math.round(s.e)+'% \u00b7 '+(s.kwh||0).toFixed(1)+' kWh';
-        if(s.odo) line1+=' \u00b7 <span style="color:var(--muted)">odo '+Math.round(s.odo).toLocaleString('en-IN')+'</span>';
-        var line2='';
         var _kmShow=(_kmDiff!=null&&_kmDiff>0)?_kmDiff:(s.km||0);
-        if(_kmShow>0&&!s.chargedSince) line2+=_kmShow+' km';
-        if(effStr) line2+=(line2?' \u00b7 ':'')+effStr;
-        if(s.duration) line2+=(line2?' \u00b7 ':'')+s.duration+' min';
-        var costStr=s.cost!=null&&s.cost>0?'\u20b9'+Math.round(s.cost):'';
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(s.date)+'</span>'+badgeHtml(s.t)+(costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':'')+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'charge\','+x.idx+')">\u2715</button></div></div><div style="font-size:11px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+'</div>';
+        out+=_chargeRowHtml(s,x.idx,_effStr,_kmShow,_warn);
       } else {
-        var t=x.data;
-        var effStr='';
-        if(t.efficiency) effStr=Math.round(1000/t.efficiency)+' Wh/km \u00b7 '+(t.km/(t.startPct-t.endPct)).toFixed(1)+' km/%';
-        if(t.regen) effStr='+'+Math.abs(t.startPct-t.endPct)+'% regen \u26a1';
-        var line1=Math.round(t.startPct)+'% \u2192 '+Math.round(t.endPct)+'%';
-        if(t.startPct>t.endPct) line1+=' \u00b7 ('+Math.round(t.startPct-t.endPct)+'%)';
-        var line2='';
-        if(t.startOdo&&t.endOdo){
-          line2=Math.round(t.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(t.endOdo).toLocaleString('en-IN');
-          if(t.km) line2+=' \u00b7 ('+parseFloat((t.km||0).toFixed(1))+' km)';
-          if(effStr) line2+=' \u00b7 '+effStr;
-        }
-        var badge='<span class="badge badge-trip">Trip</span>';
-        // Accurate FIFO cost badge + energy-mix line
-        var _tc=_costMap[t.id];
-        var costBadge='',mixLine='';
-        if(_tc){
-          var _cpkTxt=_costPerKmLabel(_tc);
-          if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:11px">'+_cpkTxt+'</span>';
-          var _mix=tripCostMixLabel(_tc);
-          if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
-        }
-        var paxWeatherStr='';
-        if((t.pax)||(t.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
-        var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:11px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
+        out+=_tripRowHtml(x.data,x.idx,_costMap);
       }
     });
     out+='</div>';mIdx++;
@@ -4195,7 +4218,7 @@ function renderExpenses(){
     var mAmt=rows.reduce(function(a,r){return a+(r.amount||0);},0);
     var mid='egrp-'+month;
     var collapsed=mIdx>0?' style="display:none"':'';
-    html+='<div class="month-header" onclick="var g=document.getElementById(\''+mid+'\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' \u00b7 \u20b9'+Math.round(mAmt).toLocaleString('en-IN')+' <span style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
+    html+='<div class="month-header" onclick="_toggleCollapse(\''+mid+'\',document.getElementById(\'chev-'+mid+'\'),\'\u25bc\',\'\u25b6\')" style="cursor:pointer">'+label+' \u00b7 '+rows.length+' \u00b7 \u20b9'+Math.round(mAmt).toLocaleString('en-IN')+' <span id="chev-'+mid+'" style="float:right;font-size:10px">'+(mIdx>0?'\u25b6':'\u25bc')+'</span></div>';
     html+='<div id="'+mid+'"'+collapsed+'>';
     rows.forEach(function(x){
       var idx=expenses.indexOf(x);
