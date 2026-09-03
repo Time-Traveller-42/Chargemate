@@ -860,7 +860,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v8.0.0 <span class="cl-date">2 Sep 2026</span></div>
+    <div class="cl-ver">v8.0.1 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li>Tidy: log rows now use one consistent text size (first line matched to the rest).</li>
+</ul>
+<div class="cl-ver">v8.0.0 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Wh/km everywhere</b>: km/kWh is fully retired across the app in favour of <b>Wh/km</b> (the metric your car dashboard uses — lower is better). Converted the dashboard efficiency stat, range estimate, trip planner, trip-form live preview, and all log rows. The Efficiency Trend chart now plots Wh/km too, so the line reads the same way as the number (a dip = a more efficient stretch).</li>
 </ul>
@@ -3742,7 +3746,7 @@ function renderList(){
               <button class="btn-sm btn-del" onclick="delCharge(${i})">\u2715</button>
             </div>
           </div>
-          <div style="font-size:12px;margin-top:4px;color:var(--text)">${line1}</div>
+          <div style="font-size:11px;margin-top:4px;color:var(--text)">${line1}</div>
           ${line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':''}
           ${line3?'<div style="font-size:11px;margin-top:3px">'+line3+'</div>':''}
           ${x.notes?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">📝 '+escapeHtml(x.notes)+'</div>':''}
@@ -3795,14 +3799,14 @@ function renderTripsOnly(){
       var costBadge='',mixLine='';
       if(_tc){
         var _cpkTxt=_costPerKmLabel(_tc);
-        if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:12px">'+_cpkTxt+'</span>';
+        if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:11px">'+_cpkTxt+'</span>';
         var _mix=tripCostMixLabel(_tc);
         if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
       }
       var paxWeatherStr='';
       if((x.pax)||(x.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
       var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
-      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
+      out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:11px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
     });
     out+='</div>';
     mIdx++;
@@ -3857,7 +3861,7 @@ function renderAllLog(){
         if(effStr) line2+=(line2?' \u00b7 ':'')+effStr;
         if(s.duration) line2+=(line2?' \u00b7 ':'')+s.duration+' min';
         var costStr=s.cost!=null&&s.cost>0?'\u20b9'+Math.round(s.cost):'';
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(s.date)+'</span>'+badgeHtml(s.t)+(costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':'')+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'charge\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+'</div>';
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge"><span class="session-date">'+fmtDate(s.date)+'</span>'+badgeHtml(s.t)+(costStr?'<span class="session-cost" style="margin-left:auto">'+costStr+'</span>':'')+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editCharge('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'charge\','+x.idx+')">\u2715</button></div></div><div style="font-size:11px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2+'</div>':'')+'</div>';
       } else {
         var t=x.data;
         var effStr='';
@@ -3877,14 +3881,14 @@ function renderAllLog(){
         var costBadge='',mixLine='';
         if(_tc){
           var _cpkTxt=_costPerKmLabel(_tc);
-          if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:12px">'+_cpkTxt+'</span>';
+          if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:11px">'+_cpkTxt+'</span>';
           var _mix=tripCostMixLabel(_tc);
           if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
         }
         var paxWeatherStr='';
         if((t.pax)||(t.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
         var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
-        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
+        out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:11px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
       }
     });
     out+='</div>';mIdx++;
