@@ -427,7 +427,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="card tappable" onclick="openPlanOverlay()"><h3>Estimated Range</h3><div id="rangeCard"></div>
     <div style="margin-top:10px"><a href="javascript:switchTab('planner')" style="color:var(--accent);font-size:12px;text-decoration:none">🗺️ Plan a trip →</a></div></div>
   <div class="card tappable" onclick="switchTab('expenses')"><h3 id="spendingTitle">Spending</h3><div class="stats-grid" id="paidStats"></div><button class="ghost" onclick="copyMonthlySummary()" style="margin-top:10px;font-size:10px">📋 Copy monthly summary</button></div>
-  <div class="card"><h3>Efficiency Trend <span style="font-size:10px;font-weight:400;color:var(--muted)">(1 pax · km/kWh)</span></h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
+  <div class="card"><h3>Efficiency Trend <span style="font-size:10px;font-weight:400;color:var(--muted)">(1 pax · Wh/km · lower is better)</span></h3><div class="chart-wrap"><canvas id="effChart" height="200"></canvas></div></div>
   <div class="card"><h3>Monthly Expenditures</h3><div class="chart-wrap"><canvas id="costChart" height="200"></canvas></div></div>
   </div>
 
@@ -875,7 +875,15 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v7.15.1 <span class="cl-date">2 Sep 2026</span></div>
+    <div class="cl-ver">v8.0.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Wh/km everywhere</b>: km/kWh is fully retired across the app in favour of <b>Wh/km</b> (the metric your car dashboard uses — lower is better). Converted the dashboard efficiency stat, range estimate, trip planner, trip-form live preview, and all log rows. The Efficiency Trend chart now plots Wh/km too, so the line reads the same way as the number (a dip = a more efficient stretch).</li>
+</ul>
+<div class="cl-ver">v7.16.0 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Trip row cleanup</b>: first line now shows start→end % with the consumed amount in brackets (e.g. "70% → 59% · (11%)"); distance moved down next to the odometer (e.g. "8,954 → 8,993 · (39 km)"). Efficiency switched from km/kWh to <b>Wh/km</b> (car-dashboard style, lower is better) alongside km/%. Cost/km badge sized to match the other numbers; pax/carpool spacing tightened.</li>
+</ul>
+<div class="cl-ver">v7.15.1 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Fix</b>: Trip cost-per-km was inflated by charges from before trip logging began — energy from unlogged driving (e.g. early road-trip public charges) lingered in the cost queue and got wrongly attributed to later home commutes. The cost engine now reconciles against your actual battery % at every charge and trip: a measured state of charge physically caps how much energy can be left in the pool, so stale energy is trimmed to reality. Recent home-charged trips read their true ~₹/km again.</li>
 </ul>
@@ -1974,8 +1982,8 @@ function renderDash(){
   // === AT A GLANCE (lifetime stats) ===
   var avgMonthSpend=(function(){var allM=new Set();sessions.forEach(function(s){if(s.date&&s.cost>0)allM.add(s.date.slice(0,7))});(expenses||[]).forEach(function(e){if(e.date&&e.category!=='purchase')allM.add(e.date.slice(0,7))});var n=Math.max(1,allM.size);var tot=sessions.filter(function(s){return s.cost>0}).reduce(function(a,s){return a+s.cost},0)+(expenses||[]).filter(function(e){return e.category!=='purchase'}).reduce(function(a,e){return a+(e.amount||0)},0);return Math.round(tot/n);})();
   document.getElementById('stats').innerHTML=
-    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'\u2014','Total Distance',avgEff?avgEff+' km/kWh \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
-    statBox(avgEff?avgEff+' km/kWh':'\u2014','Efficiency (1 pax)',avgEff?(+avgEff*settings.battery/100).toFixed(1)+' km/% \u00b7 '+(1000/+avgEff).toFixed(0)+' Wh/km':null)+
+    statBox(totalKm>0?totalKm.toLocaleString('en-IN')+' km':'\u2014','Total Distance',avgEff?(1000/+avgEff).toFixed(0)+' Wh/km':null)+
+    statBox(avgEff?(1000/+avgEff).toFixed(0)+' Wh/km':'\u2014','Efficiency (1 pax)',avgEff?(+avgEff*settings.battery/100).toFixed(1)+' km/%':null)+
     statBox((function(){var paidKm=sessions.filter(function(s){return s.cost>0&&s.km>0}).reduce(function(a,s){return a+s.km},0);return hasCost&&paidKm>0?'\u20b9'+(totalCost/paidKm).toFixed(2):'\u2014'})(),'Cost / km',settings.homeRate&&avgEff?'\u20b9'+(settings.homeRate/+avgEff).toFixed(2)+'/km at home':'paid charges')+
     statBox('\u20b9 '+avgMonthSpend.toLocaleString('en-IN'),'Avg / Month','lifetime spend');
 
@@ -2016,7 +2024,7 @@ function renderDash(){
 
   // === RANGE CARD ===
   document.getElementById('rangeCard').innerHTML=avgEff
-    ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on recent efficiency (${avgEff} km/kWh · 1 pax)</div>
+    ?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Based on recent efficiency (${(1000/+avgEff).toFixed(0)} Wh/km · 1 pax)</div>
       <div style="font-family:'Inter',sans-serif;font-size:28px;font-weight:700;color:var(--accent)">${(+avgEff*settings.battery*0.8).toFixed(0)} km<span style="font-size:13px;color:var(--muted);font-family:'Inter',sans-serif"> at 80% charge</span></div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">Full charge: ${(+avgEff*settings.battery).toFixed(0)} km theoretical</div>
       <div class="range-meter"><div class="range-track"><div class="range-fill" style="width:80%"></div></div>
@@ -2151,7 +2159,7 @@ function getPlannerEfficiency(type){
   var finalEff=baseEff*wFactor*pFactor;
   
   // Build source string
-  var parts=[type+' '+baseEff.toFixed(1)+'km/kWh'];
+  var parts=[type+' '+Math.round(1000/baseEff)+'Wh/km'];
   if(wSource) parts.push(wSource);
   if(pSource) parts.push(pSource);
   
@@ -2559,7 +2567,7 @@ function runPlan(){
 
   resultEl.innerHTML=`
     <div class="card">
-      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(${dist} km) · ${(1000/eff).toFixed(0)} Wh/km · ${eff.toFixed(2)} km/kWh</span></h3>
+      <h3>Result <span style="font-size:10px;color:var(--muted);font-weight:400">(${dist} km) · ${(1000/eff).toFixed(0)} Wh/km</span></h3>
 
       
 
@@ -3150,7 +3158,7 @@ function updateTripPreview(){
     var drop=sp-ep;
     var consumption=drop*settings.battery/100;
     var eff=km/consumption;
-    el.textContent='📊 '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+eff.toFixed(1)+' km/kWh \u00b7 '+(km/drop).toFixed(1)+' km/%';
+    el.textContent='📊 '+km+' km \u00b7 '+drop+'% used \u00b7 '+consumption.toFixed(1)+' kWh \u00b7 '+Math.round(1000/eff)+' Wh/km \u00b7 '+(km/drop).toFixed(1)+' km/%';
   } else if(km>0&&sp<=100&&ep>=0&&ep>sp){
     var gained=ep-sp;
     el.textContent='\u26a1 '+km+' km \u00b7 +'+gained+'% regen \u00b7 '+(gained*settings.battery/100).toFixed(1)+' kWh recovered';
@@ -3953,7 +3961,7 @@ function renderList(){
               const drop=prevDiffOdo.e-x.s;
             if(x.chargedSince){effStr='<span style="color:var(--muted)">\u26a1 chain break</span>';}
             else if(km>0&&drop<0){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+x.s+'% but left prev at '+prevDiffOdo.e+'%</span>';}
-            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=ev.toFixed(1)+' km/kWh · '+(km/drop).toFixed(1)+' km/%';
+            else if(km>0&&drop>0){var ev=km/(settings.battery*drop/100);effStr=Math.round(1000/ev)+' Wh/km · '+(km/drop).toFixed(1)+' km/%';
             if(ev>_effErrorThresh) effStr+=' \u26a0\ufe0f missed charge?'; else if(ev>_effWarnThresh) effStr+=' \u26a0\ufe0f';}
             }
           }
@@ -4021,7 +4029,7 @@ function renderTripsOnly(){
     rows.forEach(function(x){
       var i=trips.findIndex(function(t){return t.id===x.id;});
       var effStr='';
-      if(x.efficiency) effStr=x.efficiency.toFixed(1)+' km/kWh \u00b7 '+(x.km/(x.startPct-x.endPct)).toFixed(1)+' km/%';
+      if(x.efficiency) effStr=Math.round(1000/x.efficiency)+' Wh/km \u00b7 '+(x.km/(x.startPct-x.endPct)).toFixed(1)+' km/%';
       if(x.regen) effStr='+'+Math.abs(x.startPct-x.endPct)+'% regen \u26a1';
       if(x.efficiency&&x.effWarn) effStr='\u26a0\ufe0f '+effStr;
       var isCarpoolOnly=x.carpool&&!x.km;
@@ -4029,11 +4037,13 @@ function renderTripsOnly(){
       if(isCarpoolOnly){
         line1=(x.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(x.carpool.amount).toLocaleString('en-IN');
       } else {
-        line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'% \u00b7 '+parseFloat((x.km||0).toFixed(1))+' km';
+        line1=Math.round(x.startPct)+'% \u2192 '+Math.round(x.endPct)+'%';
+        if(x.startPct>x.endPct) line1+=' \u00b7 ('+Math.round(x.startPct-x.endPct)+'%)';
       }
       var line2='';
       if(!isCarpoolOnly&&x.startOdo&&x.endOdo){
         line2=Math.round(x.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(x.endOdo).toLocaleString('en-IN');
+        if(x.km) line2+=' \u00b7 ('+parseFloat((x.km||0).toFixed(1))+' km)';
         if(effStr) line2+=' \u00b7 '+effStr;
       }
       var carpoolBadge='';
@@ -4046,12 +4056,12 @@ function renderTripsOnly(){
       var costBadge='',mixLine='';
       if(_tc){
         var _cpkTxt=_costPerKmLabel(_tc);
-        if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600">'+_cpkTxt+'</span>';
+        if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:12px">'+_cpkTxt+'</span>';
         var _mix=tripCostMixLabel(_tc);
         if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
       }
       var paxWeatherStr='';
-      if((x.pax)||(x.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted)'+(costBadge?';margin-left:8px':';margin-left:auto')+'">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
+      if((x.pax)||(x.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(x.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[x.weather]||''):'')+(x.pax?' '+x.pax+'p':'')+'</span>';}
       var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
       out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(x.date)+'</span>'+badgeType+carpoolBadge+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+i+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+i+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(x.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(x.note)+'</div>':'')+'</div>';
     });
@@ -4129,7 +4139,7 @@ function renderAllLog(){
           if(_prevC){
             _kmDiff=s.odo-_prevC.odo;
             var _drop=_prevC.e-s.s;
-            if(_kmDiff>0&&_drop>0){var _con=settings.battery*_drop/100;var _ev=_kmDiff/_con;effStr=_ev.toFixed(1)+' km/kWh \u00b7 '+(_kmDiff/_drop).toFixed(1)+' km/%';if(_ev>_effErrorThresh)effStr+=' \u26a0\ufe0f missed charge?';else if(_ev>_effWarnThresh)effStr+=' \u26a0\ufe0f';}
+            if(_kmDiff>0&&_drop>0){var _con=settings.battery*_drop/100;var _ev=_kmDiff/_con;effStr=Math.round(1000/_ev)+' Wh/km \u00b7 '+(_kmDiff/_drop).toFixed(1)+' km/%';if(_ev>_effErrorThresh)effStr+=' \u26a0\ufe0f missed charge?';else if(_ev>_effWarnThresh)effStr+=' \u26a0\ufe0f';}
             else if(_kmDiff>0&&_drop<0){effStr='<span style="color:var(--warn)">\u26a0 gap: arrived at '+s.s+'% but left prev at '+_prevC.e+'%</span>';}
           }
         }
@@ -4146,17 +4156,19 @@ function renderAllLog(){
         var t=x.data;
         var isCarpoolOnly=t.carpool&&!t.km;
         var effStr='';
-        if(t.efficiency) effStr=t.efficiency.toFixed(1)+' km/kWh \u00b7 '+(t.km/(t.startPct-t.endPct)).toFixed(1)+' km/%';
+        if(t.efficiency) effStr=Math.round(1000/t.efficiency)+' Wh/km \u00b7 '+(t.km/(t.startPct-t.endPct)).toFixed(1)+' km/%';
         if(t.regen) effStr='+'+Math.abs(t.startPct-t.endPct)+'% regen \u26a1';
         var line1='';
         if(isCarpoolOnly){
           line1=(t.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(t.carpool.amount).toLocaleString('en-IN');
         } else {
-          line1=Math.round(t.startPct)+'% \u2192 '+Math.round(t.endPct)+'% \u00b7 '+parseFloat((t.km||0).toFixed(1))+' km';
+          line1=Math.round(t.startPct)+'% \u2192 '+Math.round(t.endPct)+'%';
+          if(t.startPct>t.endPct) line1+=' \u00b7 ('+Math.round(t.startPct-t.endPct)+'%)';
         }
         var line2='';
         if(!isCarpoolOnly&&t.startOdo&&t.endOdo){
           line2=Math.round(t.startOdo).toLocaleString('en-IN')+' \u2192 '+Math.round(t.endOdo).toLocaleString('en-IN');
+          if(t.km) line2+=' \u00b7 ('+parseFloat((t.km||0).toFixed(1))+' km)';
           if(effStr) line2+=' \u00b7 '+effStr;
         }
         var badge=isCarpoolOnly?'<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--good)">Carpool</span>':'<span class="badge badge-trip">Trip</span>';
@@ -4167,12 +4179,12 @@ function renderAllLog(){
         var costBadge='',mixLine='';
         if(_tc){
           var _cpkTxt=_costPerKmLabel(_tc);
-          if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600">'+_cpkTxt+'</span>';
+          if(_cpkTxt) costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:12px">'+_cpkTxt+'</span>';
           var _mix=tripCostMixLabel(_tc);
           if(_mix&&_tc.breakdown.length>1) mixLine=_mix;
         }
         var paxWeatherStr='';
-        if((t.pax)||(t.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted)'+(costBadge?';margin-left:8px':';margin-left:auto')+'">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
+        if((t.pax)||(t.weather)){paxWeatherStr='<span style="font-size:10px;color:var(--muted);margin-left:4px'+(costBadge?'':';margin-right:auto')+'">'+(t.weather?({'hot':'\u2600\ufe0f','rain':'\ud83c\udf27\ufe0f','cold':'\u2744\ufe0f','mild':'\ud83c\udf24\ufe0f'}[t.weather]||''):'')+(t.pax?' '+t.pax+'p':'')+'</span>';}
         var line2b=[line2,mixLine].filter(Boolean).join(' \u00b7 ');
         out+='<div class="session-row"><div class="session-top"><div class="session-date-badge" style="flex:1"><span class="session-date">'+fmtDate(t.date)+'</span>'+badge+cpBadge+paxWeatherStr+costBadge+'</div><div class="session-actions"><button class="btn-sm btn-edit" onclick="editTrip('+x.idx+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><button class="btn-sm btn-del" onclick="undoableDelete(\'trip\','+x.idx+')">\u2715</button></div></div><div style="font-size:12px;margin-top:4px;color:var(--text)">'+line1+'</div>'+(line2b?'<div style="font-size:11px;color:var(--text);margin-top:3px">'+line2b+'</div>':'')+(t.note?'<div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">\ud83d\udcdd '+escapeHtml(t.note)+'</div>':'')+'</div>';
       }
@@ -4656,12 +4668,12 @@ function drawAllCharts(retryCount){
     segments.filter(function(s){return s.flag!=='error'&&!s.regen&&isFinite(s.efficiency);}).forEach(function(seg){
       var pax=seg.pax||_avgPax;
       var normEff=normalizeTo1Pax(seg.efficiency,pax);
-      allEffPts.push({v:+normEff.toFixed(2),d:seg.date});
+      if(normEff>0) allEffPts.push({v:+(1000/normEff).toFixed(0),d:seg.date}); // Wh/km (lower is better)
     });
   } else {
     for(let i=1;i<sorted.length;i++){
       const p=sorted[i-1],c=sorted[i];
-      if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0)allEffPts.push({v:+(c.km/con).toFixed(2),d:c.date});}
+      if(c.km&&c.km>0){const con=settings.battery*(p.e-c.s)/100;if(con>0){const _kpk=c.km/con;if(_kpk>0)allEffPts.push({v:+(1000/_kpk).toFixed(0),d:c.date});}}
     }
   }
   // Last 10 individual, older grouped by week
@@ -4673,7 +4685,8 @@ function drawAllCharts(retryCount){
   const chartData=[...weekPts,...recent];
   const effPts=chartData.map(p=>p.v);
   const effDates=chartData.map(p=>p.d);
-  drawChart('effChart',effPts,effDates,'#00e5ff',getWeightedRecentEff());
+  var _wre=getWeightedRecentEff();
+  drawChart('effChart',effPts,effDates,'#00e5ff',(_wre>0?1000/_wre:0)); // avg line in Wh/km
   _chartDataHash=newHash; // Set hash only after successful draw
 }
 
