@@ -875,6 +875,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v8.4.0 <span class="cl-date">7 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Trip start/end/distance rebuilt</b>: enter any two of Start odo, End odo, Distance and the third fills in automatically — in any order. Clearing a field and typing another now recomputes cleanly (e.g. you have end odo + distance but forgot the start → start fills in). Fixes the cases where a field could get stuck and refuse input.</li>
+</ul>
+<div class="cl-ver">v8.3.2 <span class="cl-date">7 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Icons: trip rows show a road icon; charge rows show a bolt with the type label (Home/Office/Public) in the collapsed view. Replaces custom SVGs with emoji matching the app's existing visual language.</li>
+    </ul>
     <div class="cl-ver">v8.3.1 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li>Fix: Trip form — entering the end odometer and the distance now correctly back-fills the start odometer. Previously a last-known-state fallback for the start blocked this, so start odo stayed empty.</li>
@@ -1827,6 +1835,8 @@ function ocrConfirm(){
     if(sPct){document.getElementById('tripStartPct').value=sPct;}
     if(eOdo){document.getElementById('tripEndOdo').value=eOdo;}
     if(ePct){document.getElementById('tripEndPct').value=ePct;}
+    // Both odos come from OCR → make them authoritative so distance derives.
+    _tripOdoOrder=(sOdo&&eOdo)?['so','eo']:(eOdo?['eo']:(sOdo?['so']:[]));
     autoCalcTrip('endOdo');autoCalcTrip('endPct');updateTripPreview();
   }else if(_ocrMode==='charge'){
     if(sOdo){document.getElementById('odo').value=sOdo;autoCalcCharge('odo');}
@@ -3075,6 +3085,19 @@ function setEntryMode(mode){
 }
 
 // ── TRIP MANAGEMENT ────────────────────────────────────────────────────────
+// Recency-based "any 2 of 3" engine for Start odo / End odo / Distance.
+// Rule: the two MOST-RECENTLY-EDITED fields that currently have a value are
+// authoritative; the third is computed from them. This replaces the old
+// userEntered/fallback flag logic, which produced stuck states when fields were
+// added/cleared in different orders. Recompute happens fresh on every keystroke,
+// so no sticky flags can desync. Only the derived field is written.
+var _tripOdoOrder=[]; // field keys 'so'/'eo'/'dist', most-recently-edited last
+function _tripOdoTouch(key){
+  var i=_tripOdoOrder.indexOf(key);
+  if(i>-1)_tripOdoOrder.splice(i,1);
+  _tripOdoOrder.push(key);
+}
+function _tripOdoReset(){_tripOdoOrder=[];}
 function autoCalcTrip(changed){
   var soEl=document.getElementById('tripStartOdo');
   var eoEl=document.getElementById('tripEndOdo');
@@ -3083,68 +3106,51 @@ function autoCalcTrip(changed){
   var epEl=document.getElementById('tripEndPct');
   var conEl=document.getElementById('tripConsumed');
   var errEl=document.getElementById('tripError');
-  
-  var so=+stripCommas(soEl.value), eo=+stripCommas(eoEl.value), dist=+stripCommas(distEl.value);
-  var soFromFallback=false;
-  if(!so){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFromFallback=true;}}
-  var sp=+spEl.value, ep=+epEl.value, con=+conEl.value;
-  var spFromFallback=false;
-  if(!spEl.value){var _lks2=getLastKnownState();if(_lks2&&_lks2.endPct!=null){sp=_lks2.endPct;spFromFallback=true;}}
-  
-  // Inline validation: end odo must be > start odo
-  if(so>0&&eo>0&&eo<=so){
-    errEl.textContent='End odo must be greater than start odo.';
-    distEl.value='';
-  } else {
-    if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
-    // Distance auto-calc: any 2 of 3 computes the 3rd
-    if(changed==='startOdo'||changed==='endOdo'){
-      if(so>0&&eo>0&&eo>so){
-        // Both odos present: distance is derived.
-        distEl.value=parseFloat((eo-so).toFixed(1));
-      } else if(changed==='endOdo'&&eo>0&&dist>0&&!soEl.dataset.userEntered&&!soFromFallback){
-        // End odo + distance known, start blank: back-fill start = end - distance.
-        soEl.value=Math.round(eo-dist);
-      } else if(changed==='startOdo'&&so>0&&dist>0&&!eoEl.dataset.userEntered){
-        // Start odo + distance known, end blank: forward-fill end = start + distance.
-        eoEl.value=Math.round(so+dist);
-      }
-      // Mark user-entered fields
-      if(changed==='startOdo'&&soEl.value) soEl.dataset.userEntered='1';
-      if(changed==='endOdo'&&eoEl.value) eoEl.dataset.userEntered='1';
-      // Clear auto-calc marker if user clears the field
-      if(changed==='startOdo'&&!soEl.value) delete soEl.dataset.userEntered;
-      if(changed==='endOdo'&&!eoEl.value) delete eoEl.dataset.userEntered;
-    } else if(changed==='dist'){
-      // Priority: if the user genuinely entered the END odo and the start field is
-      // NOT user-entered, compute start = end - dist. A last-known-state fallback for
-      // start must NOT block this — the user told us the end, so start is derived.
-      if(dist>0&&eoEl.dataset.userEntered&&eo>0&&!soEl.dataset.userEntered){
-        soEl.value=Math.round(eo-dist);
-      } else if(dist>0&&so>0&&(soFromFallback||soEl.dataset.userEntered)&&!eoEl.dataset.userEntered){
-        // Start known (entered or fallback) + no end yet: forward-fill end.
-        eoEl.value=Math.round(so+dist);
-      } else if(dist>0&&eo>0&&!soEl.dataset.userEntered&&!soFromFallback){
-        soEl.value=Math.round(eo-dist);
-      } else if(!dist){
-        if(!soEl.dataset.userEntered&&soEl.value){soEl.value='';}
-        else if(!eoEl.dataset.userEntered&&eoEl.value){eoEl.value='';}
+
+  // ── Odo / Distance: recency-based any-2-of-3 ──
+  if(changed==='startOdo'||changed==='endOdo'||changed==='dist'){
+    var keyMap={startOdo:'so',endOdo:'eo',dist:'dist'};
+    var key=keyMap[changed];
+    var elMap={so:soEl,eo:eoEl,dist:distEl};
+    // Track recency: if the changed field now has a value, mark it most-recent;
+    // if it was cleared, drop it from the order.
+    if(elMap[key].value.trim()!=='') _tripOdoTouch(key); else {var _ri=_tripOdoOrder.indexOf(key);if(_ri>-1)_tripOdoOrder.splice(_ri,1);}
+    var val=function(k){return +stripCommas(elMap[k].value);};
+    var has=function(k){return elMap[k].value.trim()!==''&&isFinite(val(k));};
+    // Authoritative = the two most-recently-edited fields that currently have values.
+    var recent=_tripOdoOrder.filter(has);
+    var auth=recent.slice(-2);
+    // Validation: end must exceed start when both are the actual entered odos.
+    if(has('so')&&has('eo')&&val('eo')<=val('so')){
+      errEl.textContent='End odo must be greater than start odo.';
+    } else {
+      if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
+      if(auth.length===2){
+        // Derived field = whichever of so/eo/dist is NOT authoritative.
+        var derived=['so','eo','dist'].filter(function(k){return auth.indexOf(k)<0;})[0];
+        var so=val('so'),eo=val('eo'),dist=val('dist');
+        if(derived==='dist'){var d=eo-so;if(d>0)distEl.value=parseFloat(d.toFixed(1));}
+        else if(derived==='so'){var s=eo-dist;if(s>0)soEl.value=Math.round(s);}
+        else if(derived==='eo'){eoEl.value=Math.round(so+dist);}
       }
     }
-    // Inline range sanity warning
     checkTripRangeWarning();
   }
-  
-  // Battery auto-calc: any 2 of 3 computes the 3rd
-  if(changed==='startPct'||changed==='endPct'){
-    if(sp>=0&&ep>=0&&sp>ep) conEl.value=sp-ep;
-    else if(sp>=0&&ep>=0&&ep>sp) conEl.value=''; // regen
-  } else if(changed==='consumed'){
-    // If start% from fallback, treat as known — compute end%
-    if(con>0&&sp>0&&(spFromFallback||spEl.value)) epEl.value=Math.max(0,sp-con);
-    else if(con>0&&ep>=0&&!spEl.value&&!spFromFallback) spEl.value=ep+con;
+
+  // ── Battery %: any 2 of 3 (start% / end% / used%) — unchanged ──
+  if(changed==='startPct'||changed==='endPct'||changed==='consumed'){
+    var sp=+spEl.value, ep=+epEl.value, con=+conEl.value;
+    var spFromFallback=false;
+    if(!spEl.value){var _lks2=getLastKnownState();if(_lks2&&_lks2.endPct!=null){sp=_lks2.endPct;spFromFallback=true;}}
+    if(changed==='startPct'||changed==='endPct'){
+      if(sp>=0&&ep>=0&&sp>ep) conEl.value=sp-ep;
+      else if(sp>=0&&ep>=0&&ep>sp) conEl.value=''; // regen
+    } else if(changed==='consumed'){
+      if(con>0&&sp>0&&(spFromFallback||spEl.value)) epEl.value=Math.max(0,sp-con);
+      else if(con>0&&ep>=0&&!spEl.value&&!spFromFallback) spEl.value=ep+con;
+    }
   }
-  
+
   updateTripPreview();
 }
 
@@ -3464,8 +3470,7 @@ function saveTrip(){
 
 function clearTripForm(){
   ['tripStartOdo','tripEndOdo','tripDistance','tripStartPct','tripEndPct','tripConsumed','tripNote'].forEach(function(id){document.getElementById(id).value='';});
-  delete document.getElementById('tripStartOdo').dataset.userEntered;
-  delete document.getElementById('tripEndOdo').dataset.userEntered;
+  _tripOdoReset();
   document.getElementById('tripDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
@@ -3501,6 +3506,9 @@ function editTrip(i){
   document.getElementById('tripStartOdo').value=x.startOdo?Math.round(x.startOdo):'';
   document.getElementById('tripEndOdo').value=x.endOdo?Math.round(x.endOdo):'';
   document.getElementById('tripDistance').value=x.km||'';
+  // Seed recency so start+end are authoritative (distance derived) — editing an
+  // odo then recomputes distance, not the other odo.
+  _tripOdoOrder=['dist','so','eo'];
   document.getElementById('tripStartPct').value=x.startPct!=null?Math.round(x.startPct):'';
   document.getElementById('tripEndPct').value=x.endPct!=null?Math.round(x.endPct):'';
   document.getElementById('tripConsumed').value=(x.startPct>x.endPct)?Math.round(x.startPct-x.endPct):'';
@@ -3926,9 +3934,9 @@ function _toggleCollapse(panelId,chevEl,openChar,closeChar){
 }
 // SVG type icons (crisp + identical across devices, unlike emoji). Stroke style
 // matches the bottom-nav icons (round caps). Trip=car, Charge=charging bolt.
-var _ICON_TRIP='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><title>Trip</title><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M4 11h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1z"/><circle cx="7.5" cy="14.5" r="1"/><circle cx="16.5" cy="14.5" r="1"/></svg>';
-var _ICON_CHARGE='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><title>Charge</title><path d="M14 2L5 14h6l-1 8 9-12h-6l1-8z" fill="currentColor" stroke="none"/></svg>';
-function _typeIcon(kind,color){return '<span style="color:'+(color||'var(--muted)')+';display:inline-flex;align-items:center">'+(kind==='trip'?_ICON_TRIP:_ICON_CHARGE)+'</span>';}
+var _ICON_TRIP='\ud83d\udee3\ufe0f';
+var _ICON_CHARGE='\u26a1';
+function _typeIcon(kind,color,typeText){if(kind==='trip')return '<span style="font-size:12px">'+_ICON_TRIP+'</span>';return '<span style="font-size:12px">'+_ICON_CHARGE+'</span>'+(typeText?' <span style="font-size:10px;color:var(--muted)">'+typeText+'</span>':'');}
 var _EDIT_SVG='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
 function _detBlock(id,inner){
   // Collapsed-by-default detail panel + returns '' if nothing to show.
@@ -3946,7 +3954,7 @@ function _tripRowHtml(x,i,costMap){
   var id=x.id;
   var isCarpoolOnly=x.carpool&&!x.km;
   // Header pieces
-  var icon=isCarpoolOnly?'':_typeIcon('trip','#f59e0b');
+  var icon=isCarpoolOnly?'':_typeIcon('trip');
   var carpoolBadge='';
   if(x.carpool){
     carpoolBadge='<span style="margin-left:6px;background:rgba(74,222,128,0.15);color:var(--good);font-size:10px;padding:2px 3px;border-radius:4px">'+(x.carpool.dir==='to_office'?'\ud83c\udfe2':'\ud83c\udfe0')+' \u20b9'+Math.round(x.carpool.amount)+'</span>';
@@ -4014,7 +4022,7 @@ function _tripRowHtml(x,i,costMap){
 // derive efficiency differently). costStr comes from the session's own cost.
 function _chargeRowHtml(s,idx,effStr,kmShow,warn){
   var id=s.id;
-  var icon=_typeIcon('charge','#818cf8');
+  var icon=_typeIcon('charge',null,_typeText);
   var costStr=s.cost!=null&&s.cost>0?'<span class="session-cost" style="margin-left:auto">\u20b9'+Math.round(s.cost)+'</span>':(s.cost===0?'<span class="session-cost" style="margin-left:auto;color:var(--muted)">Free</span>':'');
   // Collapsed info line: km · % added · kWh · Wh/km
   var parts=[];
