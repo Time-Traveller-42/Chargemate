@@ -860,11 +860,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v8.3.1 <span class="cl-date">3 Sep 2026</span></div>
-    <ul class="cl-list">
-      <li>Icons: trip rows show a road icon, charge rows show a bolt + type label (Home/Office/Public) directly in the collapsed view.</li>
-    </ul>
-    <div class="cl-ver">v8.3.0 <span class="cl-date">2 Sep 2026</span></div>
+    <div class="cl-ver">v8.3.1 <span class="cl-date">2 Sep 2026</span></div>
+<ul class="cl-list">
+<li>Fix: Trip form — entering the end odometer and the distance now correctly back-fills the start odometer. Previously a last-known-state fallback for the start blocked this, so start odo stayed empty.</li>
+</ul>
+<div class="cl-ver">v8.3.0 <span class="cl-date">2 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Richer expanded detail</b>: tapping a row now shows more — trips reveal total ₹ cost, trip type, and the energy-cost breakdown on its own line. Charges spell out the type in words (Home/Office/Public), plus start–end time, average kW, and ₹/kWh.</li>
 <li>Expanded detail now lists the odometer before the battery %.</li>
@@ -3061,7 +3061,10 @@ function autoCalcTrip(changed){
       if(changed==='startOdo'&&!soEl.value) delete soEl.dataset.userEntered;
       if(changed==='endOdo'&&!eoEl.value) delete eoEl.dataset.userEntered;
     } else if(changed==='dist'){
-      if(dist>0&&so>0&&(soFromFallback||soEl.dataset.userEntered)&&!eoEl.dataset.userEntered){
+      if(dist>0&&eoEl.dataset.userEntered&&eo>0&&!soEl.dataset.userEntered){
+        // User entered END odo + dist: derive start = end - dist (fallback start must not block this).
+        soEl.value=Math.round(eo-dist);
+      } else if(dist>0&&so>0&&(soFromFallback||soEl.dataset.userEntered)&&!eoEl.dataset.userEntered){
         eoEl.value=Math.round(so+dist);
       } else if(dist>0&&eo>0&&!soEl.dataset.userEntered&&!soFromFallback){
         soEl.value=Math.round(eo-dist);
@@ -3665,9 +3668,9 @@ function _toggleCollapse(panelId,chevEl,openChar,closeChar){
   g.style.display=show?'block':'none';
   if(chevEl)chevEl.textContent=show?openChar:closeChar;
 }
-var _ICON_TRIP='\ud83d\udee3\ufe0f';
-var _ICON_CHARGE='\u26a1';
-function _typeIcon(kind,color,typeText){if(kind==='trip')return '<span style="font-size:12px">'+ _ICON_TRIP+'</span>';return '<span style="font-size:12px">'+_ICON_CHARGE+'</span>'+(typeText?' <span style="font-size:10px;color:var(--muted)">'+typeText+'</span>':'');}
+var _ICON_TRIP='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><title>Trip</title><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M4 11h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1z"/><circle cx="7.5" cy="14.5" r="1"/><circle cx="16.5" cy="14.5" r="1"/></svg>';
+var _ICON_CHARGE='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><title>Charge</title><path d="M14 2L5 14h6l-1 8 9-12h-6l1-8z" fill="currentColor" stroke="none"/></svg>';
+function _typeIcon(kind,color){return '<span style="color:'+(color||'var(--muted)')+';display:inline-flex;align-items:center">'+(kind==='trip'?_ICON_TRIP:_ICON_CHARGE)+'</span>';}
 var _EDIT_SVG='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
 function _detBlock(id,inner){
   if(!inner) return {chev:'',panel:''};
@@ -3680,7 +3683,7 @@ function _rowClickToggle(id){
 }
 function _tripRowHtml(x,i,costMap){
   var id=x.id;
-  var icon=_typeIcon('trip');
+  var icon=_typeIcon('trip','#f59e0b');
   var _tc=costMap[x.id];
   var costBadge='';
   if(_tc){var _cpkTxt=_costPerKmLabel(_tc);if(_cpkTxt)costBadge='<span class="session-cost" style="margin-left:auto;color:var(--muted);font-weight:600;font-size:11px">'+_cpkTxt+'</span>';}
@@ -3716,7 +3719,7 @@ function _tripRowHtml(x,i,costMap){
 }
 function _chargeRowHtml(s,idx,effStr,kmShow,warn){
   var id=s.id;
-  var icon=_typeIcon('charge',null,_typeText);
+  var icon=_typeIcon('charge','#818cf8');
   var costStr=s.cost!=null&&s.cost>0?'<span class="session-cost" style="margin-left:auto">\u20b9'+Math.round(s.cost)+'</span>':(s.cost===0?'<span class="session-cost" style="margin-left:auto;color:var(--muted)">Free</span>':'');
   var parts=[];
   if(kmShow>0&&!s.chargedSince) parts.push(kmShow+' km');
