@@ -3059,6 +3059,9 @@ function autoCalcTrip(changed){
       if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
       if(auth.length===2){
         var derived=['so','eo','dist'].filter(function(k){return auth.indexOf(k)<0;})[0];
+        // Editing an odometer with both odos present recomputes DISTANCE (odos are
+        // the source of truth); only editing Distance recomputes an odometer.
+        if((key==='so'||key==='eo')&&has('so')&&has('eo')) derived='dist';
         var so=val('so'),eo=val('eo'),dist=val('dist');
         if(derived==='dist'){var d=eo-so;if(d>0)distEl.value=parseFloat(d.toFixed(1));}
         else if(derived==='so'){var s=eo-dist;if(s>0)soEl.value=Math.round(s);}

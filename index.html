@@ -3128,6 +3128,10 @@ function autoCalcTrip(changed){
       if(auth.length===2){
         // Derived field = whichever of so/eo/dist is NOT authoritative.
         var derived=['so','eo','dist'].filter(function(k){return auth.indexOf(k)<0;})[0];
+        // Intuition override: editing an ODOMETER when both odos are present should
+        // recompute DISTANCE (odometers are the source of truth), never rewrite the
+        // other odometer. Only editing Distance recomputes an odometer.
+        if((key==='so'||key==='eo')&&has('so')&&has('eo')) derived='dist';
         var so=val('so'),eo=val('eo'),dist=val('dist');
         if(derived==='dist'){var d=eo-so;if(d>0)distEl.value=parseFloat(d.toFixed(1));}
         else if(derived==='so'){var s=eo-dist;if(s>0)soEl.value=Math.round(s);}
