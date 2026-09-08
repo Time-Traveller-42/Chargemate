@@ -880,7 +880,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
     <div class="cl-ver">v8.5.0 <span class="cl-date">8 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Trip inputs are now fully clearable</b>: Start odo / End odo / Distance (and Start% / End% / Used%) are no longer auto-typed into each other, so you can always erase and re-enter any field. The computed third value now shows as a read-only "= …" preview line under the row (like the carpool total), and is saved automatically. Fixes the stuck "can't erase the last digit" behaviour.</li>
-<li><b>Charge kWh preview fix</b>: when you leave Start% blank (carrying over from the last charge), the live kWh preview now uses that carried-over start instead of 0%, so the preview matches the saved value.</li>
+<li><b>Charge preview fix (kWh + duration)</b>: when you leave Start% blank (carrying over from the last charge), the live kWh preview AND the estimated charge duration now both use that carried-over start instead of 0%, so the previews match the saved charge.</li>
 <li><b>Efficiency Trend x-axis fix</b>: the last date label no longer overlaps the one before it at the end of the axis (was rendering e.g. "4 Sep" and "8 Sep" on top of each other).</li>
 <li><b>Trip start/end/distance rebuilt</b>: enter any two of Start odo, End odo, Distance and the third fills in automatically — in any order. Clearing a field and typing another now recomputes cleanly (e.g. you have end odo + distance but forgot the start → start fills in). Fixes the cases where a field could get stuck and refuse input.</li>
 </ul>
@@ -2804,6 +2804,9 @@ function updateAutoDuration(){
   var type=document.getElementById('type').value;
   if(type==='public'){el.style.display='none';return;}
   var s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  // Blank start carries over from the last charge — use that end% instead of 0%,
+  // so the estimated duration matches the actual charge span (matches updatePreview).
+  if(!document.getElementById('start').value){var _st=getLastKnownState();if(_st&&_st.endPct!=null)s=_st.endPct;}
   if(isFinite(s)&&isFinite(e)&&e>s&&s>=0){
     var mins=Math.round((e-s)/5.5*60);
     if(isFinite(mins)&&mins>0){el.textContent='⏱ ~'+fmtDuration(mins)+' (at 5.5 %/hr)';el.style.display='block';}
@@ -2824,7 +2827,9 @@ function autoCalcPublic(changed){
 
   // Auto-fill kWh from % if not manually entered and not computing from rate+total
   if(!isManualKwh&&changed!=='units'){
-    const s=+document.getElementById('start').value, e=+document.getElementById('end').value;
+    let s=+document.getElementById('start').value; const e=+document.getElementById('end').value;
+    // Blank start carries over from the last charge — use that end% instead of 0%.
+    if(!document.getElementById('start').value){var _st=getLastKnownState();if(_st&&_st.endPct!=null)s=_st.endPct;}
     if(e>s&&s>=0) uEl.value=(settings.battery*(e-s)/100).toFixed(2);
   }
 
@@ -3108,18 +3113,26 @@ function _deriveTripOdo(){
   var soRaw=document.getElementById('tripStartOdo').value.trim();
   var eoRaw=document.getElementById('tripEndOdo').value.trim();
   var dRaw=document.getElementById('tripDistance').value.trim();
+  // Only the REAL entered values drive derivation. The last-known-odo fallback is
+  // a save-time convenience that fills a blank start ONLY when two real values
+  // aren't otherwise available — it must never count as an entered value (else a
+  // single real value + fallback would wrongly "compute the third"), nor block
+  // deriving the start from a real end + real distance.
   var so=soRaw!==''?+stripCommas(soRaw):null;
   var eo=eoRaw!==''?+stripCommas(eoRaw):null;
   var dist=dRaw!==''?+stripCommas(dRaw):null;
   var soFallback=false;
-  if(so==null){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFallback=true;}}
-  var have=(so!=null?1:0)+(eo!=null?1:0)+(dist!=null?1:0);
   var derived=null;
-  // Priority when computing the third: distance is the natural derived value when
-  // both odos are known; otherwise fill whichever odo is missing.
+  // Priority when computing the third from two REAL values: distance is the
+  // natural derived value when both odos are known; otherwise fill the missing odo.
   if(eo!=null&&dist!=null&&so==null){so=eo-dist;derived='so';}
-  else if((so!=null||soFallback)&&dist!=null&&eo==null){eo=so+dist;derived='eo';}
+  else if(so!=null&&dist!=null&&eo==null){eo=so+dist;derived='eo';}
   else if(so!=null&&eo!=null&&dist==null){dist=parseFloat((eo-so).toFixed(1));derived='dist';}
+  // Last resort: still no real start after trying the two-real-values rules —
+  // borrow the last-known odo purely as a save-time fallback. This never sets
+  // `derived`, so a single real value (e.g. only End odo) shows NO computed
+  // preview; the derived preview only ever comes from two real entered values.
+  if(so==null){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFallback=true;}}
   return {so:so,eo:eo,dist:dist,derived:derived,soFallback:soFallback};
 }
 function _deriveTripPct(){
