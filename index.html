@@ -485,6 +485,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <div><label>End Odo</label><input type="tel" id="tripEndOdo" placeholder="e.g. 5070" oninput="autoCalcTrip('endOdo')"></div>
           <div><label>Distance (km)</label><input type="tel" id="tripDistance" placeholder="e.g. 70" oninput="autoCalcTrip('dist')"></div>
         </div>
+        <div id="tripOdoPreview" class="stat-sub" style="margin-top:4px;min-height:14px"></div>
       </div>
       <div style="margin-top:10px">
         <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
@@ -492,6 +493,7 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <div><label>End %</label><input type="tel" id="tripEndPct" placeholder="e.g. 67" oninput="autoCalcTrip('endPct')"></div>
           <div><label>Used %</label><input type="tel" id="tripConsumed" placeholder="e.g. 23" oninput="autoCalcTrip('consumed')"></div>
         </div>
+        <div id="tripPctPreview" class="stat-sub" style="margin-top:4px;min-height:14px"></div>
       </div>
       <div style="margin-top:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;background:var(--input-bg);border-radius:8px;padding:8px 12px;margin-top:10px;border:1px solid var(--border)">
@@ -875,8 +877,11 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
-    <div class="cl-ver">v8.4.0 <span class="cl-date">7 Sep 2026</span></div>
+    <div class="cl-ver">v8.5.0 <span class="cl-date">8 Sep 2026</span></div>
 <ul class="cl-list">
+<li><b>Trip inputs are now fully clearable</b>: Start odo / End odo / Distance (and Start% / End% / Used%) are no longer auto-typed into each other, so you can always erase and re-enter any field. The computed third value now shows as a read-only "= …" preview line under the row (like the carpool total), and is saved automatically. Fixes the stuck "can't erase the last digit" behaviour.</li>
+<li><b>Charge kWh preview fix</b>: when you leave Start% blank (carrying over from the last charge), the live kWh preview now uses that carried-over start instead of 0%, so the preview matches the saved value.</li>
+<li><b>Efficiency Trend x-axis fix</b>: the last date label no longer overlaps the one before it at the end of the axis (was rendering e.g. "4 Sep" and "8 Sep" on top of each other).</li>
 <li><b>Trip start/end/distance rebuilt</b>: enter any two of Start odo, End odo, Distance and the third fills in automatically — in any order. Clearing a field and typing another now recomputes cleanly (e.g. you have end odo + distance but forgot the start → start fills in). Fixes the cases where a field could get stuck and refuse input.</li>
 </ul>
 <div class="cl-ver">v8.3.2 <span class="cl-date">7 Sep 2026</span></div>
@@ -1835,8 +1840,6 @@ function ocrConfirm(){
     if(sPct){document.getElementById('tripStartPct').value=sPct;}
     if(eOdo){document.getElementById('tripEndOdo').value=eOdo;}
     if(ePct){document.getElementById('tripEndPct').value=ePct;}
-    // Both odos come from OCR → make them authoritative so distance derives.
-    _tripOdoOrder=(sOdo&&eOdo)?['so','eo']:(eOdo?['eo']:(sOdo?['so']:[]));
     autoCalcTrip('endOdo');autoCalcTrip('endPct');updateTripPreview();
   }else if(_ocrMode==='charge'){
     if(sOdo){document.getElementById('odo').value=sOdo;autoCalcCharge('odo');}
@@ -2774,7 +2777,11 @@ function openChargerPicker(){
 }
 
 function updatePreview(){
-  const s=+document.getElementById('start').value,e=+document.getElementById('end').value;
+  let s=+document.getElementById('start').value;const e=+document.getElementById('end').value;
+  // Start may be blank while a "Last: N%" placeholder shows — apply the same
+  // last-known-state fallback saveCharge/autoCalcCharge use, so the kWh preview
+  // matches the value that gets saved.
+  if(!document.getElementById('start').value){var _st=getLastKnownState();if(_st&&_st.endPct!=null)s=_st.endPct;}
   document.getElementById('kwhPreview').textContent=(e>s&&s>=0)?'⚡ '+calcKwh(s,e).toFixed(2)+' kWh':'';
   updateDurationPreview();
   if(document.getElementById('type').value==='public') autoCalcPublic('pct');
@@ -3085,73 +3092,85 @@ function setEntryMode(mode){
 }
 
 // ── TRIP MANAGEMENT ────────────────────────────────────────────────────────
-// Recency-based "any 2 of 3" engine for Start odo / End odo / Distance.
-// Rule: the two MOST-RECENTLY-EDITED fields that currently have a value are
-// authoritative; the third is computed from them. This replaces the old
-// userEntered/fallback flag logic, which produced stuck states when fields were
-// added/cleared in different orders. Recompute happens fresh on every keystroke,
-// so no sticky flags can desync. Only the derived field is written.
-var _tripOdoOrder=[]; // field keys 'so'/'eo'/'dist', most-recently-edited last
-function _tripOdoTouch(key){
-  var i=_tripOdoOrder.indexOf(key);
-  if(i>-1)_tripOdoOrder.splice(i,1);
-  _tripOdoOrder.push(key);
+// Read-only "any 2 of 3" model (like the carpool total). The Start odo / End odo
+// / Distance inputs — and the Start% / End% / Used% inputs — are NEVER auto-written,
+// so any field can always be fully cleared/edited. Instead, the computed third
+// value is shown in a read-only preview span. saveTrip derives the missing value
+// at save time from the two present values (+ last-known-state fallback), so the
+// saved trip is correct even though the field was never filled in.
+//
+// _deriveTripOdo() / _deriveTripPct() are the single source of truth for the
+// reconciliation, used by both the live preview and saveTrip.
+function _deriveTripOdo(){
+  // Reads the three odo/dist inputs; applies last-known odo fallback for a blank
+  // start; returns {so,eo,dist,derived} where `derived` names which field was
+  // computed ('so'|'eo'|'dist'|null). Never mutates inputs.
+  var soRaw=document.getElementById('tripStartOdo').value.trim();
+  var eoRaw=document.getElementById('tripEndOdo').value.trim();
+  var dRaw=document.getElementById('tripDistance').value.trim();
+  var so=soRaw!==''?+stripCommas(soRaw):null;
+  var eo=eoRaw!==''?+stripCommas(eoRaw):null;
+  var dist=dRaw!==''?+stripCommas(dRaw):null;
+  var soFallback=false;
+  if(so==null){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFallback=true;}}
+  var have=(so!=null?1:0)+(eo!=null?1:0)+(dist!=null?1:0);
+  var derived=null;
+  // Priority when computing the third: distance is the natural derived value when
+  // both odos are known; otherwise fill whichever odo is missing.
+  if(eo!=null&&dist!=null&&so==null){so=eo-dist;derived='so';}
+  else if((so!=null||soFallback)&&dist!=null&&eo==null){eo=so+dist;derived='eo';}
+  else if(so!=null&&eo!=null&&dist==null){dist=parseFloat((eo-so).toFixed(1));derived='dist';}
+  return {so:so,eo:eo,dist:dist,derived:derived,soFallback:soFallback};
 }
-function _tripOdoReset(){_tripOdoOrder=[];}
+function _deriveTripPct(){
+  var spRaw=document.getElementById('tripStartPct').value.trim();
+  var epRaw=document.getElementById('tripEndPct').value.trim();
+  var conRaw=document.getElementById('tripConsumed').value.trim();
+  var sp=spRaw!==''?+spRaw:null;
+  var ep=epRaw!==''?+epRaw:null;
+  var con=conRaw!==''?+conRaw:null;
+  var spFallback=false;
+  if(sp==null){var _lks=getLastKnownState();if(_lks&&_lks.endPct!=null){sp=_lks.endPct;spFallback=true;}}
+  var derived=null;
+  if(sp!=null&&ep!=null&&con==null){if(sp>ep){con=sp-ep;derived='con';}}
+  else if((sp!=null||spFallback)&&con!=null&&ep==null){ep=Math.max(0,sp-con);derived='ep';}
+  else if(ep!=null&&con!=null&&sp==null){sp=ep+con;derived='sp';}
+  return {sp:sp,ep:ep,con:con,derived:derived,spFallback:spFallback};
+}
 function autoCalcTrip(changed){
-  var soEl=document.getElementById('tripStartOdo');
-  var eoEl=document.getElementById('tripEndOdo');
-  var distEl=document.getElementById('tripDistance');
-  var spEl=document.getElementById('tripStartPct');
-  var epEl=document.getElementById('tripEndPct');
-  var conEl=document.getElementById('tripConsumed');
   var errEl=document.getElementById('tripError');
 
-  // ── Odo / Distance: recency-based any-2-of-3 ──
   if(changed==='startOdo'||changed==='endOdo'||changed==='dist'){
-    var keyMap={startOdo:'so',endOdo:'eo',dist:'dist'};
-    var key=keyMap[changed];
-    var elMap={so:soEl,eo:eoEl,dist:distEl};
-    // Track recency: if the changed field now has a value, mark it most-recent;
-    // if it was cleared, drop it from the order.
-    if(elMap[key].value.trim()!=='') _tripOdoTouch(key); else {var _ri=_tripOdoOrder.indexOf(key);if(_ri>-1)_tripOdoOrder.splice(_ri,1);}
-    var val=function(k){return +stripCommas(elMap[k].value);};
-    var has=function(k){return elMap[k].value.trim()!==''&&isFinite(val(k));};
-    // Authoritative = the two most-recently-edited fields that currently have values.
-    var recent=_tripOdoOrder.filter(has);
-    var auth=recent.slice(-2);
-    // Validation: end must exceed start when both are the actual entered odos.
-    if(has('so')&&has('eo')&&val('eo')<=val('so')){
+    var o=_deriveTripOdo();
+    var opv=document.getElementById('tripOdoPreview');
+    // Validation: end must exceed start when both are actual entered values.
+    var soEntered=document.getElementById('tripStartOdo').value.trim()!=='';
+    var eoEntered=document.getElementById('tripEndOdo').value.trim()!=='';
+    if(soEntered&&eoEntered&&o.so!=null&&o.eo!=null&&o.eo<=o.so){
       errEl.textContent='End odo must be greater than start odo.';
-    } else {
-      if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
-      if(auth.length===2){
-        // Derived field = whichever of so/eo/dist is NOT authoritative.
-        var derived=['so','eo','dist'].filter(function(k){return auth.indexOf(k)<0;})[0];
-        // Intuition override: editing an ODOMETER when both odos are present should
-        // recompute DISTANCE (odometers are the source of truth), never rewrite the
-        // other odometer. Only editing Distance recomputes an odometer.
-        if((key==='so'||key==='eo')&&has('so')&&has('eo')) derived='dist';
-        var so=val('so'),eo=val('eo'),dist=val('dist');
-        if(derived==='dist'){var d=eo-so;if(d>0)distEl.value=parseFloat(d.toFixed(1));}
-        else if(derived==='so'){var s=eo-dist;if(s>0)soEl.value=Math.round(s);}
-        else if(derived==='eo'){eoEl.value=Math.round(so+dist);}
-      }
+    } else if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1){
+      errEl.textContent='';
+    }
+    // Show only the freshly-computed third value as a read-only preview.
+    if(opv){
+      if(o.derived==='so'&&o.so>0) opv.textContent='= start odo '+Math.round(o.so).toLocaleString('en-IN');
+      else if(o.derived==='eo'&&o.eo>0) opv.textContent='= end odo '+Math.round(o.eo).toLocaleString('en-IN');
+      else if(o.derived==='dist'&&o.dist>0) opv.textContent='= '+o.dist+' km';
+      else opv.textContent='';
+      opv.style.color='var(--good)';
     }
     checkTripRangeWarning();
   }
 
-  // ── Battery %: any 2 of 3 (start% / end% / used%) — unchanged ──
   if(changed==='startPct'||changed==='endPct'||changed==='consumed'){
-    var sp=+spEl.value, ep=+epEl.value, con=+conEl.value;
-    var spFromFallback=false;
-    if(!spEl.value){var _lks2=getLastKnownState();if(_lks2&&_lks2.endPct!=null){sp=_lks2.endPct;spFromFallback=true;}}
-    if(changed==='startPct'||changed==='endPct'){
-      if(sp>=0&&ep>=0&&sp>ep) conEl.value=sp-ep;
-      else if(sp>=0&&ep>=0&&ep>sp) conEl.value=''; // regen
-    } else if(changed==='consumed'){
-      if(con>0&&sp>0&&(spFromFallback||spEl.value)) epEl.value=Math.max(0,sp-con);
-      else if(con>0&&ep>=0&&!spEl.value&&!spFromFallback) spEl.value=ep+con;
+    var p=_deriveTripPct();
+    var ppv=document.getElementById('tripPctPreview');
+    if(ppv){
+      if(p.derived==='con'&&p.con>0) ppv.textContent='= '+p.con+'% used';
+      else if(p.derived==='ep'&&p.ep>=0) ppv.textContent='= end '+p.ep+'%';
+      else if(p.derived==='sp'&&p.sp>=0) ppv.textContent='= start '+p.sp+'%';
+      else ppv.textContent='';
+      ppv.style.color='var(--good)';
     }
   }
 
@@ -3159,9 +3178,9 @@ function autoCalcTrip(changed){
 }
 
 function checkTripRangeWarning(){
-  var distEl=document.getElementById('tripDistance');
   var errEl=document.getElementById('tripError');
-  var _tripKm=+(stripCommas(distEl.value));
+  var o=_deriveTripOdo();
+  var _tripKm=(o.dist!=null&&isFinite(o.dist))?o.dist:0;
   // Clear previous range warnings (but not other errors)
   if(errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1)errEl.textContent='';
   if(_tripKm>0){
@@ -3177,22 +3196,15 @@ function checkTripRangeWarning(){
 }
 
 function updateTripPreview(){
-  var so=+stripCommas(document.getElementById('tripStartOdo').value);
-  var eo=+stripCommas(document.getElementById('tripEndOdo').value);
-  // Start Odo may be blank while showing a "Last: N" placeholder — apply the same
-  // last-known-state fallback that autoCalcTrip uses, so preview matches Distance.
-  if(!so){var _lks=getLastKnownState();if(_lks&&_lks.odo)so=_lks.odo;}
-  var distEl=document.getElementById('tripDistance');
-  var distVal=+stripCommas(distEl.value);
-  var spEl=document.getElementById('tripStartPct');
-  var epEl=document.getElementById('tripEndPct');
-  var sp=+spEl.value, ep=+epEl.value;
+  // Uses the same derive helpers so the preview reflects computed (not just typed)
+  // values — including the last-known-state fallback for a blank start.
+  var o=_deriveTripOdo();
+  var p=_deriveTripPct();
   var el=document.getElementById('tripPreview');
-  // Don't show preview if Start% or End% fields are empty
-  if(spEl.value===''||epEl.value===''){el.textContent='';return;}
-  // Prefer the explicit Distance field (already reconciled by autoCalcTrip);
-  // fall back to odo diff only when Distance is empty.
-  var km=distVal>0?distVal:(eo>so?parseFloat((eo-so).toFixed(1)):0);
+  var km=(o.dist!=null&&isFinite(o.dist)&&o.dist>0)?o.dist:0;
+  var sp=p.sp, ep=p.ep;
+  // Need both % values (entered or derived) to show the energy preview.
+  if(sp==null||ep==null){el.textContent='';return;}
   if(km>0&&sp<=100&&ep>=0&&ep<=100&&sp>ep){
     var drop=sp-ep;
     var consumption=drop*settings.battery/100;
@@ -3404,15 +3416,14 @@ function _syncTripCpFares(){
 
 function saveTrip(){
   var date=document.getElementById('tripDate').value;
-  var soRaw=stripCommas(document.getElementById('tripStartOdo').value);
-  var spRaw=document.getElementById('tripStartPct').value;
-  // Fallback: if start odo/% empty, use last known state
-  if(!soRaw||!+soRaw){var _tst=getLastKnownState();if(_tst&&_tst.odo)soRaw=''+_tst.odo;}
-  if(!spRaw){var _tst2=getLastKnownState();if(_tst2&&_tst2.endPct!=null)spRaw=''+_tst2.endPct;}
-  var so=+soRaw;
-  var eo=+stripCommas(document.getElementById('tripEndOdo').value);
-  var sp=+spRaw;
-  var ep=+document.getElementById('tripEndPct').value;
+  // Derive the full odo/dist and %/used sets from whatever 2-of-3 the user gave
+  // (+ last-known-state fallback), matching the read-only preview shown in the form.
+  var _o=_deriveTripOdo();
+  var _p=_deriveTripPct();
+  var so=_o.so!=null?_o.so:0;
+  var eo=_o.eo!=null?_o.eo:0;
+  var sp=_p.sp!=null?_p.sp:NaN;
+  var ep=_p.ep!=null?_p.ep:NaN;
   var note=document.getElementById('tripNote').value.trim()||null;
   var chargedSince=document.getElementById('tripChargedSince').checked;
   var errEl=document.getElementById('tripError');
@@ -3474,7 +3485,8 @@ function saveTrip(){
 
 function clearTripForm(){
   ['tripStartOdo','tripEndOdo','tripDistance','tripStartPct','tripEndPct','tripConsumed','tripNote'].forEach(function(id){document.getElementById(id).value='';});
-  _tripOdoReset();
+  var _op=document.getElementById('tripOdoPreview');if(_op)_op.textContent='';
+  var _pp=document.getElementById('tripPctPreview');if(_pp)_pp.textContent='';
   document.getElementById('tripDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
@@ -3510,9 +3522,6 @@ function editTrip(i){
   document.getElementById('tripStartOdo').value=x.startOdo?Math.round(x.startOdo):'';
   document.getElementById('tripEndOdo').value=x.endOdo?Math.round(x.endOdo):'';
   document.getElementById('tripDistance').value=x.km||'';
-  // Seed recency so start+end are authoritative (distance derived) — editing an
-  // odo then recomputes distance, not the other odo.
-  _tripOdoOrder=['dist','so','eo'];
   document.getElementById('tripStartPct').value=x.startPct!=null?Math.round(x.startPct):'';
   document.getElementById('tripEndPct').value=x.endPct!=null?Math.round(x.endPct):'';
   document.getElementById('tripConsumed').value=(x.startPct>x.endPct)?Math.round(x.startPct-x.endPct):'';
@@ -4721,6 +4730,9 @@ function drawChart(id,pts,dates,color,overrideAvg){
   ctx.textAlign='center';ctx.fillStyle=document.body.classList.contains('light')?'#475569':'#64748b';ctx.font='9px Inter,sans-serif';
   const maxL=Math.max(2,Math.floor(gW/44));
   var lastLabelX=-999;
+  // The last label is always drawn; reserve its x up front so earlier labels
+  // don't crowd it (fixes the end-of-axis overlap, e.g. "4 Sep"/"8 Sep").
+  const lastX=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(valid.length-1)));
   valid.forEach(({d},i)=>{
     const step=Math.ceil((valid.length-1)/Math.max(1,maxL-1));
     const isFirst=i===0;
@@ -4729,8 +4741,10 @@ function drawChart(id,pts,dates,color,overrideAvg){
     const show=isFirst||isLast||isSpaced;
     if(show){
       var lx=Math.max(pad.l+16,Math.min(W-pad.r-16,toX(i)));
-      // Skip if too close to previous label (min 40px gap) — but always show first and last
+      // Skip if too close to the previously-drawn label OR to the always-drawn
+      // last label (min 40px gap) — but the first and last are never skipped.
       if(!isFirst&&!isLast&&Math.abs(lx-lastLabelX)<40) return;
+      if(!isFirst&&!isLast&&Math.abs(lx-lastX)<40) return;
       ctx.fillText(fmtDateShort(d),lx,H-4);
       lastLabelX=lx;
     }
