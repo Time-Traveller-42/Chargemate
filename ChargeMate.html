@@ -173,6 +173,7 @@ body.light .charged-since-row{background:#f8fafc;border-color:#e2e8f0}
 .stat-val.warn{color:var(--warn)}.stat-val.good{color:var(--good)}
 .stat-label{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
 .stat-sub{font-size:10px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.field-preview{font-size:10px;color:var(--good);margin-top:3px;min-height:13px;font-variant-numeric:tabular-nums;font-weight:500}
 
 .session-row{padding:6px 0;border-bottom:1px solid var(--border);overflow-wrap:break-word;word-break:break-word}
 .session-row:last-child{border-bottom:none}
@@ -481,19 +482,17 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
       </div>
       <div style="margin-top:10px">
         <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
-          <div><label>Start Odo</label><input type="tel" id="tripStartOdo" placeholder="e.g. 5000" oninput="autoCalcTrip('startOdo')"></div>
-          <div><label>End Odo</label><input type="tel" id="tripEndOdo" placeholder="e.g. 5070" oninput="autoCalcTrip('endOdo')"></div>
-          <div><label>Distance (km)</label><input type="tel" id="tripDistance" placeholder="e.g. 70" oninput="autoCalcTrip('dist')"></div>
+          <div><label>Start Odo</label><input type="tel" id="tripStartOdo" placeholder="e.g. 5000" oninput="autoCalcTrip('startOdo')"><div id="tripStartOdoPreview" class="field-preview"></div></div>
+          <div><label>End Odo</label><input type="tel" id="tripEndOdo" placeholder="e.g. 5070" oninput="autoCalcTrip('endOdo')"><div id="tripEndOdoPreview" class="field-preview"></div></div>
+          <div><label>Distance (km)</label><input type="tel" id="tripDistance" placeholder="e.g. 70" oninput="autoCalcTrip('dist')"><div id="tripDistancePreview" class="field-preview"></div></div>
         </div>
-        <div id="tripOdoPreview" class="stat-sub" style="margin-top:4px;min-height:14px"></div>
       </div>
       <div style="margin-top:10px">
         <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px">
-          <div><label>Start %</label><input type="tel" id="tripStartPct" placeholder="e.g. 90" oninput="autoCalcTrip('startPct')"></div>
-          <div><label>End %</label><input type="tel" id="tripEndPct" placeholder="e.g. 67" oninput="autoCalcTrip('endPct')"></div>
-          <div><label>Used %</label><input type="tel" id="tripConsumed" placeholder="e.g. 23" oninput="autoCalcTrip('consumed')"></div>
+          <div><label>Start %</label><input type="tel" id="tripStartPct" placeholder="e.g. 90" oninput="autoCalcTrip('startPct')"><div id="tripStartPctPreview" class="field-preview"></div></div>
+          <div><label>End %</label><input type="tel" id="tripEndPct" placeholder="e.g. 67" oninput="autoCalcTrip('endPct')"><div id="tripEndPctPreview" class="field-preview"></div></div>
+          <div><label>Used %</label><input type="tel" id="tripConsumed" placeholder="e.g. 23" oninput="autoCalcTrip('consumed')"><div id="tripConsumedPreview" class="field-preview"></div></div>
         </div>
-        <div id="tripPctPreview" class="stat-sub" style="margin-top:4px;min-height:14px"></div>
       </div>
 
       <label style="margin-top:10px">Note <span style="color:var(--muted);font-size:10px">(optional)</span></label>
@@ -862,11 +861,21 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v8.5.2 <span class="cl-date">10 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Per-field previews</b>: the computed "= …" value now appears directly under the specific field it belongs to (under Distance, Start odo, End odo, etc.) instead of one shared line under the whole row — no more guessing which box a preview refers to.</li>
+<li><b>Odo preview now matches the % row</b>: entering just the End odo (with the start carried over from the last trip) shows the computed distance under the Distance box, exactly like the % row already showed used %. Two real entered values always take priority over the carried-over start.</li>
+</ul>
+    <div class="cl-ver">v8.5.1 <span class="cl-date">8 Sep 2026</span></div>
+<ul class="cl-list">
+<li><b>Trip odo preview fix</b>: the last-known-odo fallback no longer counts as an entered value. Entering only the End odo no longer shows a phantom distance, and entering End odo + Distance now correctly derives the Start odo. The read-only "= …" preview appears only when two real values are entered.</li>
+<li><b>Charge duration preview fix</b>: the estimated charge time now also honours a blank Start% carrying over from the last charge (previously only the kWh preview did), so the time estimate no longer assumes a 0%→end% charge.</li>
+<li><b>Public charge kWh fix</b>: auto-filling kWh from the % delta for a public charge now uses the carried-over start% when Start% is left blank, instead of assuming 0%.</li>
+<li><b>Efficiency Trend x-axis fix</b>: the last date label no longer overlaps the one before it at the end of the axis (was rendering e.g. "4 Sep" and "8 Sep" on top of each other).</li>
+</ul>
     <div class="cl-ver">v8.5.0 <span class="cl-date">8 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>Trip inputs are now fully clearable</b>: Start odo / End odo / Distance (and Start% / End% / Used%) are no longer auto-typed into each other, so you can always erase and re-enter any field. The computed third value now shows as a read-only "= …" preview line under the row (like the carpool total), and is saved automatically. Fixes the stuck "can't erase the last digit" behaviour.</li>
-<li><b>Charge preview fix (kWh + duration)</b>: when you leave Start% blank (carrying over from the last charge), the live kWh preview AND the estimated charge duration now both use that carried-over start instead of 0%, so the previews match the saved charge.</li>
-<li><b>Efficiency Trend x-axis fix</b>: the last date label no longer overlaps the one before it at the end of the axis (was rendering e.g. "4 Sep" and "8 Sep" on top of each other).</li>
 <li><b>Trip start/end/distance rebuilt</b>: enter any two of Start odo, End odo, Distance and the third fills in automatically — in any order. Clearing a field and typing another now recomputes cleanly (e.g. end odo + distance but no start → start fills in). Fixes the cases where a field could get stuck and refuse input.</li>
 </ul>
 <div class="cl-ver">v8.3.2 <span class="cl-date">7 Sep 2026</span></div>
@@ -3039,6 +3048,7 @@ function setEntryMode(mode){
 // Read-only "any 2 of 3" model (like the carpool total): the odo/distance and
 // %/used inputs are never auto-written, so they stay fully clearable. The computed
 // third value is shown in a read-only preview span; saveTrip derives it on save.
+function _setFieldPreview(id,text){var el=document.getElementById(id);if(el)el.textContent=text;}
 function _deriveTripOdo(){
   var soRaw=document.getElementById('tripStartOdo').value.trim();
   var eoRaw=document.getElementById('tripEndOdo').value.trim();
@@ -3052,12 +3062,17 @@ function _deriveTripOdo(){
   var dist=dRaw!==''?+stripCommas(dRaw):null;
   var soFallback=false;
   var derived=null;
-  if(eo!=null&&dist!=null&&so==null){so=eo-dist;derived='so';}
+  // 1) Prefer deriving from two REAL entered values (real values win over fallback).
+  if(so!=null&&eo!=null&&dist==null){var _d=parseFloat((eo-so).toFixed(1));if(_d>0){dist=_d;derived='dist';}}
   else if(so!=null&&dist!=null&&eo==null){eo=so+dist;derived='eo';}
-  else if(so!=null&&eo!=null&&dist==null){dist=parseFloat((eo-so).toFixed(1));derived='dist';}
-  // Last resort: still no real start — borrow last-known odo purely as a save-time
-  // fallback. Never sets `derived`, so a single real value shows no computed preview.
-  if(so==null){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFallback=true;}}
+  else if(eo!=null&&dist!=null&&so==null){so=eo-dist;derived='so';}
+  else {
+    // 2) Only ONE real value: borrow the carried-over start so the third still
+    //    previews under its own box (mirrors the % row).
+    if(so==null){var _lks=getLastKnownState();if(_lks&&_lks.odo){so=_lks.odo;soFallback=true;}}
+    if(soFallback&&eo!=null&&dist==null){var _d2=parseFloat((eo-so).toFixed(1));if(_d2>0){dist=_d2;derived='dist';}}
+    else if(soFallback&&dist!=null&&eo==null){eo=so+dist;derived='eo';}
+  }
   return {so:so,eo:eo,dist:dist,derived:derived,soFallback:soFallback};
 }
 function _deriveTripPct(){
@@ -3080,7 +3095,6 @@ function autoCalcTrip(changed){
 
   if(changed==='startOdo'||changed==='endOdo'||changed==='dist'){
     var o=_deriveTripOdo();
-    var opv=document.getElementById('tripOdoPreview');
     var soEntered=document.getElementById('tripStartOdo').value.trim()!=='';
     var eoEntered=document.getElementById('tripEndOdo').value.trim()!=='';
     if(soEntered&&eoEntered&&o.so!=null&&o.eo!=null&&o.eo<=o.so){
@@ -3088,26 +3102,23 @@ function autoCalcTrip(changed){
     } else if(errEl.textContent==='End odo must be greater than start odo.'||errEl.textContent.indexOf('exceeds')>-1||errEl.textContent.indexOf('high')>-1){
       errEl.textContent='';
     }
-    if(opv){
-      if(o.derived==='so'&&o.so>0) opv.textContent='= start odo '+Math.round(o.so).toLocaleString('en-IN');
-      else if(o.derived==='eo'&&o.eo>0) opv.textContent='= end odo '+Math.round(o.eo).toLocaleString('en-IN');
-      else if(o.derived==='dist'&&o.dist>0) opv.textContent='= '+o.dist+' km';
-      else opv.textContent='';
-      opv.style.color='var(--good)';
-    }
+    _setFieldPreview('tripStartOdoPreview','');
+    _setFieldPreview('tripEndOdoPreview','');
+    _setFieldPreview('tripDistancePreview','');
+    if(o.derived==='so'&&o.so>0) _setFieldPreview('tripStartOdoPreview','= '+Math.round(o.so).toLocaleString('en-IN'));
+    else if(o.derived==='eo'&&o.eo>0) _setFieldPreview('tripEndOdoPreview','= '+Math.round(o.eo).toLocaleString('en-IN'));
+    else if(o.derived==='dist'&&o.dist>0) _setFieldPreview('tripDistancePreview','= '+o.dist+' km');
     checkTripRangeWarning();
   }
 
   if(changed==='startPct'||changed==='endPct'||changed==='consumed'){
     var p=_deriveTripPct();
-    var ppv=document.getElementById('tripPctPreview');
-    if(ppv){
-      if(p.derived==='con'&&p.con>0) ppv.textContent='= '+p.con+'% used';
-      else if(p.derived==='ep'&&p.ep>=0) ppv.textContent='= end '+p.ep+'%';
-      else if(p.derived==='sp'&&p.sp>=0) ppv.textContent='= start '+p.sp+'%';
-      else ppv.textContent='';
-      ppv.style.color='var(--good)';
-    }
+    _setFieldPreview('tripStartPctPreview','');
+    _setFieldPreview('tripEndPctPreview','');
+    _setFieldPreview('tripConsumedPreview','');
+    if(p.derived==='con'&&p.con>0) _setFieldPreview('tripConsumedPreview','= '+p.con+'%');
+    else if(p.derived==='ep'&&p.ep>=0) _setFieldPreview('tripEndPctPreview','= '+p.ep+'%');
+    else if(p.derived==='sp'&&p.sp>=0) _setFieldPreview('tripStartPctPreview','= '+p.sp+'%');
   }
 
   updateTripPreview();
@@ -3271,8 +3282,7 @@ function saveTrip(){
 
 function clearTripForm(){
   ['tripStartOdo','tripEndOdo','tripDistance','tripStartPct','tripEndPct','tripConsumed','tripNote'].forEach(function(id){document.getElementById(id).value='';});
-  var _op=document.getElementById('tripOdoPreview');if(_op)_op.textContent='';
-  var _pp=document.getElementById('tripPctPreview');if(_pp)_pp.textContent='';
+  ['tripStartOdoPreview','tripEndOdoPreview','tripDistancePreview','tripStartPctPreview','tripEndPctPreview','tripConsumedPreview'].forEach(function(id){var _e=document.getElementById(id);if(_e)_e.textContent='';});
   document.getElementById('tripDate').value=new Date().toISOString().slice(0,10);
   document.getElementById('tripChargedSince').checked=false;
   document.getElementById('tripPreview').textContent='';
