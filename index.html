@@ -880,6 +880,14 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v8.5.8 <span class="cl-date">15 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: OCR binarisation threshold lowered from 128 to 80 — the Punch.ev battery % text (teal, grayscale ~107) was binarising to black on black at the old threshold. At 80 the teal text survives while the dark background (gray ~25) remains black and white odo digits (gray ~200) are unaffected.</li>
+    </ul>
+    <div class="cl-ver">v8.5.7 <span class="cl-date">15 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: OCR retries on the original image whenever battery % is missing, even when the odometer was already found. Previously it only retried when both were missing — teal-coloured % text can binarize away while the white odo text reads fine.</li>
+    </ul>
     <div class="cl-ver">v8.5.5 <span class="cl-date">15 Sep 2026</span></div>
 <ul class="cl-list">
 <li><b>OCR battery detection rework</b>: battery % is now read from the number attached to a "%" (taking the last one), then a divider-separated "km | NN", then as a last resort the battery number on the charge line — so it no longer reads 0 or blank when the "%" glyph is lost. Also added a <b>"Scanned text (debug)"</b> drop-down in the scan result so you can see exactly what the scanner read and correct the fields if needed.</li>
@@ -1649,17 +1657,29 @@ function _ocrGetWorker(){
 }
 
 function _ocrPreprocess(img){
-  var maxW=1400;
-  var scale=img.width>maxW?maxW/img.width:1;
+  // The small battery "% " text on these dashboards sits right at the edge of
+  // what OCR can resolve: a crisp screenshot reads fine ("26%"), but a slightly
+  // more compressed/smaller one degrades and "51 %" collapses to a single glyph.
+  // The binarisation threshold (g>128) is proven to work on good images, so we
+  // keep it unchanged. The one lever that helps the borderline cases without
+  // hurting the good ones is UPSCALING — a phone screenshot (~1080px wide) was
+  // previously left at 1x, leaving the battery digits tiny. We now upscale small
+  // screenshots so those digits get more pixels, then binarise as before.
+  var minW=1900;                                  // upscale target for small shots
+  var maxW=2400;                                  // cap to bound memory
+  var scale=1;
+  if(img.width<minW)scale=minW/img.width;         // upscale small screenshots
+  else if(img.width>maxW)scale=maxW/img.width;    // downscale only very large ones
   var w=Math.round(img.width*scale),h=Math.round(img.height*scale);
   var c=document.createElement('canvas');c.width=w;c.height=h;
   var ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   ctx.drawImage(img,0,0,w,h);
   var data=ctx.getImageData(0,0,w,h);
   var px=data.data;
   for(var i=0;i<px.length;i+=4){
     var g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
-    var v=g>128?255:0;
+    var v=g>80?255:0;                             // threshold 80: captures teal % text (gray~107) and white odo (gray~200+) while keeping dark bg (gray~25) black
     px[i]=px[i+1]=px[i+2]=v;
   }
   ctx.putImageData(data,0,0);
@@ -1746,7 +1766,9 @@ function _ocrRecognize(img){
     var text=(res&&res.data&&res.data.text)||'';
     var parsed=_ocrParse(text);
     parsed.raw=text;
-    if(parsed.odo==null&&parsed.pct==null){
+    if(parsed.pct==null){
+      // Retry on original whenever % is missing (teal % text can binarize poorly
+      // even when white odo text is fine — don't skip retry just because odo was found).
       return worker.recognize(img).then(function(res2){
         var text2=(res2&&res2.data&&res2.data.text)||'';
         var p2=_ocrParse(text+'\n'+text2);
