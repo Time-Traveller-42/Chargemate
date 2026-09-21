@@ -850,6 +850,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
           <input type="tel" id="ocrEndPct" placeholder="End">
         </div>
       </div>
+      <details style="margin-top:12px">
+        <summary style="font-size:11px;color:var(--muted);cursor:pointer">Scanned text (debug)</summary>
+        <pre id="ocrRawText" style="margin-top:6px;font-size:10px;color:var(--muted);white-space:pre-wrap;word-break:break-word;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:8px;max-height:160px;overflow:auto"></pre>
+      </details>
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="ghost" onclick="closeOcr()" style="flex:1;margin:0">Cancel</button>
@@ -861,9 +865,29 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v8.5.11 <span class="cl-date">21 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: "Include sync credentials" in Export/Import now actually works. It was reading and writing a settings field the Cloud Sync feature never used, so a checked export saved no credentials and an import never reached sync. Export now pulls the real token + Gist ID from your sync setup, and import writes them straight back into Cloud Sync (the Sync settings fill in immediately). Backups made by older versions still import correctly.</li>
+    </ul>
+    <div class="cl-ver">v8.5.10 <span class="cl-date">21 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: the Trip Planner's "Efficiency Mode" readout now reflects pax and weather. It was showing the raw City/Highway/Mixed average and never moved when you changed pax or weather, even though the plan's range math underneath was already applying those factors — so it looked like pax had no effect. The readout now uses the same pax/weather-adjusted efficiency the plan uses, and the label notes the applied factors (e.g. "City (from tagged data) · 3pax ×0.95 · rain ×1.08").</li>
+    </ul>
+    <div class="cl-ver">v8.5.9 <span class="cl-date">15 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>OCR cleanup: battery % is now only read when genuinely attached to a "%"; the "guess a number after km / on the charge line" fallbacks were removed so a bad scan leaves the field blank instead of returning a wrong value (e.g. "37 %" read as 7). Scan preprocessing (upscaling + threshold 80) brought in line with the Full build.</li>
+    </ul>
+    <div class="cl-ver">v8.5.8 <span class="cl-date">15 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: OCR binarisation threshold lowered from 128 to 80 — teal battery % text (grayscale ~107) now survives binarisation.</li>
+    </ul>
+    <div class="cl-ver">v8.5.7 <span class="cl-date">15 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Fix: OCR retries on the original image whenever battery % is missing, even when the odometer was already found.</li>
+    </ul>
     <div class="cl-ver">v8.5.5 <span class="cl-date">15 Sep 2026</span></div>
 <ul class="cl-list">
-<li><b>OCR battery fix (read 0)</b>: the previous scan could read the battery as 0% because the odometer line also ends in "km" and a stray digit after it was mistaken for the battery. The battery % is now taken from the number actually attached to a "%" (or a divider-separated "km | NN"), never a bare number after "km".</li>
+<li><b>OCR battery detection rework</b>: battery % is now read from the number attached to a "%" (taking the last one), then a divider-separated "km | NN", then as a last resort the battery number on the charge line — so it no longer reads 0 or blank when the "%" glyph is lost. Also added a <b>"Scanned text (debug)"</b> drop-down in the scan result so you can see exactly what the scanner read and correct the fields if needed.</li>
 </ul>
     <div class="cl-ver">v8.5.4 <span class="cl-date">15 Sep 2026</span></div>
 <ul class="cl-list">
@@ -1615,17 +1639,25 @@ function _ocrGetWorker(){
 }
 
 function _ocrPreprocess(img){
-  var maxW=1400;
-  var scale=img.width>maxW?maxW/img.width:1;
+  // Kept in sync with the full build. Two levers make the small battery "% " text
+  // readable: (1) UPSCALE small screenshots so the digits get enough pixels, and
+  // (2) BINARISATION THRESHOLD 80 (not 128) so teal % text (grayscale ~107)
+  // survives instead of binarising to black-on-black.
+  var minW=1900;                                  // upscale target for small shots
+  var maxW=2400;                                  // cap to bound memory
+  var scale=1;
+  if(img.width<minW)scale=minW/img.width;         // upscale small screenshots
+  else if(img.width>maxW)scale=maxW/img.width;    // downscale only very large ones
   var w=Math.round(img.width*scale),h=Math.round(img.height*scale);
   var c=document.createElement('canvas');c.width=w;c.height=h;
   var ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   ctx.drawImage(img,0,0,w,h);
   var data=ctx.getImageData(0,0,w,h);
   var px=data.data;
   for(var i=0;i<px.length;i+=4){
     var g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
-    var v=g>128?255:0;
+    var v=g>80?255:0;
     px[i]=px[i+1]=px[i+2]=v;
   }
   ctx.putImageData(data,0,0);
@@ -1636,10 +1668,12 @@ function _ocrParse(text){
   var odo=null,pct=null;
   var clean=text.replace(/[Oo]/g,'0');
   // ── Battery % detection ──────────────────────────────────────────────────
-  // The battery % is the number attached to a "%" glyph. We must NOT grab a
-  // stray number that merely follows "km" (the odometer line also ends in "km",
-  // which previously made us read 0). Anchor on the "%" wherever possible and
-  // only fall back to structure (requiring a divider) when the glyph is gone.
+  // Only accept a number genuinely attached to a "%" glyph (or a clearly garbled
+  // %: 9o, o/o, °/o); take the LAST valid candidate. We deliberately do NOT guess
+  // from "a number after km" or "the last number on the charge line" — when OCR
+  // mangles the battery those fallbacks produce a confidently WRONG value, and a
+  // blank the user can fill in is better than a plausible wrong number. The g>80
+  // preprocessing threshold now makes the "%" survive, so this carries the read.
   var pctCandidates=[];
   var pctRe=/(\d{1,3})\s*(?:%|9\s*[o0]|[o0]\s*\/\s*[o0]|[°º]\s*\/?\s*[o0])/gi;
   var pm;
@@ -1648,17 +1682,6 @@ function _ocrParse(text){
     if(pv>=0&&pv<=100)pctCandidates.push(pv);
   }
   if(pctCandidates.length)pct=pctCandidates[pctCandidates.length-1];
-  // Fallback: "%" glyph dropped. Require a real divider (| l I / :) between "km"
-  // and the number so we match the range→battery separator, never the bare
-  // odometer "…km". Take the last such match.
-  if(pct==null){
-    var kmRe=/km\s*[|lI\/:]+\s*(\d{1,3})(?!\d)/gi;
-    var km;
-    while((km=kmRe.exec(clean))!==null){
-      var kv=parseInt(km[1],10);
-      if(kv>=0&&kv<=100)pct=kv;
-    }
-  }
   var odoAnchored=clean.match(/0D0[\s.:]*([\d\s]+?)\s*km/i);
   if(odoAnchored){
     var digits=odoAnchored[1].replace(/\s/g,'');
@@ -1684,10 +1707,13 @@ function _ocrRecognize(img){
   }).then(function(res){
     var text=(res&&res.data&&res.data.text)||'';
     var parsed=_ocrParse(text);
-    if(parsed.odo==null&&parsed.pct==null){
+    parsed.raw=text;
+    if(parsed.pct==null){
       return worker.recognize(img).then(function(res2){
         var text2=(res2&&res2.data&&res2.data.text)||'';
-        return _ocrParse(text+'\n'+text2);
+        var p2=_ocrParse(text+'\n'+text2);
+        p2.raw=text+'\n'+text2;
+        return p2;
       });
     }
     return parsed;
@@ -1814,6 +1840,11 @@ function _ocrAutoAssign(results){
   document.getElementById('ocrStartPct').value=sPct!=null?sPct:'';
   document.getElementById('ocrEndOdo').value=eOdo!=null?eOdo:'';
   document.getElementById('ocrEndPct').value=ePct!=null?ePct:'';
+  var _rawEl=document.getElementById('ocrRawText');
+  if(_rawEl){
+    var _raw=results.map(function(r){return (r&&r.raw)||'';}).join('\n---\n').trim();
+    _rawEl.textContent=_raw||'(no text recognised)';
+  }
   status.innerHTML='<span style="color:var(--good)">\u2713 Review and confirm.</span>';
 }
 
@@ -2362,31 +2393,31 @@ function updateEffModeDisplay(){
 
   if(planEffMode==='custom'){ display.style.display='none'; return; }
 
+  // Base label + data/fallback source (per mode)
+  var baseLabel, baseSource;
   if(planEffMode==='city'){
-    const e=getCityEff();
-    if(e){ 
-      const src=getCityEffSource();
-      labelEl.textContent=src==='data'?'City (from tagged data)':'City (overall avg)'; 
-      valEl.textContent=(1000/e).toFixed(0)+' Wh/km'; 
-      display.style.display='flex'; 
-    } else { display.style.display='none'; }
+    baseSource=getCityEffSource();
+    baseLabel=baseSource==='data'?'City (from tagged data)':'City (overall avg)';
   } else if(planEffMode==='highway'){
-    const e=getHighwayEff();
-    if(e){ 
-      const src=getHighwayEffSource();
-      labelEl.textContent=src==='data'?'Highway (from tagged data)':'Highway (~est.)'; 
-      valEl.textContent=(1000/e).toFixed(0)+' Wh/km'; 
-      display.style.display='flex'; 
-    } else { display.style.display='none'; }
-  } else if(planEffMode==='mixed'){
-    const e=getMixedEff();
-    if(e){ 
-      const src=getMixedEffSource();
-      labelEl.textContent=src==='data'?'Mixed (from tagged data)':'Mixed (overall avg)'; 
-      valEl.textContent=(1000/e).toFixed(0)+' Wh/km'; 
-      display.style.display='flex'; 
-    } else { display.style.display='none'; }
+    baseSource=getHighwayEffSource();
+    baseLabel=baseSource==='data'?'Highway (from tagged data)':'Highway (~est.)';
+  } else {
+    baseSource=getMixedEffSource();
+    baseLabel=baseSource==='data'?'Mixed (from tagged data)':'Mixed (overall avg)';
   }
+
+  // Use the SAME pax/weather-adjusted efficiency the plan itself uses, so the
+  // readout moves with pax/weather instead of showing the raw base value.
+  var result=getPlannerEfficiency(planEffMode);
+  if(result&&result.eff){
+    valEl.textContent=(1000/result.eff).toFixed(0)+' Wh/km';
+    // getPlannerEfficiency source is "type NNNWh/km · <pax> · <weather>"; keep
+    // only the applied factor notes (drop the leading "type NNNWh/km" token) and
+    // append them to the base data/fallback label.
+    var factorParts=(result.source||'').split(' · ').slice(1);
+    labelEl.textContent=factorParts.length?baseLabel+' · '+factorParts.join(' · '):baseLabel;
+    display.style.display='flex';
+  } else { display.style.display='none'; }
 }
 
 // ── PLAN / TRIP ESTIMATOR ──────────────────────────────────────────────────
@@ -4514,10 +4545,12 @@ function copyMonthlySummary(){
 
 function exportJSON(){
   var p={version:32,sessions:sessions,expenses:expenses,petrolLog:petrolLog,trips:trips,settings:settings,chargers:savedChargers,exportedAt:new Date().toISOString()};
-  // v5.6.0: Include sync credentials if checkbox checked
+  // v5.6.0: Include sync credentials if checkbox checked.
+  // v8.5.11: read from the real sync store (_syncSettings / cm-sync), not the
+  // dead settings.gist* fields the sync feature never touched.
   var credCb=document.getElementById('credExport');
-  if(credCb&&credCb.checked&&settings.gistId&&settings.gistToken){
-    p.credentials={gistId:settings.gistId,gistToken:settings.gistToken};
+  if(credCb&&credCb.checked&&_syncSettings&&_syncSettings.gistId&&_syncSettings.token){
+    p.credentials={gistId:_syncSettings.gistId,token:_syncSettings.token};
   }
   var blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'});
   dl(blob,'chargemate-backup-'+new Date().toISOString().slice(0,10)+'.json');
@@ -4769,11 +4802,14 @@ function importData(event){
       if(p.settings){settings=p.settings;safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();}
       if(p.chargers){savedChargers=p.chargers;safeLS.set('cm-chargers',JSON.stringify(savedChargers));}
       _lksCacheKey='';_ueCacheKey='';recomputeAllKm();render();
-      // v5.6.0: Handle credentials import
-      if(p.credentials&&p.credentials.gistId&&p.credentials.gistToken){
+      // v5.6.0: Handle credentials import.
+      // v8.5.11: write into the real sync store (_syncSettings / cm-sync) so the
+      // sync feature actually picks them up; accept new `token` or legacy `gistToken`.
+      var _credTok=p.credentials&&(p.credentials.token||p.credentials.gistToken);
+      if(p.credentials&&p.credentials.gistId&&_credTok){
         if(confirm('This backup contains sync credentials. Import them?')){
-          settings.gistId=p.credentials.gistId;settings.gistToken=p.credentials.gistToken;
-          safeLS.set('cm-settings',JSON.stringify(settings));populateSettingsInputs();
+          _syncSettings.gistId=p.credentials.gistId;_syncSettings.token=_credTok;
+          safeLS.set('cm-sync',JSON.stringify(_syncSettings));loadSyncUI();
         }
       }
       toast('Imported '+sessions.length+' charges, '+(trips?trips.length:0)+' trips'+(p.settings?' + settings':''));
