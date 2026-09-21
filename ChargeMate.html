@@ -865,6 +865,10 @@ input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
   <div class="changelog-content">
     <div class="cl-close"><span onclick="closeChangelog()">×</span></div>
     <div style="font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px">⚡ ChargeMate Changelog</div>
+    <div class="cl-ver">v8.5.12 <span class="cl-date">21 Sep 2026</span></div>
+    <ul class="cl-list">
+      <li>Change: the energy-mix breakdown on multi-rate trips (e.g. "30 km @ ₹0 · 18 km @ ₹7.5") now reads in chronological order — the energy consumed first (oldest charge, FIFO) is shown first, so the line reads like the trip itself. It was previously ordered largest-slice-first, which didn't reflect the sequence you actually drove.</li>
+    </ul>
     <div class="cl-ver">v8.5.11 <span class="cl-date">21 Sep 2026</span></div>
     <ul class="cl-list">
       <li>Fix: "Include sync credentials" in Export/Import now actually works. It was reading and writing a settings field the Cloud Sync feature never used, so a checked export saved no credentials and an import never reached sync. Export now pulls the real token + Gist ID from your sync setup, and import writes them straight back into Cloud Sync (the Sync settings fill in immediately). Backups made by older versions still import correctly.</li>
@@ -3577,22 +3581,25 @@ function computeTripCosts(){
     var need=safeNum(ev.data.consumption,0);
     var cost=0;
     var mix={};
+    var mixOrder=[]; // rates in the order they were first drawn (FIFO / chronological)
     while(need>1e-9&&queue.length){
       var lot=queue[0];
       var take=Math.min(lot.kwh,need);
       cost+=take*lot.rate;
+      if(!(lot.rate in mix)) mixOrder.push(lot.rate);
       mix[lot.rate]=(mix[lot.rate]||0)+take;
       lot.kwh-=take;need-=take;
       if(lot.kwh<=1e-9) queue.shift();
     }
     if(need>1e-9){
       cost+=need*fallbackRate;
+      if(!(fallbackRate in mix)) mixOrder.push(fallbackRate);
       mix[fallbackRate]=(mix[fallbackRate]||0)+need;
       need=0;
     }
     var t=ev.data;
-    var breakdown=Object.keys(mix).map(function(r){return {rate:+r,kwh:mix[r]};})
-      .sort(function(a,b){return b.kwh-a.kwh;});
+    // Chronological (FIFO) draw order — energy consumed first is shown first.
+    var breakdown=mixOrder.map(function(r){return {rate:+r,kwh:mix[r]};});
     result[t.id]={cost:cost,breakdown:breakdown,km:safeNum(t.km,0)};
   });
   _tcCache=result;
